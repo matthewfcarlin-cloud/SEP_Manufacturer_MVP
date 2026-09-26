@@ -50,3 +50,14 @@ body {
   background: var(--bg);
   color: var(--ink);
 }
+
+@media print {
+  body > header,
+  body > footer {
+    display: none;
+  }
+
+  body {
+    background: #fff;
+  }
+}

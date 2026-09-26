@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { RunAnalysisButton } from "@/components/analysis/RunAnalysisButton";
 import { GeometryPanel } from "@/components/GeometryPanel";
 import { ModelViewer } from "@/components/viewer";
 import { formatNumber, formatUsd } from "@/lib/format";
+import { matchProject } from "@/lib/match";
 import { getProject } from "@/lib/projectStore";
+import { ShopMatches } from "@/components/ShopMatches";
 
 export async function generateMetadata(props: PageProps<"/project/[id]">): Promise<Metadata> {
   const { id } = await props.params;
@@ -26,6 +29,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
   const { id } = await props.params;
   const project = await getProject(id);
   if (!project) notFound();
+  const shopMatches = matchProject(project);
 
   const created = new Date(project.createdAt).toLocaleDateString("en-US", {
     month: "short",
@@ -96,7 +100,10 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
           <h2 id="analysis-heading" className="text-2xl font-semibold tracking-tight">
             How it could be made
           </h2>
-          {project.analysis && <RunAnalysisButton projectId={project.id} variant="secondary" />}
+          <div className="flex flex-wrap items-center gap-2">
+            {project.analysis && <Link href={`/project/${project.id}/pitch`} className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90">Open pitch kit</Link>}
+            {project.analysis && <RunAnalysisButton projectId={project.id} variant="secondary" />}
+          </div>
         </div>
         {project.analysis ? (
           <AnalysisResults analysis={project.analysis} quantity={project.targetQuantity} />
@@ -111,6 +118,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
           </div>
         )}
       </section>
+      {project.analysis && <ShopMatches matches={shopMatches} />}
     </div>
   );
 }

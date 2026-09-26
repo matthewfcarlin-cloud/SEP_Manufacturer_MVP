@@ -1,14 +1,17 @@
 "use client";
 
 import { Bounds, Center, ContactShadows, OrbitControls } from "@react-three/drei";
-import { Canvas, useLoader } from "@react-three/fiber";
-import { Component, Suspense, useEffect, useMemo, useState, type ReactNode } from "react";
+import { Canvas, useLoader, useThree } from "@react-three/fiber";
+import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 
 export type ModelViewerProps = {
   url: string;
   autoRotate?: boolean;
   className?: string;
+  captureAngles?: boolean;
+  onRenders?: (renders: string[]) => void;
+  onRenderError?: () => void;
 };
 
 function Part({ url, onReady }: { url: string; onReady: () => void }) {
@@ -40,7 +43,10 @@ function Part({ url, onReady }: { url: string; onReady: () => void }) {
   );
 }
 
-class ViewerErrorBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+class ViewerErrorBoundary extends Component<
+  { children: ReactNode; onRenderError?: () => void },
+  { failed: boolean }
+> {
   state = { failed: false };
 
   static getDerivedStateFromError() {
@@ -49,6 +55,7 @@ class ViewerErrorBoundary extends Component<{ children: ReactNode }, { failed: b
 
   componentDidCatch(error: unknown) {
     console.error("[ModelViewer] failed to render model", error);
+    this.props.onRenderError?.();
   }
 
   render() {
@@ -65,17 +72,51 @@ class ViewerErrorBoundary extends Component<{ children: ReactNode }, { failed: b
 
 // drei's <Html> can't be the Suspense fallback here: it mounts its own React
 // root, which React 19 refuses to unmount mid-render. A DOM overlay it is.
-function Scene({ url, autoRotate }: { url: string; autoRotate: boolean }) {
+function Scene({
+  url,
+  autoRotate,
+  captureAngles,
+  onRenders,
+  onRenderError,
+}: {
+  url: string;
+  autoRotate: boolean;
+  captureAngles: boolean;
+  onRenders?: (renders: string[]) => void;
+  onRenderError?: () => void;
+}) {
   const [ready, setReady] = useState(false);
   const markReady = useMemo(() => () => setReady(true), []);
+  const controls = useRef<React.ComponentRef<typeof OrbitControls>>(null);
+  const { gl, scene, camera } = useThree();
+
+  useEffect(() => {
+    if (!ready || !captureAngles || !onRenders || !controls.current) return;
+    const renders: string[] = [];
+    try {
+      for (const angle of [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2]) {
+        controls.current.setAzimuthalAngle(angle);
+        controls.current.update();
+        gl.render(scene, camera);
+        renders.push(gl.domElement.toDataURL("image/png"));
+      }
+    } catch (error) {
+      console.error("[ModelViewer] couldn't capture pitch render", error);
+      onRenderError?.();
+      return;
+    }
+    onRenders(renders);
+  }, [camera, captureAngles, gl, onRenderError, onRenders, ready, scene]);
 
   return (
     <>
       <Canvas
         dpr={[1, 2]}
+        gl={{ preserveDrawingBuffer: captureAngles }}
         camera={{ position: [160, 120, 200], fov: 35, near: 0.1, far: 20000 }}
         aria-label="3D view of the uploaded part. Drag to rotate, scroll to zoom."
       >
+        {captureAngles && <color attach="background" args={["#f6f4ef"]} />}
         <hemisphereLight args={["#ffffff", "#8d8a84", 1.2]} />
         <directionalLight position={[300, 500, 200]} intensity={2.4} />
         <directionalLight position={[-300, 200, -250]} intensity={0.8} />
@@ -83,7 +124,7 @@ function Scene({ url, autoRotate }: { url: string; autoRotate: boolean }) {
         <Suspense fallback={null}>
           <Part url={url} onReady={markReady} />
         </Suspense>
-        <OrbitControls makeDefault autoRotate={autoRotate} autoRotateSpeed={1.4} />
+        <OrbitControls ref={controls} makeDefault autoRotate={autoRotate} autoRotateSpeed={1.4} />
       </Canvas>
       {!ready && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-muted">
@@ -94,13 +135,26 @@ function Scene({ url, autoRotate }: { url: string; autoRotate: boolean }) {
   );
 }
 
-export default function ModelViewer({ url, autoRotate = true, className = "" }: ModelViewerProps) {
+export default function ModelViewer({
+  url,
+  autoRotate = true,
+  className = "",
+  captureAngles = false,
+  onRenders,
+  onRenderError,
+}: ModelViewerProps) {
   return (
     <div
       className={`relative overflow-hidden rounded-xl border border-line bg-gradient-to-b from-surface to-bg ${className}`}
     >
-      <ViewerErrorBoundary key={url}>
-        <Scene url={url} autoRotate={autoRotate} />
+      <ViewerErrorBoundary key={url} onRenderError={onRenderError}>
+        <Scene
+          url={url}
+          autoRotate={autoRotate}
+          captureAngles={captureAngles}
+          onRenders={onRenders}
+          onRenderError={onRenderError}
+        />
       </ViewerErrorBoundary>
     </div>
   );
