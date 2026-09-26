@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { FormError, inputClass, PhotoPicker, StlPicker, useUploadFiles } from "@/components/upload/UploadPickers";
+import { FormError, inputClass, PhotoPicker, StlPicker, UnitsSelect, useUploadFiles } from "@/components/upload/UploadPickers";
 import type { ApiResponse } from "@/lib/api";
 import { MAX_CHANGE_NOTE, MAX_IMAGES } from "@/lib/projectInput";
 
@@ -95,9 +95,10 @@ export function NewVersionForm({ projectId, base, tweaks, preselectedTweak }: Pr
       <section className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
           <h2 className="text-sm font-medium">
-            Revised CAD file <span className="text-muted">(STL in millimeters, or STEP)</span>
+            Revised CAD file <span className="text-muted">(STL or STEP)</span>
           </h2>
           <StlPicker stl={stl} onPick={pickStl} />
+          <UnitsSelect stl={stl} />
         </div>
         {tweaks.length > 0 && <TweakPicker tweaks={tweaks} selected={tweak} onSelect={selectTweak} />}
       </section>

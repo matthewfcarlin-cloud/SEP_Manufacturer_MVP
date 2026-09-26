@@ -1,10 +1,12 @@
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { MIN_WALL_MM } from "./geometryLimits";
 import { measureTriangle, sampleWallThickness } from "./wallThickness";
+import { toBinaryStl, type Triangle, type Vec3 } from "./meshes";
 import type { GeometryStats } from "./types";
 
-// STL files carry no units. We assume millimeters, which is what nearly every
-// CAD package exports by default; the UI says so next to the numbers.
+// Everything here works in millimeters. STL files carry no units, so the
+// upload says which unit a file was exported in and scaleStl() converts it
+// first (lib/units.ts); millimeters is the default.
 
 /** Warn when more than this share of the surface sits over a thin wall. */
 const THIN_AREA_FRACTION = 0.05;
@@ -117,6 +119,20 @@ function measureWalls(p: Float32Array, triangleCount: number, sign: number): Wal
 const round = (n: number, places: number) => Number(n.toFixed(places));
 
 /** Parses an STL (binary or ASCII) and measures it. Throws StlParseError on bad input. */
+/**
+ * Returns the STL with every coordinate multiplied by `factor`, as binary
+ * STL. Used to convert files exported in cm, m or inches to millimeters.
+ */
+export function scaleStl(data: ArrayBuffer, factor: number): ArrayBuffer {
+  const p = parsePositions(data);
+  const triangles: Triangle[] = [];
+  for (let i = 0; i < p.length; i += 9) {
+    const v = (j: number): Vec3 => [p[i + j] * factor, p[i + j + 1] * factor, p[i + j + 2] * factor];
+    triangles.push([v(0), v(3), v(6)]);
+  }
+  return toBinaryStl(triangles);
+}
+
 export function analyzeStl(data: ArrayBuffer): GeometryStats {
   const positions = parsePositions(data);
   const triangleCount = positions.length / 9;

@@ -1,6 +1,7 @@
 import { formatDimensions, formatNumber } from "@/lib/format";
 import { MIN_WALL_MM } from "@/lib/geometryLimits";
 import { estimateMassGrams, REFERENCE_DENSITIES } from "@/lib/materials";
+import { scaleWarning } from "@/lib/units";
 import type { GeometryStats } from "@/lib/types";
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -31,13 +32,14 @@ function Check({ ok, title, detail }: { ok: boolean; title: string; detail: stri
 }
 
 export function GeometryPanel({ geometry }: { geometry: GeometryStats }) {
+  const sizeWarning = scaleWarning(geometry.boundingBoxMm);
   return (
     <section aria-labelledby="geometry-heading" className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5">
       <div className="flex items-baseline justify-between">
         <h2 id="geometry-heading" className="font-semibold">
           Part geometry
         </h2>
-        <span className="text-xs text-muted">STL units read as mm</span>
+        <span className="text-xs text-muted">Measured in mm</span>
       </div>
 
       <dl>
@@ -63,6 +65,7 @@ export function GeometryPanel({ geometry }: { geometry: GeometryStats }) {
       </div>
 
       <ul className="flex flex-col gap-2">
+        {sizeWarning && <Check ok={false} title="Check the units" detail={sizeWarning} />}
         <Check
           ok={geometry.isWatertight}
           title={geometry.isWatertight ? "Watertight mesh" : "Mesh has gaps"}

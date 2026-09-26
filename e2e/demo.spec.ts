@@ -463,3 +463,25 @@ test("an over-budget browser is refused before any AI call", async ({ page }) =>
     await rm(ledger, { force: true });
   }
 });
+
+test("an STL exported in inches is scaled to millimeters on upload", async ({ page }) => {
+  await page.goto("/new");
+  await page.getByLabel("CAD file (STL or STEP)").setInputFiles("demo/charger-bracket.stl");
+  await page.getByLabel("Units in the file").selectOption("in");
+  await page.getByLabel("Project name").fill("E2E inches");
+  await page.getByRole("button", { name: "Create project" }).click();
+  await expect(page).toHaveURL(/\/project\/[A-Za-z0-9_-]{10}$/);
+  const geometry = page.getByRole("region", { name: "Part geometry" });
+  await expect(geometry).toContainText("2,032 × 1,524 × 1,270 mm");
+  await expect(geometry).not.toContainText("Check the units");
+});
+
+test("a part that looks the wrong size gets a units warning", async ({ page }) => {
+  await page.goto("/new");
+  await page.getByLabel("CAD file (STL or STEP)").setInputFiles("demo/charger-bracket.stl");
+  await page.getByLabel("Units in the file").selectOption("m"); // 80 m across
+  await page.getByLabel("Project name").fill("E2E wrong units");
+  await page.getByRole("button", { name: "Create project" }).click();
+  await expect(page).toHaveURL(/\/project\/[A-Za-z0-9_-]{10}$/);
+  await expect(page.getByRole("region", { name: "Part geometry" })).toContainText("Check the units");
+});

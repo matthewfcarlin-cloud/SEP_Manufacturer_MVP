@@ -21,7 +21,7 @@ Click **Start a project** and fill in:
 
 | Field | What to give it |
 |---|---|
-| **CAD file** | An STL (read as millimeters) or a STEP file (`.step` / `.stp`), up to 50 MB. STEP is converted automatically. |
+| **CAD file** | An STL or a STEP file (`.step` / `.stp`), up to 50 MB. For an STL, pick the **units in the file** (millimeters, centimeters, meters or inches; most CAD tools export millimeters). STEP files carry their own units and are converted automatically. |
 | **Project name** | What you call the product. |
 | **What is it?** | What it does, who it's for, and what matters most (finish, strength, cost, weight). The more specific, the better the advice. |
 | **Target quantity** | How many units you want in your first run. This drives almost every recommendation. |
@@ -29,7 +29,7 @@ Click **Start a project** and fill in:
 | **Material ideas** *(optional)* | Comma-separated, e.g. `aluminum, ABS`. |
 | **Photos or sketches** *(optional)* | Up to 5. They help the AI understand features the mesh alone doesn't show. |
 
-Click **Create project**. Idlefit measures the part straight away: bounding box, volume, surface area, typical wall thickness, and whether the mesh is watertight. If the part has thin walls, **Show thin walls** paints them on the 3D model.
+Click **Create project**. Idlefit measures the part straight away: bounding box, volume, surface area, typical wall thickness, and whether the mesh is watertight. If the part comes out implausibly tiny or huge, a **Check the units** warning suggests re-uploading it as a new version with the right units. If the part has thin walls, **Show thin walls** paints them on the 3D model.
 
 ### 2. Check what the AI will see
 

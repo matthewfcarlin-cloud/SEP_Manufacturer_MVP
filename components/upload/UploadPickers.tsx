@@ -4,6 +4,7 @@ import { useRef, useState, type DragEvent } from "react";
 import { ModelViewer } from "@/components/viewer";
 import { resizeImageToJpeg } from "@/lib/client/resizeImage";
 import { CAD_EXTENSIONS, MAX_IMAGES, MAX_STL_BYTES } from "@/lib/projectInput";
+import { STL_UNITS, UNIT_LABELS } from "@/lib/units";
 
 // Object URLs are created and revoked in event handlers only. Revoking in an
 // unmount effect would break under StrictMode's simulated unmount; the few
@@ -20,7 +21,7 @@ function formatBytes(bytes: number): string {
 export const inputClass =
   "w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink";
 
-const isStep = (file: File) => /\.(step|stp)$/i.test(file.name);
+export const isStep = (file: File) => /\.(step|stp)$/i.test(file.name);
 
 function validateCad(file: File): string | null {
   const name = file.name.toLowerCase();
@@ -200,5 +201,28 @@ export function FormError({ message }: { message: string | null }) {
     <p role="alert" className="rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm">
       {message}
     </p>
+  );
+}
+
+/**
+ * STL files carry no units, so ask which one the file was exported in; the
+ * server scales it to millimeters. STEP files record their own.
+ */
+export function UnitsSelect({ stl }: { stl: LocalFile | null }) {
+  if (stl && isStep(stl.file)) {
+    return <p className="text-xs text-muted">STEP files carry their own units, so no conversion is needed.</p>;
+  }
+  return (
+    <label className="flex flex-wrap items-center gap-2 text-sm font-medium">
+      Units in the file
+      <select name="units" defaultValue="mm" className="rounded-lg border border-line bg-surface px-2 py-1.5 text-sm">
+        {STL_UNITS.map((u) => (
+          <option key={u} value={u}>
+            {UNIT_LABELS[u]}
+          </option>
+        ))}
+      </select>
+      <span className="text-xs font-normal text-muted">Most CAD tools export millimeters. Check this if your part looks tiny or huge.</span>
+    </label>
   );
 }

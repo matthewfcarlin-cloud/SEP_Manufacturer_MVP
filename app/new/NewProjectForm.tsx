@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { FormError, inputClass, PhotoPicker, StlPicker, useUploadFiles } from "@/components/upload/UploadPickers";
+import { FormError, inputClass, PhotoPicker, StlPicker, UnitsSelect, useUploadFiles } from "@/components/upload/UploadPickers";
 import type { ApiResponse } from "@/lib/api";
 import { MAX_IMAGES } from "@/lib/projectInput";
 
@@ -38,9 +38,10 @@ export function NewProjectForm() {
     <form onSubmit={onSubmit} className="grid gap-8 lg:grid-cols-[1.1fr_1fr]" noValidate>
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium">
-          CAD file <span className="text-muted">(STL in millimeters, or STEP)</span>
+          CAD file <span className="text-muted">(STL or STEP)</span>
         </h2>
         <StlPicker stl={stl} onPick={pickStl} />
+          <UnitsSelect stl={stl} />
       </section>
 
       <section className="flex flex-col gap-5">
