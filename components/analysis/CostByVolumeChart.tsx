@@ -68,8 +68,11 @@ export function CostByVolumeChart({ curves, targetQuantity }: Props) {
     const qMax = quantities[quantities.length - 1];
     const plotW = Math.max(120, width - PAD.left - PAD.right);
     const plotH = HEIGHT - PAD.top - PAD.bottom;
-    const x = (q: number) => PAD.left + ((log(q) - log(qMin)) / (log(qMax) - log(qMin))) * plotW;
-    const y = (v: number) => PAD.top + (1 - (log(v) - log(yMin)) / (log(yMax) - log(yMin))) * plotH;
+    // Rounded to 0.01 px: Node and the browser disagree in the last digits of
+    // Math.log10, which otherwise causes a hydration mismatch on SSR.
+    const px = (n: number) => Math.round(n * 100) / 100;
+    const x = (q: number) => px(PAD.left + ((log(q) - log(qMin)) / (log(qMax) - log(qMin))) * plotW);
+    const y = (v: number) => px(PAD.top + (1 - (log(v) - log(yMin)) / (log(yMax) - log(yMin))) * plotH);
     return { x, y, yTicks: logTicks(yMin, yMax), plotW, plotH, qMin, qMax };
   }, [curves, quantities, width]);
 

@@ -167,3 +167,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Cost by quantity: `lib/costCurve.ts` turns `unitCostAtVolume` + tooling into all-in cost per part and a "cheapest by volume" sentence; `CostByVolumeChart` draws it. Series colors are the validated `--series-1..4` tokens in `app/globals.css`; keep their order.
 - Pages that read project files per request call `await connection()` (Next 16's replacement for `force-dynamic`).
 - E2E: `npm run test:e2e` (Playwright on installed Chrome). Tests clean up projects they create in `afterEach`.
+- Design system (industrial redesign): tokens in `app/globals.css` (theme `bg/surface/ink/muted/line/accent` plus always-dark `night-*` for the header, footer, hero and statement bands; use `night-accent`, not `accent`, on night surfaces). Utilities: `display-type` (Archivo, uppercase headlines) and `eyebrow` (mono caps captions). Page titles use `components/PageHeader.tsx`. Radii are tightened globally in `@theme`.
+- Home page sections live in `components/home/` (3D hero, idle ticker, pinned `ProcessStory`, `ProcessTiles`, `Showcase`, `ScrollStatement`). Animation uses `motion` (`motion/react`); every animated component must respect `useReducedMotion()`. Animated words need real spaces between them, not just margins.
+

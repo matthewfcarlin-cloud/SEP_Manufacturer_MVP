@@ -1,17 +1,30 @@
 @import "tailwindcss";
 
+/*
+ * Industrial palette: warm off-white by day, near-black by night.
+ * Accent (safety orange) and idle green are the only chromatic colors
+ * outside charts, and they're used sparingly.
+ */
 :root {
-  --bg: #f6f4ef;
-  --surface: #ffffff;
-  --ink: #1b1a17;
-  --muted: #6a655c;
-  --line: #e2ddd3;
-  --accent: #d9531e;
+  --bg: #efeeec;
+  --surface: #f8f7f5;
+  --ink: #0d0d0c;
+  --muted: #5c5a55;
+  --line: #d6d3cc;
+  --accent: #c8440f;
   --accent-ink: #ffffff;
-  --idle: #17784a;
-  --idle-soft: #e3f3ea;
-  --demo: #8a5a00;
-  --demo-soft: #fbf0d6;
+  --idle: #13703f;
+  --idle-soft: #dcefe3;
+  --demo: #7a4f00;
+  --demo-soft: #f5e7c4;
+  /* Always-dark surfaces (hero, statement bands) regardless of theme. */
+  --night: #0a0a0a;
+  --night-ink: #efeeec;
+  --night-muted: #8f8b83;
+  --night-line: #232321;
+  --night-idle: #5fd39a;
+  --night-surface: #111110;
+  --night-accent: #ff6a2b;
   /* Chart series, fixed order (validated: dataviz reference palette, slots 1-4). */
   --series-1: #2a78d6;
   --series-2: #eb6834;
@@ -21,17 +34,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121210;
-    --surface: #1b1b18;
-    --ink: #eeebe4;
-    --muted: #a19b90;
-    --line: #2f2e2a;
-    --accent: #f06a33;
-    --accent-ink: #121210;
+    --bg: #0a0a0a;
+    --surface: #131312;
+    --ink: #efeeec;
+    --muted: #9a968d;
+    --line: #262624;
+    --accent: #ff6a2b;
+    --accent-ink: #0a0a0a;
     --idle: #5fd39a;
-    --idle-soft: #173226;
+    --idle-soft: #12291d;
     --demo: #f2c36b;
-    --demo-soft: #332811;
+    --demo-soft: #2e2410;
     --series-1: #3987e5;
     --series-2: #d95926;
     --series-3: #199e70;
@@ -51,13 +64,53 @@
   --color-idle-soft: var(--idle-soft);
   --color-demo: var(--demo);
   --color-demo-soft: var(--demo-soft);
+  --color-night: var(--night);
+  --color-night-ink: var(--night-ink);
+  --color-night-muted: var(--night-muted);
+  --color-night-line: var(--night-line);
+  --color-night-idle: var(--night-idle);
+  --color-night-surface: var(--night-surface);
+  --color-night-accent: var(--night-accent);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-archivo);
+}
+
+/* Machined, not bubbly: every rounded-* in the app gets a tighter radius. */
+@theme {
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+}
+
+/* Huge, tight, uppercase industrial headlines. */
+@utility display-type {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-stretch: 112%;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+  line-height: 0.92;
+}
+
+/* Small monospace spec-sheet captions ("CNC MILLING · 6 IDLE"). */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 }
 
 body {
   background: var(--bg);
   color: var(--ink);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
 }
 
 @media print {
@@ -68,5 +121,23 @@ body {
 
   body {
     background: #fff;
+  }
+}
+
+/* Infinite horizontal ticker: content is rendered twice, so -50% loops seamlessly. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@utility animate-marquee {
+  animation: marquee var(--marquee-duration, 60s) linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
 }

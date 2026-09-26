@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@/components/PageHeader";
 import { connection } from "next/server";
 import { DEMO_PROJECTS } from "@/lib/demoProjects";
 import { formatUnitCostRange } from "@/lib/format";
@@ -16,16 +17,17 @@ export default async function ProjectsPage() {
   const projects = await listProjects();
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Projects</h1>
-          <p className="mt-1 text-muted">Every part you&apos;ve uploaded, newest first.</p>
-        </div>
-        <Link href="/new" className="rounded-lg bg-accent px-4 py-2 font-medium text-accent-ink hover:opacity-90">
-          Start a project
-        </Link>
-      </header>
+    <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
+      <PageHeader
+        eyebrow={<span>{projects.length} {projects.length === 1 ? "project" : "projects"} · newest first</span>}
+        title="Projects"
+        description="Every part you've uploaded. Open one to see its analysis, shop matches, and pitch kit."
+        actions={
+          <Link href="/new" className="eyebrow rounded-md bg-ink px-4 py-3 text-bg hover:opacity-90">
+            Start a project →
+          </Link>
+        }
+      />
 
       {projects.length === 0 ? (
         <div className="rounded-xl border border-dashed border-line p-10 text-center text-muted">
@@ -40,7 +42,7 @@ export default async function ProjectsPage() {
               <li key={p.id}>
                 <Link href={`/project/${p.id}`} className="flex h-full flex-col gap-3 rounded-xl border border-line bg-surface p-5 transition-colors hover:border-ink">
                   <div className="flex items-start justify-between gap-2">
-                    <h2 className="font-semibold">{p.name}</h2>
+                    <h2 className="display-type text-2xl">{p.name}</h2>
                     {EXAMPLE_IDS.has(p.id) && (
                       <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-xs text-muted">Example</span>
                     )}

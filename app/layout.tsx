@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Geist, Geist_Mono } from "next/font/google";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
@@ -13,6 +14,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Display face for uppercase headlines; the width axis lets it run slightly expanded.
+const archivo = Archivo({
+  variable: "--font-archivo",
+  subsets: ["latin"],
+  axes: ["wdth"],
+});
+
 export const metadata: Metadata = {
   title: { default: "Idlefit", template: "%s · Idlefit" },
   description:
@@ -23,14 +31,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${archivo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
         <SiteHeader />
         <main className="flex-1">{children}</main>
-        <footer className="border-t border-line px-4 py-6 text-center text-xs text-muted sm:px-6">
-          Idlefit is a club MVP. Costs are estimates, and every shop listed is fictional demo data.
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );

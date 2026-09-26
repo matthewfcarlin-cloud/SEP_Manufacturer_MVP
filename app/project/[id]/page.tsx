@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { RunAnalysisButton } from "@/components/analysis/RunAnalysisButton";
 import { GeometryPanel } from "@/components/GeometryPanel";
+import { PageHeader } from "@/components/PageHeader";
 import { ProjectViewer } from "@/components/viewer/ProjectViewer";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { matchProject } from "@/lib/match";
@@ -38,11 +39,19 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
   });
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6">
-      <header className="flex flex-col gap-1">
-        <p className="text-sm text-muted">Project · created {created}</p>
-        <h1 className="text-3xl font-semibold tracking-tight">{project.name}</h1>
-      </header>
+    <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
+      <PageHeader
+        eyebrow={
+          <>
+            <Link href="/projects" className="hover:text-ink">Projects</Link>
+            <span aria-hidden>/</span>
+            <span>Created {created}</span>
+            <span aria-hidden>·</span>
+            <span>{project.targetQuantity.toLocaleString("en-US")} units</span>
+          </>
+        }
+        title={project.name}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] [&>*]:min-w-0">
         {project.cadFileUrl ? (
@@ -101,7 +110,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
 
       <section aria-labelledby="analysis-heading" className="flex flex-col gap-4 border-t border-line pt-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 id="analysis-heading" className="text-2xl font-semibold tracking-tight">
+          <h2 id="analysis-heading" className="display-type text-[clamp(2rem,4vw,3.25rem)]">
             How it could be made
           </h2>
           <div className="flex flex-wrap items-center gap-2">

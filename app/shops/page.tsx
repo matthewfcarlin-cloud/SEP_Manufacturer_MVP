@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DemoBadge } from "@/components/Badges";
+import { PageHeader } from "@/components/PageHeader";
 import { getShops, summarizeShops } from "@/lib/shops";
 import { ShopBrowser } from "./ShopBrowser";
 
@@ -10,25 +11,30 @@ export default function ShopsPage() {
   const stats = summarizeShops(shops);
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6">
-      <header className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-3xl font-semibold tracking-tight">LA-area shops</h1>
-          <DemoBadge />
-        </div>
-        <p className="max-w-2xl text-muted">
-          Machine shops, print farms, fabs, and molders around Los Angeles. Green machines have idle
-          time this month, which is where a well-fitted design gets the best price and fastest slot.
-        </p>
-        <p className="text-sm text-muted">
-          All {stats.shops} shops are fictional and exist only for this demo.
-        </p>
-        <dl className="mt-2 grid max-w-md grid-cols-3 gap-3">
-          <Stat label="Shops" value={stats.shops} />
-          <Stat label="Machines" value={stats.machines} />
-          <Stat label="Idle now" value={stats.idleMachines} highlight />
-        </dl>
-      </header>
+    <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
+      <PageHeader
+        eyebrow={
+          <>
+            <span>Los Angeles · {stats.shops} shops</span>
+            <DemoBadge />
+          </>
+        }
+        title="LA-area shops"
+        description={
+          <>
+            Machine shops, print farms, fabs, and molders. Green machines have idle time this month,
+            which is where a well-fitted design gets the best price and fastest slot. All{" "}
+            {stats.shops} shops are fictional and exist only for this demo.
+          </>
+        }
+        actions={
+          <dl className="grid grid-cols-3 gap-2">
+            <Stat label="Shops" value={stats.shops} />
+            <Stat label="Machines" value={stats.machines} />
+            <Stat label="Idle now" value={stats.idleMachines} highlight />
+          </dl>
+        }
+      />
       <ShopBrowser shops={shops} />
     </div>
   );

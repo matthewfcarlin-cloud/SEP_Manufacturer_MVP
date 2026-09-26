@@ -115,4 +115,6 @@ function writeStl(solid: Solid, file: string): void {
 }
 
 writeStl(pedalEnclosure(), "demo/pedal-enclosure.stl");
+// Also served statically for the landing page's 3D hero.
+writeStl(pedalEnclosure(), "public/models/pedal-enclosure.stl");
 writeStl(chargerBracket(), "demo/charger-bracket.stl");

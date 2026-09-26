@@ -24,8 +24,8 @@ function CostCard({ path, quantity }: { path: ManufacturingPath; quantity: numbe
     <section aria-labelledby="cost-heading" className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">At a glance</p>
-          <h2 id="cost-heading" className="mt-1 text-2xl font-semibold tracking-tight">The cost picture</h2>
+          <p className="eyebrow text-accent">At a glance</p>
+          <h2 id="cost-heading" className="display-type mt-2 text-[clamp(1.8rem,3.5vw,2.75rem)]">The cost picture</h2>
         </div>
         <p className="text-sm text-muted">Estimate for {quantity.toLocaleString("en-US")} units</p>
       </div>
@@ -65,7 +65,7 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
   const matchedShop = topMatch ? getShopById(topMatch.shopId) : undefined;
 
   return (
-    <article className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-12 print:max-w-none print:gap-7 print:px-0 print:py-0">
+    <article className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-8 sm:px-6 sm:py-12 print:max-w-none print:gap-7 print:px-0 print:py-0">
       <header className="flex flex-wrap items-center justify-between gap-4 print:hidden">
         <Link href={`/project/${project.id}`} className="text-sm font-medium text-muted hover:text-ink">← Back to project</Link>
         <PrintButton />
@@ -73,8 +73,8 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
 
       {!project.analysis ? (
         <section className="rounded-2xl border border-line bg-surface p-8">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">Pitch kit</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{project.name}</h1>
+          <p className="eyebrow text-accent">Pitch kit</p>
+          <h1 className="display-type mt-2 text-4xl">{project.name}</h1>
           <p className="mt-3 max-w-xl text-muted">Run a manufacturing analysis first to build the recommended process, estimate, shop match, and storyboard for this pitch kit.</p>
           <Link href={`/project/${project.id}`} className="mt-5 inline-flex rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink">View project analysis</Link>
         </section>
@@ -82,8 +82,8 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
         <>
           <section className="grid gap-8 border-b border-line pb-9 md:grid-cols-[1.1fr_0.9fr] md:items-end print:grid-cols-2">
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-accent">Product pitch · {project.targetQuantity.toLocaleString("en-US")} unit run</p>
-              <h1 className="mt-4 max-w-2xl text-4xl font-semibold leading-[1.08] tracking-tight sm:text-6xl">{project.name}</h1>
+              <p className="eyebrow text-accent">Product pitch · {project.targetQuantity.toLocaleString("en-US")} unit run</p>
+              <h1 className="display-type mt-4 max-w-3xl text-[clamp(2.8rem,7vw,6rem)]">{project.name}</h1>
               <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{project.analysis.productSummary}</p>
             </div>
             <div className="rounded-2xl bg-ink p-6 text-bg sm:p-8">
@@ -97,15 +97,15 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
           {topPath && (
             <section aria-labelledby="manufacturing-heading" className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
               <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">How it gets made</p>
-                <h2 id="manufacturing-heading" className="mt-2 text-2xl font-semibold tracking-tight">{PROCESS_LABELS[topPath.process]}</h2>
+                <p className="eyebrow text-accent">How it gets made</p>
+                <h2 id="manufacturing-heading" className="display-type mt-2 text-3xl">{PROCESS_LABELS[topPath.process]}</h2>
                 <p className="mt-2 text-sm text-muted">Recommended process · {topPath.fitScore}/100 fit</p>
                 <p className="mt-5 text-sm leading-relaxed">{topPath.pros[0] ?? topPath.materials.join(", ")}</p>
               </div>
               <div className="rounded-2xl border border-line bg-surface p-6 sm:p-8">
                 {matchedShop && topMatch ? (
                   <>
-                    <div className="flex flex-wrap items-center gap-2"><p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">Local shop match</p>{topMatch.idleBoost && <IdleBadge hoursPerWeek={topMatch.matchedMachine.idleHoursPerWeek} />}</div>
+                    <div className="flex flex-wrap items-center gap-2"><p className="eyebrow text-accent">Local shop match</p>{topMatch.idleBoost && <IdleBadge hoursPerWeek={topMatch.matchedMachine.idleHoursPerWeek} />}</div>
                     <div className="mt-2 flex flex-wrap items-baseline justify-between gap-3">
                       <h3 className="text-2xl font-semibold tracking-tight">{matchedShop.name}</h3>
                       <DemoBadge />
@@ -116,8 +116,8 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
                   </>
                 ) : (
                   <>
-                    <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">Local shop match</p>
-                    <h3 className="mt-2 text-2xl font-semibold tracking-tight">No direct shop match yet</h3>
+                    <p className="eyebrow text-accent">Local shop match</p>
+                    <h3 className="display-type mt-2 text-3xl">No direct shop match yet</h3>
                     <p className="mt-3 text-sm text-muted">The recommended process is shown above. Review other manufacturing paths for currently available local machine matches.</p>
                   </>
                 )}
@@ -130,8 +130,8 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
           <section aria-labelledby="storyboard-heading" className="flex flex-col gap-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">A 30-second spot</p>
-                <h2 id="storyboard-heading" className="mt-1 text-2xl font-semibold tracking-tight">The story in six frames</h2>
+                <p className="eyebrow text-accent">A 30-second spot</p>
+                <h2 id="storyboard-heading" className="display-type mt-2 text-[clamp(1.8rem,3.5vw,2.75rem)]">The story in six frames</h2>
               </div>
               <p className="text-sm text-muted">A first pass for the product conversation</p>
             </div>

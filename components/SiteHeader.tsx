@@ -1,26 +1,47 @@
 import Link from "next/link";
+import { getShops, summarizeShops } from "@/lib/shops";
 
+const NAV = [
+  { href: "/projects", label: "Projects" },
+  { href: "/shops", label: "Shops" },
+];
+
+// Always dark (like the hero) so every page gets the same industrial frame.
 export function SiteHeader() {
+  const { idleMachines } = summarizeShops(getShops());
   return (
-    <header className="border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-3 py-3 sm:gap-4 sm:px-6">
-        <Link href="/" className="flex shrink-0 items-center gap-2 font-semibold tracking-tight">
-          <span aria-hidden className="grid h-7 w-7 place-items-center rounded-md bg-accent text-sm text-accent-ink">
-            If
-          </span>
-          Idlefit
-        </Link>
-        <nav className="flex shrink-0 items-center gap-1 text-sm">
-          <Link href="/projects" className="whitespace-nowrap rounded-md px-2 py-2 text-muted hover:text-ink sm:px-3">
-            Projects
+    <header className="sticky top-0 z-40 border-b border-night-line bg-night/90 text-night-ink backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-4">
+          <Link href="/" className="display-type text-xl leading-none tracking-tight">
+            Idlefit
           </Link>
-          <Link href="/shops" className="whitespace-nowrap rounded-md px-2 py-2 text-muted hover:text-ink sm:px-3">
-            Shops
+          <Link
+            href="/shops"
+            className="eyebrow hidden items-center gap-2 text-night-muted hover:text-night-ink md:flex"
+            title="Demo shop data"
+          >
+            <span aria-hidden className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-night-idle opacity-60 motion-reduce:hidden" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-night-idle" />
+            </span>
+            {idleMachines} machines idle in LA
           </Link>
+        </div>
+        <nav className="flex shrink-0 items-center gap-1">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="eyebrow whitespace-nowrap rounded-md px-2 py-2 text-night-muted hover:text-night-ink sm:px-3"
+            >
+              {item.label}
+            </Link>
+          ))}
           <Link
             href="/new"
             aria-label="Start a project"
-            className="whitespace-nowrap rounded-md bg-ink px-2.5 py-2 font-medium text-bg hover:opacity-90 sm:px-3"
+            className="eyebrow ml-1 whitespace-nowrap rounded-md bg-night-ink px-3 py-2 text-night hover:bg-white"
           >
             <span className="sm:hidden">Start</span>
             <span className="hidden sm:inline">Start a project</span>

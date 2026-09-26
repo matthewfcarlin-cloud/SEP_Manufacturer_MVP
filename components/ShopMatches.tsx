@@ -11,7 +11,7 @@ export function ShopMatches({ matches }: { matches: ShopMatch[] }) {
   return (
     <section aria-labelledby="shop-matches-heading" className="flex flex-col gap-4 border-t border-line pt-8">
       <div>
-        <h2 id="shop-matches-heading" className="text-2xl font-semibold tracking-tight">Shop matches</h2>
+        <h2 id="shop-matches-heading" className="display-type text-[clamp(2rem,4vw,3.25rem)]">Shop matches</h2>
         <p className="mt-1 text-sm text-muted">Ranked by process fit, material, order size, and available machine time.</p>
       </div>
       {matches.length ? (

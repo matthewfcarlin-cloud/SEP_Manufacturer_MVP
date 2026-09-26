@@ -42,8 +42,8 @@ export function PitchHero({ projectName, cadFileUrl }: { projectName: string; ca
     <section aria-labelledby="renders-heading" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-accent">Product study</p>
-          <h2 id="renders-heading" className="mt-1 text-2xl font-semibold tracking-tight">The design, from every side</h2>
+          <p className="eyebrow text-accent">Product study</p>
+          <h2 id="renders-heading" className="display-type mt-2 text-[clamp(1.8rem,3.5vw,2.75rem)]">The design, from every side</h2>
         </div>
         <p className="text-sm text-muted">Studio renders · generated from your 3D model</p>
       </div>
