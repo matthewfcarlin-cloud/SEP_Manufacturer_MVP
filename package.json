@@ -40,5 +40,8 @@
     "typescript": "^5",
     "vitest": "^5.0.2"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  }
 }

@@ -20,7 +20,7 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - STL: three.js `STLLoader`. STEP (stretch): `occt-import-js` (WASM) → mesh
 - Claude API (server-side only) with vision + structured JSON output
 - Storage: local JSON + filesystem for v1; Supabase optional later
-- Deploy: Vercel
+- Deploy: Railway (see "Deploying" under Working in this repo). Vercel would need storage moved off-disk first.
 - API key in `.env.local` as `ANTHROPIC_API_KEY`. Never expose it to the client.
 
 ## Routes
@@ -407,6 +407,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Stored data vs. AI rules: stored `priceSuggestion` is validated structurally only; the business rules (`priceSuggestionSchema`) gate new AI answers. Tightening a rule must never make saved projects unreadable.
 - Route lookups: API routes load `{ project, version }` with `findVersion()` from `lib/versionLookup.ts`.
 - Process names mid-sentence: `processInSentence()` ("injection molding", but "CNC milling").
+- Deploying (Railway): `railway.json` holds the build/start/healthcheck config. The service needs a volume (e.g. mounted at `/data`), `IDLEFIT_DATA_DIR=/data`, and `ANTHROPIC_API_KEY`. The start command runs `demo:seed` first, so the examples are (re)installed on the volume at every deploy, which also resets any visitor edits to them. One volume means one replica; that's also what the in-process update lock in `projectStore` assumes.
 - Don't run `npm run build` while `next dev` runs from the same folder: the build rewrites `.next` and the dev server then 404s routes added since it started. Stop dev, build, restart.
 - Wall thickness: `lib/wallThickness.ts` is shared by the server (sampled, for `GeometryStats`) and the browser (every triangle, for the viewer's "Show thin walls" overlay). Change the method there, not in two places.
 - Cost by quantity: `lib/costCurve.ts` turns `unitCostAtVolume` + tooling into all-in cost per part and a "cheapest by volume" sentence; `CostByVolumeChart` draws it. Series colors are the validated `--series-1..4` tokens in `app/globals.css`; keep their order.
