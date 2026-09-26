@@ -136,3 +136,11 @@ Each phase ends with a working, demoable app.
 - Shops are clearly fictional demo data.
 - Keep the API key server-side.
 - Favor a smooth, polished demo path over extra features.
+
+## Working in this repo
+- Next.js 16 (App Router), React 19, Tailwind v4, zod 4, vitest. Next 16 has breaking changes from older versions: check `node_modules/next/dist/docs/` before using an unfamiliar API.
+- Commands: `npm run dev`, `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`. All five must pass before merging to `main`.
+- Shop data: `data/shops.json`, validated at load by `lib/schemas.ts` (`shopsSchema`). Read it through `getShops()` / `getShopById()` in `lib/shops.ts`, never by importing the JSON directly.
+- Process names and display labels: `lib/processes.ts` (`PROCESSES`, `PROCESS_LABELS`).
+- Colors are theme tokens in `app/globals.css` (`bg`, `surface`, `ink`, `muted`, `line`, `accent`, `idle`, `demo`) with light and dark values. Use them instead of raw Tailwind colors.
+- Badges: `DemoBadge` and `IdleBadge` in `components/Badges.tsx`. Any UI showing a shop must show `DemoBadge`.

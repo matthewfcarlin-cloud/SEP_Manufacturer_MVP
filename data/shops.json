@@ -1,0 +1,408 @@
+[
+  {
+    "id": "halyard-machine-co",
+    "name": "Halyard Machine Co.",
+    "neighborhood": "Vernon",
+    "description": "Three-generation job shop running production aluminum and steel parts for food-equipment and packaging OEMs.",
+    "machines": [
+      { "type": "cnc_milling", "model": "Haas VF-2", "envelopeMm": { "x": 762, "y": 406, "z": 508 }, "materials": ["Aluminum 6061", "Aluminum 7075", "Steel 1018", "Stainless 304", "Delrin (POM)"], "idleThisMonth": true, "idleHoursPerWeek": 22 },
+      { "type": "cnc_milling", "model": "Haas VF-4", "envelopeMm": { "x": 1270, "y": 508, "z": 635 }, "materials": ["Aluminum 6061", "Steel 1018", "Stainless 304"], "idleThisMonth": false },
+      { "type": "cnc_turning", "model": "Haas ST-10", "envelopeMm": { "x": 356, "y": 356, "z": 406 }, "materials": ["Aluminum 6061", "Steel 1018", "Brass 360"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 5,
+    "maxOrderQty": 2000,
+    "typicalLeadDays": 12,
+    "specialties": ["Production aluminum", "Fixtures", "Food-grade stainless"],
+    "isDemoData": true
+  },
+  {
+    "id": "layerline-print-farm",
+    "name": "Layerline Print Farm",
+    "neighborhood": "Burbank",
+    "description": "Forty-printer FDM farm next to the studios. Fast turnaround on props, enclosures, and short-run consumer parts.",
+    "machines": [
+      { "type": "fdm_print", "model": "Bambu Lab X1C (bank of 24)", "envelopeMm": { "x": 256, "y": 256, "z": 256 }, "materials": ["PLA", "PETG", "ABS", "TPU", "Nylon PA12"], "idleThisMonth": true, "idleHoursPerWeek": 60 },
+      { "type": "fdm_print", "model": "Prusa XL", "envelopeMm": { "x": 360, "y": 360, "z": 360 }, "materials": ["PLA", "PETG", "ABS", "TPU"], "idleThisMonth": false },
+      { "type": "fdm_print", "model": "Ultimaker S5", "envelopeMm": { "x": 330, "y": 240, "z": 300 }, "materials": ["PLA", "ABS", "Nylon PA12", "Polycarbonate"], "idleThisMonth": true, "idleHoursPerWeek": 30 }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 500,
+    "typicalLeadDays": 4,
+    "specialties": ["Short-run consumer parts", "Film props", "Enclosures"],
+    "isDemoData": true
+  },
+  {
+    "id": "bitterroot-sheetworks",
+    "name": "Bitterroot Sheetworks",
+    "neighborhood": "Gardena",
+    "description": "Sheet-metal fab doing brackets, chassis, and electronics enclosures for aerospace suppliers in the South Bay.",
+    "machines": [
+      { "type": "sheet_metal", "model": "Trumpf TruBend 5130", "envelopeMm": { "x": 3230, "y": 1200, "z": 380 }, "materials": ["Mild steel (CRS)", "Stainless 304", "Aluminum 5052", "Galvanized steel"], "idleThisMonth": false },
+      { "type": "laser_cutting", "model": "Trumpf TruLaser 1030 fiber", "envelopeMm": { "x": 3000, "y": 1500, "z": 20 }, "materials": ["Mild steel (CRS)", "Stainless 304", "Aluminum 5052", "Brass 360"], "idleThisMonth": true, "idleHoursPerWeek": 18 },
+      { "type": "sheet_metal", "model": "Amada EG-6013", "envelopeMm": { "x": 600, "y": 500, "z": 150 }, "materials": ["Mild steel (CRS)", "Stainless 304", "Aluminum 5052"], "idleThisMonth": true, "idleHoursPerWeek": 12 }
+    ],
+    "minOrderQty": 25,
+    "maxOrderQty": 10000,
+    "typicalLeadDays": 15,
+    "specialties": ["Brackets", "Electronics enclosures", "Small precision bends"],
+    "isDemoData": true
+  },
+  {
+    "id": "marrow-plastics",
+    "name": "Marrow Plastics",
+    "neighborhood": "Van Nuys",
+    "description": "Small injection molder with an in-house mold room. Comfortable with first-time inventors and single-cavity aluminum tools.",
+    "machines": [
+      { "type": "injection_molding", "model": "Arburg Allrounder 370", "envelopeMm": { "x": 250, "y": 200, "z": 120 }, "materials": ["ABS", "Polypropylene", "Polycarbonate", "Nylon PA66", "TPE"], "idleThisMonth": true, "idleHoursPerWeek": 40 },
+      { "type": "injection_molding", "model": "Engel e-mac 100", "envelopeMm": { "x": 300, "y": 250, "z": 150 }, "materials": ["ABS", "Polypropylene", "HDPE", "Polycarbonate"], "idleThisMonth": false },
+      { "type": "cnc_milling", "model": "Haas VF-2 (mold room)", "envelopeMm": { "x": 762, "y": 406, "z": 508 }, "materials": ["Aluminum 7075", "P20 tool steel"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 500,
+    "maxOrderQty": 100000,
+    "typicalLeadDays": 35,
+    "specialties": ["Aluminum bridge tooling", "Consumer housings", "First-time inventors"],
+    "isDemoData": true
+  },
+  {
+    "id": "foundry-row-makerspace",
+    "name": "Foundry Row Makerspace",
+    "neighborhood": "Downtown Arts District",
+    "description": "Member makerspace that also takes small paid jobs. Great for first prototypes and learning what a part really needs.",
+    "machines": [
+      { "type": "fdm_print", "model": "Prusa MK4", "envelopeMm": { "x": 250, "y": 210, "z": 220 }, "materials": ["PLA", "PETG", "TPU"], "idleThisMonth": true, "idleHoursPerWeek": 25 },
+      { "type": "sla_print", "model": "Formlabs Form 4", "envelopeMm": { "x": 200, "y": 125, "z": 210 }, "materials": ["Standard resin", "Tough resin", "Clear resin"], "idleThisMonth": false },
+      { "type": "laser_cutting", "model": "Epilog Fusion Pro 48", "envelopeMm": { "x": 1219, "y": 914, "z": 12 }, "materials": ["Acrylic", "Plywood", "MDF", "Hardwood", "Leather"], "idleThisMonth": true, "idleHoursPerWeek": 10 },
+      { "type": "cnc_milling", "model": "ShopBot PRSalpha 96x48 router", "envelopeMm": { "x": 2464, "y": 1245, "z": 203 }, "materials": ["Plywood", "MDF", "Hardwood", "HDPE"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 50,
+    "typicalLeadDays": 7,
+    "specialties": ["First prototypes", "Laser-cut panels", "Furniture-scale routing"],
+    "isDemoData": true
+  },
+  {
+    "id": "kettle-and-fret",
+    "name": "Kettle & Fret Woodshop",
+    "neighborhood": "Frogtown (Elysian Valley)",
+    "description": "Luthier-run wood shop building guitar necks, bridges, and pedalboards for boutique builders.",
+    "machines": [
+      { "type": "cnc_milling", "model": "Laguna SmartShop II router", "envelopeMm": { "x": 2438, "y": 1219, "z": 152 }, "materials": ["Hardwood", "Maple", "Rosewood", "Ebony", "Plywood"], "idleThisMonth": true, "idleHoursPerWeek": 15 },
+      { "type": "laser_cutting", "model": "Epilog Fusion Edge 36", "envelopeMm": { "x": 914, "y": 610, "z": 10 }, "materials": ["Hardwood", "Plywood", "Acrylic", "Mother-of-pearl veneer"], "idleThisMonth": false },
+      { "type": "sla_print", "model": "Formlabs Form 4", "envelopeMm": { "x": 200, "y": 125, "z": 210 }, "materials": ["Tough resin", "Castable resin"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 300,
+    "typicalLeadDays": 14,
+    "specialties": ["Guitar bridges and necks", "Inlay", "Pedalboards"],
+    "isDemoData": true
+  },
+  {
+    "id": "sidereal-aerospace",
+    "name": "Sidereal Aerospace Machining",
+    "neighborhood": "Chatsworth",
+    "description": "AS9100-style shop doing tight-tolerance 5-axis work. Busy mills, but the turning cell has open time this month.",
+    "machines": [
+      { "type": "cnc_milling", "model": "DMG Mori DMU 50 (5-axis)", "envelopeMm": { "x": 650, "y": 520, "z": 475 }, "materials": ["Aluminum 7075", "Titanium Ti-6Al-4V", "Stainless 316", "PEEK"], "idleThisMonth": false },
+      { "type": "cnc_milling", "model": "Haas VF-4", "envelopeMm": { "x": 1270, "y": 508, "z": 635 }, "materials": ["Aluminum 6061", "Aluminum 7075", "Stainless 304"], "idleThisMonth": false },
+      { "type": "cnc_turning", "model": "Haas ST-20", "envelopeMm": { "x": 381, "y": 381, "z": 533 }, "materials": ["Aluminum 6061", "Stainless 316", "Titanium Ti-6Al-4V", "Brass 360"], "idleThisMonth": true, "idleHoursPerWeek": 16 }
+    ],
+    "minOrderQty": 10,
+    "maxOrderQty": 5000,
+    "typicalLeadDays": 21,
+    "specialties": ["5-axis", "Tight tolerances", "Titanium"],
+    "isDemoData": true
+  },
+  {
+    "id": "parallax-additive",
+    "name": "Parallax Additive",
+    "neighborhood": "El Segundo",
+    "description": "Powder-bed and resin print bureau. Nylon SLS parts that go straight into end-use products without tooling.",
+    "machines": [
+      { "type": "sls_print", "model": "Formlabs Fuse 1+ 30W", "envelopeMm": { "x": 165, "y": 165, "z": 300 }, "materials": ["Nylon PA12", "Nylon PA11", "TPU 90A"], "idleThisMonth": true, "idleHoursPerWeek": 50 },
+      { "type": "sls_print", "model": "EOS Formiga P110", "envelopeMm": { "x": 200, "y": 250, "z": 330 }, "materials": ["Nylon PA12", "Glass-filled PA12"], "idleThisMonth": false },
+      { "type": "sla_print", "model": "Formlabs Form 4L", "envelopeMm": { "x": 353, "y": 196, "z": 350 }, "materials": ["Standard resin", "Tough resin", "Clear resin", "Rigid 10K"], "idleThisMonth": true, "idleHoursPerWeek": 20 }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 2000,
+    "typicalLeadDays": 6,
+    "specialties": ["End-use nylon", "Snap-fits", "No-tooling production"],
+    "isDemoData": true
+  },
+  {
+    "id": "driftwood-castings",
+    "name": "Driftwood Castings",
+    "neighborhood": "Torrance",
+    "description": "Urethane casting house bridging the gap between prototypes and injection molding. Silicone molds from SLA masters.",
+    "machines": [
+      { "type": "urethane_casting", "model": "MCP 4/04 vacuum casting", "envelopeMm": { "x": 600, "y": 500, "z": 450 }, "materials": ["Urethane (ABS-like)", "Urethane (PP-like)", "Urethane (clear)", "Urethane elastomer 60A"], "idleThisMonth": true, "idleHoursPerWeek": 20 },
+      { "type": "sla_print", "model": "Formlabs Form 4L (masters)", "envelopeMm": { "x": 353, "y": 196, "z": 350 }, "materials": ["Standard resin", "Rigid 10K"], "idleThisMonth": false },
+      { "type": "cnc_milling", "model": "Haas Mini Mill", "envelopeMm": { "x": 406, "y": 305, "z": 254 }, "materials": ["Aluminum 6061", "Tooling board"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 10,
+    "maxOrderQty": 300,
+    "typicalLeadDays": 10,
+    "specialties": ["Bridge production", "Overmolded grips", "Color-matched parts"],
+    "isDemoData": true
+  },
+  {
+    "id": "oxbow-metalcraft",
+    "name": "Oxbow Metalcraft",
+    "neighborhood": "Commerce",
+    "description": "Mid-size fab doing racks, kiosks, and chassis. Big lasers run two shifts; a second press brake has spare hours.",
+    "machines": [
+      { "type": "sheet_metal", "model": "Amada HG 1303", "envelopeMm": { "x": 3100, "y": 1000, "z": 370 }, "materials": ["Mild steel (CRS)", "Stainless 304", "Aluminum 5052", "Galvanized steel"], "idleThisMonth": false },
+      { "type": "laser_cutting", "model": "Bystronic ByStar Fiber 3015", "envelopeMm": { "x": 3000, "y": 1500, "z": 25 }, "materials": ["Mild steel (CRS)", "Stainless 304", "Aluminum 5052"], "idleThisMonth": false },
+      { "type": "sheet_metal", "model": "Trumpf TruBend 3100", "envelopeMm": { "x": 3060, "y": 1000, "z": 320 }, "materials": ["Mild steel (CRS)", "Aluminum 5052", "Galvanized steel"], "idleThisMonth": true, "idleHoursPerWeek": 14 }
+    ],
+    "minOrderQty": 50,
+    "maxOrderQty": 20000,
+    "typicalLeadDays": 18,
+    "specialties": ["Retail fixtures", "Chassis", "Powder-coat partners"],
+    "isDemoData": true
+  },
+  {
+    "id": "quillfeather-prototypes",
+    "name": "Quillfeather Prototypes",
+    "neighborhood": "Glendale",
+    "description": "Product-development studio for hardware startups. Resin, FDM, a desktop mill, and small-batch casting under one roof.",
+    "machines": [
+      { "type": "sla_print", "model": "Formlabs Form 4", "envelopeMm": { "x": 200, "y": 125, "z": 210 }, "materials": ["Standard resin", "Tough resin", "Clear resin", "Flexible 80A"], "idleThisMonth": true, "idleHoursPerWeek": 30 },
+      { "type": "fdm_print", "model": "Bambu Lab X1C", "envelopeMm": { "x": 256, "y": 256, "z": 256 }, "materials": ["PLA", "PETG", "ABS", "TPU"], "idleThisMonth": false },
+      { "type": "cnc_milling", "model": "Tormach 1100MX", "envelopeMm": { "x": 457, "y": 279, "z": 413 }, "materials": ["Aluminum 6061", "Delrin (POM)", "Brass 360"], "idleThisMonth": true, "idleHoursPerWeek": 12 },
+      { "type": "urethane_casting", "model": "Renishaw 5/01 vacuum casting", "envelopeMm": { "x": 500, "y": 400, "z": 400 }, "materials": ["Urethane (ABS-like)", "Urethane elastomer 60A"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 200,
+    "typicalLeadDays": 5,
+    "specialties": ["Looks-like prototypes", "Works-like prototypes", "Startup-friendly"],
+    "isDemoData": true
+  },
+  {
+    "id": "arroyo-seco-turning",
+    "name": "Arroyo Seco Turning",
+    "neighborhood": "Pasadena",
+    "description": "Turning specialist with Swiss-type capacity. Knobs, shafts, fittings, and anything round in brass or stainless.",
+    "machines": [
+      { "type": "cnc_turning", "model": "Haas ST-10", "envelopeMm": { "x": 356, "y": 356, "z": 406 }, "materials": ["Aluminum 6061", "Brass 360", "Stainless 303", "Delrin (POM)"], "idleThisMonth": true, "idleHoursPerWeek": 20 },
+      { "type": "cnc_turning", "model": "Haas ST-20Y (live tooling)", "envelopeMm": { "x": 381, "y": 381, "z": 533 }, "materials": ["Aluminum 6061", "Stainless 303", "Steel 1018"], "idleThisMonth": false },
+      { "type": "cnc_turning", "model": "Citizen L20 Swiss", "envelopeMm": { "x": 20, "y": 20, "z": 320 }, "materials": ["Brass 360", "Stainless 303", "Aluminum 6061"], "idleThisMonth": true, "idleHoursPerWeek": 30 }
+    ],
+    "minOrderQty": 50,
+    "maxOrderQty": 50000,
+    "typicalLeadDays": 14,
+    "specialties": ["Knobs and shafts", "Swiss turning", "Brass hardware"],
+    "isDemoData": true
+  },
+  {
+    "id": "tumbleweed-molding",
+    "name": "Tumbleweed Molding",
+    "neighborhood": "Sun Valley",
+    "description": "Production injection molder for housewares and toys. Built for volume; one press is between programs.",
+    "machines": [
+      { "type": "injection_molding", "model": "Arburg Allrounder 470", "envelopeMm": { "x": 350, "y": 300, "z": 150 }, "materials": ["Polypropylene", "ABS", "HDPE", "HIPS"], "idleThisMonth": false },
+      { "type": "injection_molding", "model": "Sumitomo SE75EV", "envelopeMm": { "x": 280, "y": 220, "z": 120 }, "materials": ["Polypropylene", "ABS", "Polycarbonate", "TPE"], "idleThisMonth": true, "idleHoursPerWeek": 35 },
+      { "type": "cnc_milling", "model": "Haas VF-2 (tool room)", "envelopeMm": { "x": 762, "y": 406, "z": 508 }, "materials": ["P20 tool steel", "Aluminum 7075"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 1000,
+    "maxOrderQty": 250000,
+    "typicalLeadDays": 42,
+    "specialties": ["High-volume housewares", "Multi-cavity tools", "Toys"],
+    "isDemoData": true
+  },
+  {
+    "id": "overcast-design-lab",
+    "name": "Overcast Design Lab",
+    "neighborhood": "Culver City",
+    "description": "Industrial-design studio with a print lab. Presentation-grade models for pitches and investor demos.",
+    "machines": [
+      { "type": "sla_print", "model": "Formlabs Form 4", "envelopeMm": { "x": 200, "y": 125, "z": 210 }, "materials": ["Standard resin", "Clear resin", "Tough resin"], "idleThisMonth": false },
+      { "type": "sla_print", "model": "Formlabs Form 4L", "envelopeMm": { "x": 353, "y": 196, "z": 350 }, "materials": ["Standard resin", "Rigid 10K"], "idleThisMonth": false },
+      { "type": "fdm_print", "model": "Prusa XL", "envelopeMm": { "x": 360, "y": 360, "z": 360 }, "materials": ["PLA", "PETG", "ABS"], "idleThisMonth": true, "idleHoursPerWeek": 20 },
+      { "type": "laser_cutting", "model": "Glowforge Pro", "envelopeMm": { "x": 495, "y": 279, "z": 13 }, "materials": ["Acrylic", "Plywood", "Cardboard"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 100,
+    "typicalLeadDays": 5,
+    "specialties": ["Presentation models", "Paint and finish", "Pitch props"],
+    "isDemoData": true
+  },
+  {
+    "id": "longshore-fabrication",
+    "name": "Longshore Fabrication",
+    "neighborhood": "Carson",
+    "description": "Heavy-gauge plate and sheet near the port. Big-format laser has open hours after a contract ended.",
+    "machines": [
+      { "type": "laser_cutting", "model": "Trumpf TruLaser 3030 fiber", "envelopeMm": { "x": 3000, "y": 1500, "z": 25 }, "materials": ["Mild steel (CRS)", "Stainless 316", "Aluminum 5052", "Galvanized steel"], "idleThisMonth": true, "idleHoursPerWeek": 24 },
+      { "type": "sheet_metal", "model": "Trumpf TruBend 5230", "envelopeMm": { "x": 4250, "y": 1200, "z": 400 }, "materials": ["Mild steel (CRS)", "Stainless 316", "Galvanized steel"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 10,
+    "maxOrderQty": 5000,
+    "typicalLeadDays": 20,
+    "specialties": ["Heavy gauge", "Marine stainless", "Large panels"],
+    "isDemoData": true
+  },
+  {
+    "id": "ironbark-cnc",
+    "name": "Ironbark CNC",
+    "neighborhood": "City of Industry",
+    "description": "Production machining for industrial and medical-device customers. 5-axis trunnion has spare capacity.",
+    "machines": [
+      { "type": "cnc_milling", "model": "Haas VF-2SS", "envelopeMm": { "x": 762, "y": 406, "z": 508 }, "materials": ["Aluminum 6061", "Stainless 304", "Delrin (POM)"], "idleThisMonth": false },
+      { "type": "cnc_milling", "model": "Haas UMC-750 (5-axis)", "envelopeMm": { "x": 762, "y": 508, "z": 508 }, "materials": ["Aluminum 6061", "Aluminum 7075", "Stainless 316", "PEEK"], "idleThisMonth": true, "idleHoursPerWeek": 18 },
+      { "type": "cnc_turning", "model": "Okuma LB3000", "envelopeMm": { "x": 410, "y": 410, "z": 500 }, "materials": ["Steel 1018", "Stainless 304", "Aluminum 6061"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 25,
+    "maxOrderQty": 20000,
+    "typicalLeadDays": 16,
+    "specialties": ["Medical devices", "5-axis", "Production runs"],
+    "isDemoData": true
+  },
+  {
+    "id": "cinderblock-polymer",
+    "name": "Cinderblock Polymer",
+    "neighborhood": "Santa Fe Springs",
+    "description": "Molder that also casts urethane for pilot runs, so a part can move from 50 to 50,000 units with one vendor.",
+    "machines": [
+      { "type": "injection_molding", "model": "Arburg Allrounder 370", "envelopeMm": { "x": 250, "y": 200, "z": 120 }, "materials": ["ABS", "Polycarbonate", "Nylon PA66"], "idleThisMonth": false },
+      { "type": "injection_molding", "model": "Engel e-mac 180", "envelopeMm": { "x": 400, "y": 350, "z": 180 }, "materials": ["Polypropylene", "ABS", "PC/ABS", "TPE"], "idleThisMonth": true, "idleHoursPerWeek": 30 },
+      { "type": "urethane_casting", "model": "MCP 5/01 vacuum casting", "envelopeMm": { "x": 500, "y": 400, "z": 400 }, "materials": ["Urethane (ABS-like)", "Urethane (PP-like)"], "idleThisMonth": true, "idleHoursPerWeek": 12 }
+    ],
+    "minOrderQty": 200,
+    "maxOrderQty": 150000,
+    "typicalLeadDays": 30,
+    "specialties": ["Pilot-to-production", "PC/ABS housings", "Overmolding"],
+    "isDemoData": true
+  },
+  {
+    "id": "lantern-props-fx",
+    "name": "Lantern Props & FX",
+    "neighborhood": "North Hollywood",
+    "description": "Film and TV prop shop. Fast resin prints, soft casts, and painted hero pieces; slow season right now.",
+    "machines": [
+      { "type": "sla_print", "model": "Formlabs Form 4L", "envelopeMm": { "x": 353, "y": 196, "z": 350 }, "materials": ["Standard resin", "Tough resin", "Clear resin"], "idleThisMonth": true, "idleHoursPerWeek": 25 },
+      { "type": "urethane_casting", "model": "Pressure-pot casting station", "envelopeMm": { "x": 350, "y": 350, "z": 350 }, "materials": ["Urethane (ABS-like)", "Urethane elastomer 60A", "Silicone"], "idleThisMonth": false },
+      { "type": "fdm_print", "model": "Bambu Lab X1C (bank of 8)", "envelopeMm": { "x": 256, "y": 256, "z": 256 }, "materials": ["PLA", "PETG", "TPU"], "idleThisMonth": true, "idleHoursPerWeek": 40 },
+      { "type": "cnc_milling", "model": "ShopBot PRSalpha 96x48 router", "envelopeMm": { "x": 2464, "y": 1245, "z": 203 }, "materials": ["MDF", "Foam", "Plywood", "Hardwood"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 250,
+    "typicalLeadDays": 8,
+    "specialties": ["Hero props", "Paint and finish", "Soft goods casting"],
+    "isDemoData": true
+  },
+  {
+    "id": "redtail-laser-form",
+    "name": "Redtail Laser & Form",
+    "neighborhood": "Compton",
+    "description": "Laser-and-brake shop for signage, brackets, and light enclosures. Lasers are booked; the brake is not.",
+    "machines": [
+      { "type": "laser_cutting", "model": "Bystronic ByStar Fiber 3015", "envelopeMm": { "x": 3000, "y": 1500, "z": 25 }, "materials": ["Mild steel (CRS)", "Stainless 304", "Aluminum 5052"], "idleThisMonth": false },
+      { "type": "sheet_metal", "model": "Amada HG 1303", "envelopeMm": { "x": 3100, "y": 1000, "z": 370 }, "materials": ["Mild steel (CRS)", "Aluminum 5052", "Stainless 304"], "idleThisMonth": true, "idleHoursPerWeek": 10 },
+      { "type": "laser_cutting", "model": "Trumpf TruLaser 1030 fiber", "envelopeMm": { "x": 3000, "y": 1500, "z": 20 }, "materials": ["Mild steel (CRS)", "Stainless 304", "Brass 360"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 25,
+    "maxOrderQty": 15000,
+    "typicalLeadDays": 12,
+    "specialties": ["Signage", "Brackets", "Quick-turn flat parts"],
+    "isDemoData": true
+  },
+  {
+    "id": "stackhouse-3d",
+    "name": "Stackhouse 3D",
+    "neighborhood": "Inglewood",
+    "description": "Print bureau with an overnight FDM bank and a small SLS cell. Cheapest per-part cost under a few hundred units.",
+    "machines": [
+      { "type": "fdm_print", "model": "Prusa MK4 (bank of 12)", "envelopeMm": { "x": 250, "y": 210, "z": 220 }, "materials": ["PLA", "PETG", "ASA"], "idleThisMonth": false },
+      { "type": "fdm_print", "model": "Bambu Lab X1C (bank of 16)", "envelopeMm": { "x": 256, "y": 256, "z": 256 }, "materials": ["PLA", "PETG", "ABS", "ASA", "Nylon PA12", "Carbon-fiber nylon"], "idleThisMonth": true, "idleHoursPerWeek": 70 },
+      { "type": "fdm_print", "model": "Prusa XL", "envelopeMm": { "x": 360, "y": 360, "z": 360 }, "materials": ["PLA", "PETG"], "idleThisMonth": false },
+      { "type": "sls_print", "model": "Formlabs Fuse 1+ 30W", "envelopeMm": { "x": 165, "y": 165, "z": 300 }, "materials": ["Nylon PA12", "Nylon PA11"], "idleThisMonth": true, "idleHoursPerWeek": 20 }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 1000,
+    "typicalLeadDays": 3,
+    "specialties": ["Overnight turnaround", "Low per-part cost", "Carbon-fiber nylon"],
+    "isDemoData": true
+  },
+  {
+    "id": "breakwater-machine",
+    "name": "Breakwater Machine",
+    "neighborhood": "Long Beach",
+    "description": "Marine and oil-field machine shop. Big lathes stay busy; the large vertical mill has gaps this month.",
+    "machines": [
+      { "type": "cnc_milling", "model": "Haas VF-4", "envelopeMm": { "x": 1270, "y": 508, "z": 635 }, "materials": ["Aluminum 6061", "Stainless 316", "Bronze", "Steel 1018"], "idleThisMonth": true, "idleHoursPerWeek": 10 },
+      { "type": "cnc_turning", "model": "Haas ST-20", "envelopeMm": { "x": 381, "y": 381, "z": 533 }, "materials": ["Stainless 316", "Bronze", "Steel 1018"], "idleThisMonth": false },
+      { "type": "cnc_turning", "model": "Mazak QTN 200", "envelopeMm": { "x": 380, "y": 380, "z": 500 }, "materials": ["Stainless 316", "Steel 4140", "Aluminum 6061"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 5,
+    "maxOrderQty": 3000,
+    "typicalLeadDays": 18,
+    "specialties": ["Marine hardware", "Corrosion-resistant alloys", "Large parts"],
+    "isDemoData": true
+  },
+  {
+    "id": "nightjar-garage-works",
+    "name": "Nightjar Garage Works",
+    "neighborhood": "Pacoima",
+    "description": "Two-person job shop that loves weird one-offs. Hobby-scale machines, pro-level care, evening hours available.",
+    "machines": [
+      { "type": "cnc_milling", "model": "Tormach 1100MX", "envelopeMm": { "x": 457, "y": 279, "z": 413 }, "materials": ["Aluminum 6061", "Brass 360", "Delrin (POM)", "Steel 1018"], "idleThisMonth": false },
+      { "type": "cnc_turning", "model": "Tormach 15L Slant-PRO", "envelopeMm": { "x": 250, "y": 250, "z": 500 }, "materials": ["Aluminum 6061", "Brass 360", "Delrin (POM)"], "idleThisMonth": true, "idleHoursPerWeek": 20 },
+      { "type": "laser_cutting", "model": "Glowforge Pro", "envelopeMm": { "x": 495, "y": 279, "z": 13 }, "materials": ["Acrylic", "Plywood", "Leather"], "idleThisMonth": true, "idleHoursPerWeek": 15 }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 200,
+    "typicalLeadDays": 9,
+    "specialties": ["One-offs", "Automotive restoration parts", "Evening turnaround"],
+    "isDemoData": true
+  },
+  {
+    "id": "canyon-crest-medical",
+    "name": "Canyon Crest Medical Components",
+    "neighborhood": "Sylmar",
+    "description": "Clean-room adjacent shop for medical and lab devices. Mostly booked on long contracts; a resin printer is free.",
+    "machines": [
+      { "type": "cnc_turning", "model": "Citizen L20 Swiss", "envelopeMm": { "x": 20, "y": 20, "z": 320 }, "materials": ["Stainless 316L", "Titanium Ti-6Al-4V", "PEEK"], "idleThisMonth": false },
+      { "type": "cnc_milling", "model": "DMG Mori DMU 50 (5-axis)", "envelopeMm": { "x": 650, "y": 520, "z": 475 }, "materials": ["Stainless 316L", "Titanium Ti-6Al-4V", "PEEK", "Aluminum 6061"], "idleThisMonth": false },
+      { "type": "sls_print", "model": "EOS Formiga P110", "envelopeMm": { "x": 200, "y": 250, "z": 330 }, "materials": ["Nylon PA12"], "idleThisMonth": false },
+      { "type": "sla_print", "model": "Formlabs Form 4", "envelopeMm": { "x": 200, "y": 125, "z": 210 }, "materials": ["BioMed resin", "Clear resin", "Tough resin"], "idleThisMonth": true, "idleHoursPerWeek": 10 }
+    ],
+    "minOrderQty": 100,
+    "maxOrderQty": 50000,
+    "typicalLeadDays": 28,
+    "specialties": ["Medical devices", "Biocompatible materials", "Documentation"],
+    "isDemoData": true
+  },
+  {
+    "id": "marigold-fab-collective",
+    "name": "Marigold Fabrication Collective",
+    "neighborhood": "Boyle Heights",
+    "description": "Worker-owned fab collective doing furniture, lighting, and art pieces. Laser has plenty of open time.",
+    "machines": [
+      { "type": "laser_cutting", "model": "Epilog Fusion Pro 48", "envelopeMm": { "x": 1219, "y": 914, "z": 12 }, "materials": ["Acrylic", "Plywood", "Hardwood", "MDF", "Leather"], "idleThisMonth": true, "idleHoursPerWeek": 20 },
+      { "type": "sheet_metal", "model": "Amada EG-6013", "envelopeMm": { "x": 600, "y": 500, "z": 150 }, "materials": ["Mild steel (CRS)", "Aluminum 5052", "Brass sheet"], "idleThisMonth": false },
+      { "type": "fdm_print", "model": "Bambu Lab X1C", "envelopeMm": { "x": 256, "y": 256, "z": 256 }, "materials": ["PLA", "PETG"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 1,
+    "maxOrderQty": 500,
+    "typicalLeadDays": 10,
+    "specialties": ["Lighting", "Furniture", "Art fabrication"],
+    "isDemoData": true
+  },
+  {
+    "id": "tailwind-rapid-tooling",
+    "name": "Tailwind Rapid Tooling",
+    "neighborhood": "Hawthorne",
+    "description": "Rapid aluminum tooling and short-run molding. Cuts a mold in days, then shoots the first few thousand parts.",
+    "machines": [
+      { "type": "injection_molding", "model": "Arburg Allrounder 270", "envelopeMm": { "x": 150, "y": 150, "z": 80 }, "materials": ["ABS", "Polypropylene", "Polycarbonate", "Nylon PA66", "TPE"], "idleThisMonth": true, "idleHoursPerWeek": 25 },
+      { "type": "cnc_milling", "model": "Haas VF-2", "envelopeMm": { "x": 762, "y": 406, "z": 508 }, "materials": ["Aluminum 7075", "Aluminum 6061", "Delrin (POM)"], "idleThisMonth": true, "idleHoursPerWeek": 15 },
+      { "type": "cnc_milling", "model": "Haas Mini Mill", "envelopeMm": { "x": 406, "y": 305, "z": 254 }, "materials": ["Aluminum 6061", "Delrin (POM)"], "idleThisMonth": false },
+      { "type": "sla_print", "model": "Formlabs Form 4L", "envelopeMm": { "x": 353, "y": 196, "z": 350 }, "materials": ["Rigid 10K", "Tough resin"], "idleThisMonth": false }
+    ],
+    "minOrderQty": 100,
+    "maxOrderQty": 25000,
+    "typicalLeadDays": 21,
+    "specialties": ["Rapid aluminum tooling", "Short-run molding", "Design-for-molding reviews"],
+    "isDemoData": true
+  }
+]
