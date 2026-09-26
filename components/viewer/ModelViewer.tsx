@@ -3,9 +3,11 @@
 import { Bounds, Center, ContactShadows, OrbitControls } from "@react-three/drei";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { Box3, PerspectiveCamera, Sphere, Spherical, Vector3 } from "three";
+import { Box3, BufferAttribute, Color, PerspectiveCamera, Sphere, Spherical, Vector3, type BufferGeometry } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import { MIN_WALL_MM } from "@/lib/geometryLimits";
+import { outwardSign, sampleWallThickness } from "@/lib/wallThickness";
 import { RENDER_ANGLES, STUDIO_BACKDROP } from "./renderAngles";
 
 export type ModelViewerProps = {
@@ -15,13 +17,37 @@ export type ModelViewerProps = {
   captureAngles?: boolean;
   onRenders?: (renders: string[]) => void;
   onRenderError?: () => void;
+  /** Paint the surface red wherever the wall under it is thinner than MIN_WALL_MM. */
+  highlightThin?: boolean;
 };
 
-function Part({ url, onReady }: { url: string; onReady: () => void }) {
+const PART_COLOR = "#b9bec6";
+const THIN_COLOR = "#e0461b";
+
+/** A copy of the part with per-vertex colors marking thin-walled triangles. */
+function withThinWallColors(geometry: BufferGeometry): BufferGeometry {
+  const p = geometry.getAttribute("position").array as Float32Array;
+  const base = new Color(PART_COLOR);
+  const thin = new Color(THIN_COLOR);
+  const colors = new Float32Array(p.length);
+  for (let i = 0; i < colors.length; i += 3) colors.set([base.r, base.g, base.b], i);
+  for (const s of sampleWallThickness(p, outwardSign(p))) {
+    if (s.thickness >= MIN_WALL_MM) continue;
+    for (let v = 0; v < 3; v++) colors.set([thin.r, thin.g, thin.b], s.triangle * 9 + v * 3);
+  }
+  const copy = geometry.clone();
+  copy.setAttribute("color", new BufferAttribute(colors, 3));
+  return copy;
+}
+
+function Part({ url, onReady, highlightThin }: { url: string; onReady: () => void; highlightThin: boolean }) {
   const geometry = useLoader(STLLoader, url);
   useEffect(() => {
     onReady();
   }, [onReady]);
+
+  const colored = useMemo(() => (highlightThin ? withThinWallColors(geometry) : null), [geometry, highlightThin]);
+  useEffect(() => () => colored?.dispose(), [colored]);
 
   const size = useMemo(() => {
     // Some exporters write zero normals; recompute so shading is always right.
@@ -36,8 +62,15 @@ function Part({ url, onReady }: { url: string; onReady: () => void }) {
       <Bounds fit clip observe margin={1.4}>
         <Center top>
           {/* STL is Z-up; three.js is Y-up. */}
-          <mesh name={PART_NAME} geometry={geometry} rotation={[-Math.PI / 2, 0, 0]}>
-            <meshStandardMaterial color="#b9bec6" metalness={0.25} roughness={0.42} />
+          <mesh name={PART_NAME} geometry={colored ?? geometry} rotation={[-Math.PI / 2, 0, 0]}>
+            {/* key forces a new material when switching vertex colors on/off. */}
+            <meshStandardMaterial
+              key={colored ? "thin" : "plain"}
+              color={colored ? "#ffffff" : PART_COLOR}
+              vertexColors={Boolean(colored)}
+              metalness={0.25}
+              roughness={0.42}
+            />
           </mesh>
         </Center>
       </Bounds>
@@ -146,10 +179,12 @@ function Scene({
   captureAngles,
   onRenders,
   onRenderError,
+  highlightThin,
 }: {
   url: string;
   autoRotate: boolean;
   captureAngles: boolean;
+  highlightThin: boolean;
   onRenders?: (renders: string[]) => void;
   onRenderError?: () => void;
 }) {
@@ -171,7 +206,7 @@ function Scene({
         <directionalLight position={[-300, 200, -250]} intensity={0.8} />
         {/* r3f runs its own reconciler, so Suspense must sit inside the Canvas. */}
         <Suspense fallback={null}>
-          <Part url={url} onReady={markReady} />
+          <Part url={url} onReady={markReady} highlightThin={highlightThin} />
         </Suspense>
         <OrbitControls makeDefault autoRotate={autoRotate} autoRotateSpeed={1.4} />
         {captureAngles && onRenders && (
@@ -194,6 +229,7 @@ export default function ModelViewer({
   captureAngles = false,
   onRenders,
   onRenderError,
+  highlightThin = false,
 }: ModelViewerProps) {
   return (
     <div
@@ -206,6 +242,7 @@ export default function ModelViewer({
           captureAngles={captureAngles}
           onRenders={onRenders}
           onRenderError={onRenderError}
+          highlightThin={highlightThin}
         />
       </ViewerErrorBoundary>
     </div>

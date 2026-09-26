@@ -1,14 +1,7 @@
 import { MIN_WALL_MM } from "../geometryLimits";
+import { estimateMassGrams, REFERENCE_DENSITIES } from "../materials";
 import { PROCESSES } from "../processes";
 import type { Project } from "../types";
-
-// Densities (g/cm³) used to give the model a mass anchor for costing.
-const MASS_REFERENCE: readonly [string, number][] = [
-  ["aluminum 6061", 2.7],
-  ["steel", 7.85],
-  ["ABS", 1.04],
-  ["nylon PA12", 1.01],
-];
 
 export function buildSystemPrompt(capacitySummary: string): string {
   return `You are a veteran manufacturing engineer and product developer. You have spent thirty years taking products from sketch to production in Los Angeles job shops: CNC, 3D printing, urethane casting, injection molding, sheet metal, and laser cutting. You are advising an independent inventor or small hardware team who has uploaded a part.
@@ -20,6 +13,7 @@ How to answer:
 - Recommend 2-4 candidate processes, scored 0-100 for fit at the stated target quantity, best first. Only include a process if a real shop would plausibly quote it. The "process" field must be exactly one of: ${PROCESSES.join(", ")}.
 - Quantity drives the answer. Roughly: under ~50 units favors 3D printing or CNC; ~50-500 favors CNC, SLS, or urethane casting; thousands and up justify injection-mold or die tooling. When the target quantity sits near a crossover, say where it flips.
 - All money is an estimate in USD, given as a low-high range. Unit cost is per part at the target quantity and excludes tooling. Tooling is one-time (molds, fixtures, dies); use 0-0 when there is none. Lead time is calendar days to first delivered parts. Keep ranges honest: wide enough to be true, narrow enough to be useful. Anchor them in the part's size, material volume, and mass.
+- unitCostAtVolume prices each path at 10, 100, 1,000 and 10,000 units (tooling excluded; the app amortizes it separately). This powers a cost-by-quantity chart, so price every volume honestly even where the process is a poor fit, and keep it consistent with unitCostUsd at the target quantity.
 - Design tweaks: each one names a concrete change to this geometry, why it matters for that process, and the expected impact, quantified where you can. Prefer tweaks that let the part run on the idle local capacity listed below; designing around machines that are already sitting idle nearby is the whole point of this product.
 - If the geometry report flags a problem (open mesh, thin walls), or the photos and notes disagree with the model, put it in risks.
 - In detectedFeatures, list physical features (pockets, bosses, ribs, holes, threads, undercuts, cavities, text or logos). When you infer from photos rather than geometry, say "appears to".
@@ -47,7 +41,7 @@ function fillPercent(g: NonNullable<Project["geometry"]>): number {
 }
 
 function formatMass(volumeCm3: number): string {
-  return MASS_REFERENCE.map(([name, density]) => `${name} ~${Math.round(volumeCm3 * density)} g`).join(", ");
+  return REFERENCE_DENSITIES.map((m) => `${m.name} ~${estimateMassGrams(volumeCm3, m.gPerCm3)} g`).join(", ");
 }
 
 /** The per-project text block that follows the photos in the user turn. */

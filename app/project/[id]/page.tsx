@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { RunAnalysisButton } from "@/components/analysis/RunAnalysisButton";
 import { GeometryPanel } from "@/components/GeometryPanel";
-import { ModelViewer } from "@/components/viewer";
+import { ProjectViewer } from "@/components/viewer/ProjectViewer";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { matchProject } from "@/lib/match";
 import { getProject } from "@/lib/projectStore";
@@ -44,9 +44,13 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
         <h1 className="text-3xl font-semibold tracking-tight">{project.name}</h1>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] [&>*]:min-w-0">
         {project.cadFileUrl ? (
-          <ModelViewer url={project.cadFileUrl} className="aspect-[4/3] w-full" />
+          <ProjectViewer
+            url={project.cadFileUrl}
+            hasThinWalls={Boolean(project.geometry?.thinWallWarning)}
+            className="aspect-[4/3] w-full"
+          />
         ) : (
           <div className="grid aspect-[4/3] place-items-center rounded-xl border border-line text-sm text-muted">
             No CAD file uploaded.
@@ -106,7 +110,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
           </div>
         </div>
         {project.analysis ? (
-          <AnalysisResults analysis={project.analysis} quantity={project.targetQuantity} />
+          <AnalysisResults analysis={project.analysis} quantity={project.targetQuantity} topMatch={shopMatches[0]} />
         ) : (
           <div className="flex flex-col gap-4 rounded-xl border border-dashed border-line p-6">
             <p className="max-w-2xl text-muted">

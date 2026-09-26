@@ -45,42 +45,49 @@ export function PathCard({ path, rank, quantity }: { path: ManufacturingPath; ra
   const isTop = rank === 1;
   return (
     <article
-      className={`flex flex-col gap-4 rounded-xl border bg-surface p-5 ${isTop ? "border-accent/60" : "border-line"}`}
+      id={`path-${path.process}`}
+      className={`scroll-mt-6 rounded-xl border bg-surface ${isTop ? "border-accent/60" : "border-line"}`}
     >
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          {isTop && <p className="text-xs font-medium uppercase tracking-wider text-accent">Best fit</p>}
-          <h3 className="text-lg font-semibold">{PROCESS_LABELS[path.process]}</h3>
-          <p className="text-sm text-muted">{path.materials.join(", ")}</p>
+      <details open={isTop} className="group">
+        <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
+          <div>
+            {isTop && <p className="text-xs font-medium uppercase tracking-wider text-accent">Best fit</p>}
+            <h3 className="text-lg font-semibold">{PROCESS_LABELS[path.process]}</h3>
+            <p className="text-sm text-muted">{path.materials.join(", ")}</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <FitBar score={path.fitScore} />
+            <span aria-hidden className="text-muted transition-transform group-open:rotate-180">▾</span>
+          </div>
+        </summary>
+        <div className="flex flex-col gap-4 px-5 pb-5">
+          <dl className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <Cost label={`Per unit @ ${quantity.toLocaleString("en-US")}, est.`} value={formatUnitCostRange(path.unitCostUsd)} />
+            <Cost label="Tooling, est." value={formatToolingRange(path.toolingCostUsd)} />
+            <Cost label="Lead time, est." value={formatDaysRange(path.leadTimeDays)} />
+          </dl>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <List title="Pros" items={path.pros} tone="good" />
+            <List title="Cons" items={path.cons} tone="bad" />
+          </div>
+
+          {path.designTweaks.length > 0 && (
+            <div>
+              <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted">Design tweaks</h4>
+              <ol className="flex flex-col gap-2">
+                {path.designTweaks.map((t, i) => (
+                  <li key={`${i}-${t.change}`} className="rounded-lg border border-line p-3 text-sm">
+                    <p className="font-medium">{t.change}</p>
+                    <p className="mt-1 text-muted">{t.why}</p>
+                    <p className="mt-1 text-idle">{t.impact}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
-        <FitBar score={path.fitScore} />
-      </header>
-
-      <dl className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <Cost label={`Per unit @ ${quantity.toLocaleString("en-US")}, est.`} value={formatUnitCostRange(path.unitCostUsd)} />
-        <Cost label="Tooling, est." value={formatToolingRange(path.toolingCostUsd)} />
-        <Cost label="Lead time, est." value={formatDaysRange(path.leadTimeDays)} />
-      </dl>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <List title="Pros" items={path.pros} tone="good" />
-        <List title="Cons" items={path.cons} tone="bad" />
-      </div>
-
-      {path.designTweaks.length > 0 && (
-        <div>
-          <h4 className="mb-2 text-xs font-medium uppercase tracking-wider text-muted">Design tweaks</h4>
-          <ol className="flex flex-col gap-2">
-            {path.designTweaks.map((t, i) => (
-              <li key={`${i}-${t.change}`} className="rounded-lg border border-line p-3 text-sm">
-                <p className="font-medium">{t.change}</p>
-                <p className="mt-1 text-muted">{t.why}</p>
-                <p className="mt-1 text-idle">{t.impact}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
+      </details>
     </article>
   );
 }

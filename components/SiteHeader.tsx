@@ -11,6 +11,9 @@ export function SiteHeader() {
           Idlefit
         </Link>
         <nav className="flex items-center gap-1 text-sm">
+          <Link href="/projects" className="rounded-md px-3 py-2 text-muted hover:text-ink">
+            Projects
+          </Link>
           <Link href="/shops" className="rounded-md px-3 py-2 text-muted hover:text-ink">
             Shops
           </Link>

@@ -1,5 +1,6 @@
 import { formatDimensions, formatNumber } from "@/lib/format";
 import { MIN_WALL_MM } from "@/lib/geometryLimits";
+import { estimateMassGrams, REFERENCE_DENSITIES } from "@/lib/materials";
 import type { GeometryStats } from "@/lib/types";
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -49,6 +50,18 @@ export function GeometryPanel({ geometry }: { geometry: GeometryStats }) {
         <Row label="Triangles" value={formatNumber(geometry.triangleCount, 0)} />
       </dl>
 
+      <div className="rounded-lg bg-bg p-3">
+        <p className="mb-2 text-xs text-muted">Estimated weight</p>
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+          {REFERENCE_DENSITIES.map((m) => (
+            <div key={m.name} className="flex justify-between gap-2">
+              <dt className="text-muted capitalize">{m.name}</dt>
+              <dd className="font-mono">{estimateMassGrams(geometry.volumeCm3, m.gPerCm3)} g</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+
       <ul className="flex flex-col gap-2">
         <Check
           ok={geometry.isWatertight}
@@ -64,7 +77,7 @@ export function GeometryPanel({ geometry }: { geometry: GeometryStats }) {
           title={geometry.thinWallWarning ? `Walls under ${MIN_WALL_MM} mm` : "Wall thickness OK"}
           detail={
             geometry.thinWallWarning
-              ? "A meaningful share of the part is thinner than most processes handle reliably."
+              ? "A meaningful share of the part is thinner than most processes handle reliably. Use “Show thin walls” on the model to see where."
               : `No significant areas thinner than ${MIN_WALL_MM} mm.`
           }
         />

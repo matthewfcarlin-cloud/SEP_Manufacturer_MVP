@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { IMAGE_CONTENT_TYPES, type ImageType, type ProjectFields } from "./projectInput";
 import { PROJECT_ID_PATTERN, projectSchema } from "./schemas";
@@ -125,4 +125,32 @@ export async function getProjectImages(project: Project): Promise<ProjectImage[]
       mediaType: f.contentType as ProjectImage["mediaType"],
       base64: Buffer.from(f.bytes).toString("base64"),
     }));
+}
+
+/**
+ * All stored projects, newest first. A project folder with a missing or
+ * corrupt project.json is skipped (and logged) so one bad folder can't take
+ * down the list.
+ */
+export async function listProjects(): Promise<Project[]> {
+  let ids: string[];
+  try {
+    ids = (await readdir(path.join(dataRoot(), "projects"))).filter(isValidProjectId);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+    throw err;
+  }
+  const results = await Promise.all(
+    ids.map(async (id) => {
+      try {
+        return await getProject(id);
+      } catch (err) {
+        console.error(`[projectStore] skipping unreadable project ${id}`, err);
+        return null;
+      }
+    }),
+  );
+  return results
+    .filter((p): p is Project => p !== null)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

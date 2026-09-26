@@ -83,6 +83,29 @@ describe("runAnalysis", () => {
     expect(result.paths.map((p) => p.fitScore)).toEqual([90, 80, 70, 55]);
   });
 
+  test("keeps a valid cost-by-volume curve, rounded to cents", async () => {
+    const curve = [10, 100, 1000, 10000].map((quantity, i) => ({ quantity, low: 40 / (i + 1) + 0.004, high: 60 / (i + 1) }));
+    const withCurve = sampleAnalysis({
+      paths: sampleAnalysis().paths.map((p) => ({ ...p, unitCostAtVolume: curve })),
+    });
+    const call = vi.fn<CallModel>().mockResolvedValue({ stopReason: "end_turn", output: withCurve });
+    const result = await runAnalysis(call, input);
+    expect(call).toHaveBeenCalledTimes(1);
+    expect(result.paths[0].unitCostAtVolume?.map((v) => v.quantity)).toEqual([10, 100, 1000, 10000]);
+    expect(result.paths[0].unitCostAtVolume?.[0].low).toBe(40);
+  });
+
+  test("retries when the curve is priced at the wrong volumes", async () => {
+    const badCurve = [5, 50, 500, 5000].map((quantity) => ({ quantity, low: 5, high: 8 }));
+    const bad = sampleAnalysis({ paths: sampleAnalysis().paths.map((p) => ({ ...p, unitCostAtVolume: badCurve })) });
+    const call = vi
+      .fn<CallModel>()
+      .mockResolvedValueOnce({ stopReason: "end_turn", output: bad })
+      .mockResolvedValueOnce({ stopReason: "end_turn", output: sampleAnalysis() });
+    await runAnalysis(call, input);
+    expect(call.mock.calls[1][0].text).toMatch(/unitCostAtVolume: must price exactly 10, 100, 1000, 10000/);
+  });
+
   test("retries after a truncated answer", async () => {
     const call = vi
       .fn<CallModel>()

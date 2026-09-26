@@ -48,6 +48,8 @@ export type ManufacturingPath = {
   pros: string[];
   cons: string[];
   designTweaks: { change: string; why: string; impact: string }[];
+  /** Per-part cost excluding tooling at 10 / 100 / 1k / 10k units (added in round 2). */
+  unitCostAtVolume?: { quantity: number; low: number; high: number }[];
 };
 
 export type Analysis = {

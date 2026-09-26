@@ -1,5 +1,9 @@
-import type { Analysis } from "@/lib/types";
+import { effectiveCostCurve, type CostCurve } from "@/lib/costCurve";
+import type { Analysis, ShopMatch } from "@/lib/types";
+import { AtAGlance } from "./AtAGlance";
+import { CostByVolumeChart } from "./CostByVolumeChart";
 import { PathCard } from "./PathCard";
+import { PathComparison } from "./PathComparison";
 
 function Storyboard({ shots }: { shots: Analysis["storyboard"] }) {
   const total = shots.reduce((sum, s) => sum + s.seconds, 0);
@@ -23,9 +27,16 @@ function Storyboard({ shots }: { shots: Analysis["storyboard"] }) {
   );
 }
 
-export function AnalysisResults({ analysis, quantity }: { analysis: Analysis; quantity: number }) {
+type Props = { analysis: Analysis; quantity: number; topMatch?: ShopMatch };
+
+export function AnalysisResults({ analysis, quantity, topMatch }: Props) {
+  const curves = analysis.paths.map(effectiveCostCurve).filter((c): c is CostCurve => c !== null);
+  const hasCurves = curves.length === analysis.paths.length && curves.length > 0;
+
   return (
     <div className="flex flex-col gap-6">
+      <AtAGlance analysis={analysis} quantity={quantity} topMatch={topMatch} />
+
       <section className="grid items-start gap-4 lg:grid-cols-[1.5fr_1fr]">
         <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-5">
           <h3 className="font-semibold">Recommendation</h3>
@@ -58,12 +69,21 @@ export function AnalysisResults({ analysis, quantity }: { analysis: Analysis; qu
         </div>
       </section>
 
+      {hasCurves ? (
+        <CostByVolumeChart curves={curves} targetQuantity={quantity} />
+      ) : (
+        <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">
+          This analysis predates the cost-by-quantity chart. Re-run the analysis to see how each process&apos;s cost changes with volume.
+        </p>
+      )}
+
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-lg font-semibold">Manufacturing paths</h3>
           <p className="text-xs text-muted">All costs are AI estimates in USD, shown as ranges.</p>
         </div>
-        <div className="grid gap-4 xl:grid-cols-2">
+        <PathComparison paths={analysis.paths} quantity={quantity} />
+        <div className="flex flex-col gap-3">
           {analysis.paths.map((p, i) => (
             <PathCard key={`${p.process}-${i}`} path={p} rank={i + 1} quantity={quantity} />
           ))}

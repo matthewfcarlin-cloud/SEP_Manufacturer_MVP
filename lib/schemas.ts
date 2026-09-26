@@ -90,7 +90,16 @@ const designTweakSchema = z.object({
   impact: z.string().describe("Expected effect, quantified where possible (e.g. '~20% lower unit cost', 'removes a second setup')."),
 });
 
-const manufacturingPathSchema = z.object({
+/** Volumes at which the model prices each path, for the cost-by-quantity chart. */
+export const COST_CURVE_QUANTITIES = [10, 100, 1000, 10000] as const;
+
+const unitCostAtVolumeSchema = z
+  .array(z.object({ quantity: z.number(), low: z.number(), high: z.number() }))
+  .describe(
+    "Per-part cost in USD excluding tooling at exactly 10, 100, 1000 and 10000 units, in that order, as low-high estimates. Include volumes where the process is impractical, priced honestly.",
+  );
+
+const manufacturingPathBase = z.object({
   process: processSchema,
   // Plain numbers, not .int(): .int() leaks safe-integer bounds into the
   // schema description the model sees. normalizeAnalysis() rounds instead.
@@ -104,6 +113,11 @@ const manufacturingPathSchema = z.object({
   designTweaks: z.array(designTweakSchema).describe("2-3 tweaks that make this path cheaper or more reliable."),
 });
 
+// The model must always price every volume; stored analyses from before the
+// curve existed (Phase 5 and earlier) are still valid without it.
+const manufacturingPathOutputSchema = manufacturingPathBase.extend({ unitCostAtVolume: unitCostAtVolumeSchema });
+const manufacturingPathSchema = manufacturingPathBase.extend({ unitCostAtVolume: unitCostAtVolumeSchema.optional() });
+
 const storyboardShotSchema = z.object({
   shot: z.number(),
   visual: z.string().describe("What the camera sees."),
@@ -114,7 +128,7 @@ const storyboardShotSchema = z.object({
 export const analysisOutputSchema = z.object({
   productSummary: z.string().describe("2 sentences, under 50 words: what it is, who buys it, and the key manufacturing takeaway."),
   detectedFeatures: z.array(z.string()).describe("4-8 short noun phrases (under 8 words each) naming physical features of this part."),
-  paths: z.array(manufacturingPathSchema).describe("2-4 candidate processes, best fit first."),
+  paths: z.array(manufacturingPathOutputSchema).describe("2-4 candidate processes, best fit first."),
   topRecommendation: z.string().describe("2-3 sentences, under 70 words: the path to take now, and the quantity where that changes."),
   risks: z.array(z.string()).describe("3-5 one-sentence risks, most important first."),
   storyboard: z.array(storyboardShotSchema).describe("Exactly 6 shots of a 30-second commercial, seconds summing to 30."),
@@ -139,7 +153,10 @@ function checkRange(
   }
 }
 
-export const analysisSchema = analysisOutputSchema.superRefine((a, ctx) => {
+/** Structure of a stored analysis (curve optional), before the business rules. */
+export const storedAnalysisShape = analysisOutputSchema.extend({ paths: z.array(manufacturingPathSchema) });
+
+export const analysisSchema = storedAnalysisShape.superRefine((a, ctx) => {
   if (a.paths.length < MIN_PATHS || a.paths.length > MAX_PATHS) {
     ctx.addIssue({ code: "custom", path: ["paths"], message: `need ${MIN_PATHS}-${MAX_PATHS} paths, got ${a.paths.length}` });
   }
@@ -152,6 +169,17 @@ export const analysisSchema = analysisOutputSchema.superRefine((a, ctx) => {
     checkRange(ctx, ["paths", i, "leadTimeDays"], p.leadTimeDays, 1);
     if (p.designTweaks.length === 0) {
       ctx.addIssue({ code: "custom", path: ["paths", i, "designTweaks"], message: "give at least one tweak" });
+    }
+    if (p.unitCostAtVolume) {
+      const quantities = p.unitCostAtVolume.map((v) => v.quantity);
+      if (quantities.join(",") !== COST_CURVE_QUANTITIES.join(",")) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["paths", i, "unitCostAtVolume"],
+          message: `must price exactly ${COST_CURVE_QUANTITIES.join(", ")} units in that order, got ${quantities.join(", ")}`,
+        });
+      }
+      p.unitCostAtVolume.forEach((v, j) => checkRange(ctx, ["paths", i, "unitCostAtVolume", j], v, 0.01));
     }
   });
   if (a.storyboard.length !== STORYBOARD_SHOTS) {

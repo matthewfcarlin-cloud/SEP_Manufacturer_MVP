@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { DEMO_PROJECTS } from "@/lib/demoProjects";
 import { formatUnitCostRange } from "@/lib/format";
 import { PROCESS_LABELS } from "@/lib/processes";
@@ -6,6 +7,8 @@ import { getProject } from "@/lib/projectStore";
 
 /** Links to the pre-analyzed demo projects that are installed (npm run demo:seed). */
 export async function ExampleProjects() {
+  // Per request: which examples are installed can change after the build.
+  await connection();
   const loaded = await Promise.all(
     DEMO_PROJECTS.map(async (demo) => ({ demo, project: await getProject(demo.id) })),
   );

@@ -1,4 +1,4 @@
-import { analysisOutputSchema, analysisSchema, MAX_PATHS } from "../schemas";
+import { analysisSchema, MAX_PATHS, storedAnalysisShape } from "../schemas";
 import type { Analysis } from "../types";
 
 export type ImageInput = { mediaType: "image/jpeg" | "image/png" | "image/webp"; base64: string };
@@ -39,6 +39,9 @@ export function normalizeAnalysis(a: Analysis): Analysis {
         unitCostUsd: range(p.unitCostUsd, round2),
         toolingCostUsd: range(p.toolingCostUsd, Math.round),
         leadTimeDays: range(p.leadTimeDays, Math.round),
+        ...(p.unitCostAtVolume && {
+          unitCostAtVolume: p.unitCostAtVolume.map((v) => ({ quantity: v.quantity, ...range(v, round2) })),
+        }),
       })),
     storyboard: a.storyboard.map((s, i) => ({ ...s, shot: i + 1 })),
   };
@@ -63,7 +66,7 @@ function checkTurn(turn: ModelTurn): Attempt {
   // The model sometimes lists a 5th or 6th option (often a "not viable"
   // placeholder with zero costs). Paths are ranked, so keep the best
   // MAX_PATHS instead of spending a full retry on it.
-  const structural = analysisOutputSchema.safeParse(turn.output);
+  const structural = storedAnalysisShape.safeParse(turn.output);
   const candidate = structural.success ? keepBestPaths(structural.data) : turn.output;
   const result = analysisSchema.safeParse(candidate);
   if (result.success) return { ok: true, analysis: normalizeAnalysis(result.data) };

@@ -57,6 +57,7 @@ type ManufacturingPath = {
   leadTimeDays: { low: number; high: number };
   materials: string[]; pros: string[]; cons: string[];
   designTweaks: { change: string; why: string; impact: string }[];
+  unitCostAtVolume?: { quantity: number; low: number; high: number }[]; // 10/100/1k/10k units (added round 2)
 };
 
 type Analysis = {
@@ -152,3 +153,17 @@ Each phase ends with a working, demoable app.
 - Demo parts: `npm run demo:stl` regenerates `demo/*.stl` from `lib/meshes.ts`.
 - Sample project: `demo/sample-project.json` is a real saved Claude analysis of the pedal enclosure (250 units). Run `npm run demo:seed` to install it, then open `/project/yAeM9-RDOE`. Build the matching and pitch features against it; no API key needed. A test keeps it valid against `projectSchema`.
 - AI analysis: `lib/analysis/` (`prompt.ts` builds the prompts, `run.ts` validates and retries once, `claude.ts` is the only file that calls the SDK). The model sees `analysisOutputSchema` (structural only); `analysisSchema` in `lib/schemas.ts` adds the business rules. Model and effort come from `IDLEFIT_MODEL` / `IDLEFIT_EFFORT` (default `claude-opus-5` / `high`). The local-capacity summary in the system prompt comes from `data/shops.json`, so editing shops changes the prompt.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+- Wall thickness: `lib/wallThickness.ts` is shared by the server (sampled, for `GeometryStats`) and the browser (every triangle, for the viewer's "Show thin walls" overlay). Change the method there, not in two places.
+- Cost by quantity: `lib/costCurve.ts` turns `unitCostAtVolume` + tooling into all-in cost per part and a "cheapest by volume" sentence; `CostByVolumeChart` draws it. Series colors are the validated `--series-1..4` tokens in `app/globals.css`; keep their order.
+- Pages that read project files per request call `await connection()` (Next 16's replacement for `force-dynamic`).
+- E2E: `npm run test:e2e` (Playwright on installed Chrome). Tests clean up projects they create in `afterEach`.

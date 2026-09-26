@@ -1,0 +1,218 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import { cheapestByVolume, type CostCurve } from "@/lib/costCurve";
+import { formatUnitCostRange } from "@/lib/format";
+import { PROCESS_LABELS } from "@/lib/processes";
+
+// Series colors come from validated CSS tokens in fixed order (slot = path rank).
+const SERIES = ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)"];
+const HEIGHT = 300;
+const PAD = { top: 16, right: 132, bottom: 36, left: 56 };
+const LABEL_GAP = 16;
+
+const log = Math.log10;
+const usd = (n: number) =>
+  n >= 100 ? `$${Math.round(n).toLocaleString("en-US")}` : n >= 10 ? `$${n.toFixed(0)}` : `$${n.toFixed(2)}`;
+const qty = (n: number) => (n >= 1000 ? `${n / 1000}k` : String(n));
+
+/** 1-2-5 ticks spanning [min, max] on a log scale. */
+function logTicks(min: number, max: number): number[] {
+  const ticks: number[] = [];
+  for (let e = Math.floor(log(min)); e <= Math.ceil(log(max)); e++) {
+    for (const m of [1, 2, 5]) {
+      const v = m * 10 ** e;
+      if (v >= min && v <= max) ticks.push(v);
+    }
+  }
+  return ticks;
+}
+
+function useWidth<T extends HTMLElement>(): [React.RefObject<T | null>, number] {
+  const ref = useRef<T>(null);
+  const [width, setWidth] = useState(640);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, width];
+}
+
+/** Spreads end-of-line labels apart so none overlap (keeps order by value). */
+function placeLabels(ys: number[]): number[] {
+  const order = ys.map((y, i) => ({ y, i })).sort((a, b) => a.y - b.y);
+  for (let k = 1; k < order.length; k++) {
+    order[k].y = Math.max(order[k].y, order[k - 1].y + LABEL_GAP);
+  }
+  const placed = new Array<number>(ys.length);
+  order.forEach(({ y, i }) => (placed[i] = y));
+  return placed;
+}
+
+type Props = { curves: CostCurve[]; targetQuantity: number };
+
+export function CostByVolumeChart({ curves, targetQuantity }: Props) {
+  const [ref, width] = useWidth<HTMLDivElement>();
+  const [hover, setHover] = useState<number | null>(null);
+  const quantities = curves[0].points.map((p) => p.quantity);
+  const summary = cheapestByVolume(curves);
+
+  const geo = useMemo(() => {
+    const all = curves.flatMap((c) => c.points.flatMap((p) => [p.low, p.high]));
+    const yMin = Math.min(...all) * 0.8;
+    const yMax = Math.max(...all) * 1.25;
+    const qMin = quantities[0];
+    const qMax = quantities[quantities.length - 1];
+    const plotW = Math.max(120, width - PAD.left - PAD.right);
+    const plotH = HEIGHT - PAD.top - PAD.bottom;
+    const x = (q: number) => PAD.left + ((log(q) - log(qMin)) / (log(qMax) - log(qMin))) * plotW;
+    const y = (v: number) => PAD.top + (1 - (log(v) - log(yMin)) / (log(yMax) - log(yMin))) * plotH;
+    return { x, y, yTicks: logTicks(yMin, yMax), plotW, plotH, qMin, qMax };
+  }, [curves, quantities, width]);
+
+  const endYs = placeLabels(curves.map((c) => geo.y(c.points[c.points.length - 1].mid)));
+  const showTarget = targetQuantity >= geo.qMin && targetQuantity <= geo.qMax;
+
+  const onMove = (e: React.PointerEvent<SVGRectElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - rect.left + PAD.left;
+    let best = 0;
+    quantities.forEach((q, i) => {
+      if (Math.abs(geo.x(q) - px) < Math.abs(geo.x(quantities[best]) - px)) best = i;
+    });
+    setHover(best);
+  };
+
+  return (
+    <section aria-labelledby="cost-curve-heading" className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5">
+      <div className="flex flex-col gap-1">
+        <h3 id="cost-curve-heading" className="font-semibold">Cost per part by quantity</h3>
+        <p className="text-sm text-muted">
+          Estimated all-in cost per part, with tooling spread over the run. AI estimates, shown as ranges. Cost only: the
+          fit score above also weighs finish, strength and lead time, so the best fit isn&apos;t always the cheapest.
+        </p>
+      </div>
+      {summary && <p className="text-sm font-medium">{summary}</p>}
+
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-label="Legend">
+        {curves.map((c, i) => (
+          <li key={c.process} className="flex items-center gap-1.5">
+            <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: SERIES[i] }} />
+            {PROCESS_LABELS[c.process]}
+          </li>
+        ))}
+      </ul>
+
+      <div ref={ref} className="relative w-full">
+        <svg width={width} height={HEIGHT} role="img" aria-label={summary ?? "Cost per part by quantity"} className="block">
+          {geo.yTicks.map((t) => (
+            <g key={t}>
+              <line x1={PAD.left} x2={PAD.left + geo.plotW} y1={geo.y(t)} y2={geo.y(t)} stroke="var(--line)" strokeWidth={1} />
+              <text x={PAD.left - 8} y={geo.y(t)} dy="0.32em" textAnchor="end" className="fill-[var(--muted)] text-[11px]">
+                {usd(t)}
+              </text>
+            </g>
+          ))}
+          {quantities.map((q) => (
+            <text key={q} x={geo.x(q)} y={HEIGHT - PAD.bottom + 20} textAnchor="middle" className="fill-[var(--muted)] text-[11px]">
+              {qty(q)} units
+            </text>
+          ))}
+
+          {showTarget && (
+            <g>
+              <line x1={geo.x(targetQuantity)} x2={geo.x(targetQuantity)} y1={PAD.top} y2={PAD.top + geo.plotH} stroke="var(--ink)" strokeWidth={1} strokeDasharray="3 4" opacity={0.5} />
+              <text x={geo.x(targetQuantity) + 6} y={PAD.top + 10} className="fill-[var(--ink)] text-[11px]">
+                Your {targetQuantity.toLocaleString("en-US")}
+              </text>
+            </g>
+          )}
+
+          {curves.map((c, i) => {
+            const band =
+              c.points.map((p) => `${geo.x(p.quantity)},${geo.y(p.high)}`).join(" ") +
+              " " +
+              [...c.points].reverse().map((p) => `${geo.x(p.quantity)},${geo.y(p.low)}`).join(" ");
+            const line = c.points.map((p) => `${geo.x(p.quantity)},${geo.y(p.mid)}`).join(" ");
+            return (
+              <g key={c.process}>
+                <polygon points={band} fill={SERIES[i]} opacity={0.12} />
+                <polyline points={line} fill="none" stroke={SERIES[i]} strokeWidth={2} strokeLinejoin="round" />
+                {c.points.map((p) => (
+                  <circle key={p.quantity} cx={geo.x(p.quantity)} cy={geo.y(p.mid)} r={4} fill={SERIES[i]} stroke="var(--surface)" strokeWidth={2} />
+                ))}
+                <circle cx={PAD.left + geo.plotW + 12} cy={endYs[i]} r={4} fill={SERIES[i]} />
+                <text x={PAD.left + geo.plotW + 20} y={endYs[i]} dy="0.32em" className="fill-[var(--ink)] text-[11px]">
+                  {PROCESS_LABELS[c.process]}
+                </text>
+              </g>
+            );
+          })}
+
+          {hover !== null && (
+            <line x1={geo.x(quantities[hover])} x2={geo.x(quantities[hover])} y1={PAD.top} y2={PAD.top + geo.plotH} stroke="var(--muted)" strokeWidth={1} />
+          )}
+          <rect
+            x={PAD.left - 20}
+            y={PAD.top}
+            width={geo.plotW + 40}
+            height={geo.plotH}
+            fill="transparent"
+            onPointerMove={onMove}
+            onPointerLeave={() => setHover(null)}
+          />
+        </svg>
+
+        {hover !== null && (
+          <div
+            role="status"
+            className="pointer-events-none absolute top-2 z-10 w-56 rounded-lg border border-line bg-surface p-3 text-xs shadow-lg"
+            style={{ left: Math.min(geo.x(quantities[hover]) + 12, width - 232) }}
+          >
+            <p className="mb-2 font-medium">{quantities[hover].toLocaleString("en-US")} units, per part</p>
+            <ul className="flex flex-col gap-1">
+              {curves.map((c, i) => (
+                <li key={c.process} className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5">
+                    <span aria-hidden className="h-2 w-2 rounded-full" style={{ background: SERIES[i] }} />
+                    {PROCESS_LABELS[c.process]}
+                  </span>
+                  <span className="font-mono">{formatUnitCostRange(c.points[hover])}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <details className="text-sm">
+        <summary className="cursor-pointer text-muted">Show as table</summary>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-line text-muted">
+                <th className="py-2 pr-3 font-medium">Process</th>
+                {quantities.map((q) => (
+                  <th key={q} className="py-2 pr-3 font-medium">{q.toLocaleString("en-US")} units</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {curves.map((c) => (
+                <tr key={c.process} className="border-b border-line last:border-0">
+                  <td className="py-2 pr-3">{PROCESS_LABELS[c.process]}</td>
+                  {c.points.map((p) => (
+                    <td key={p.quantity} className="py-2 pr-3 font-mono">{formatUnitCostRange(p)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </section>
+  );
+}

@@ -1,8 +1,8 @@
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { createProject, getProject, readProjectFile } from "./projectStore";
+import { createProject, getProject, listProjects, readProjectFile } from "./projectStore";
 import type { GeometryStats } from "./types";
 
 const geometry: GeometryStats = {
@@ -62,5 +62,18 @@ describe("projectStore", () => {
     expect(await readProjectFile(id, "../model.stl")).toBeNull();
     expect(await readProjectFile(id, "image-0.jpg")).toBeNull(); // not uploaded
     expect(await readProjectFile(id, "model.stl")).not.toBeNull();
+  });
+
+  test("lists projects newest first and skips corrupt folders", async () => {
+    const fields = { notes: "", targetQuantity: 1, materialHints: [] };
+    const older = await createProject({ fields: { ...fields, name: "Older" }, stl: new Uint8Array([1]), geometry, images: [] });
+    await new Promise((r) => setTimeout(r, 5));
+    const newer = await createProject({ fields: { ...fields, name: "Newer" }, stl: new Uint8Array([1]), geometry, images: [] });
+    await mkdir(path.join(dir, "projects", "BROKEN0000"), { recursive: true });
+    await writeFile(path.join(dir, "projects", "BROKEN0000", "project.json"), "{not json");
+
+    const ids = (await listProjects()).map((p) => p.id);
+    expect(ids.indexOf(newer.id)).toBeLessThan(ids.indexOf(older.id));
+    expect(ids).not.toContain("BROKEN0000");
   });
 });
