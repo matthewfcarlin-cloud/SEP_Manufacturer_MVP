@@ -1,5 +1,6 @@
 import { analysisSchema, MAX_PATHS, storedAnalysisShape } from "../schemas";
 import type { Analysis } from "../types";
+import type { TurnUsage } from "../usage/pricing";
 
 export type ImageInput = { mediaType: "image/jpeg" | "image/png" | "image/webp"; base64: string };
 
@@ -8,6 +9,8 @@ export type ModelTurn = {
   stopReason: string | null;
   /** Parsed structured output, or null if the model produced none. */
   output: unknown;
+  /** Token usage of the billed attempt, for the demo budget. Absent when unknown. */
+  usage?: TurnUsage;
 };
 
 /** Sends one user turn (images + text) and returns the model's structured answer. */

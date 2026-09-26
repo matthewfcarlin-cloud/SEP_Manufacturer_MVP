@@ -3,6 +3,7 @@ import { copyFile, mkdir, readdir, readFile, rename, rm, writeFile } from "node:
 import path from "node:path";
 import { detectImageType, IMAGE_CONTENT_TYPES, type ImageType, type ProjectFields, type VersionFields } from "./projectInput";
 import { migrateProject } from "./projectMigration";
+import { serialized } from "./serialize";
 import { PROJECT_ID_PATTERN, projectSchema } from "./schemas";
 import type { AppliedTweak, GeometryStats, Project, ProjectVersion } from "./types";
 import { appendVersion, getVersion, nextVersionNumber, replaceVersion, versionFileName } from "./versions";
@@ -137,9 +138,7 @@ export async function addVersion(id: string, input: NewVersionInput): Promise<{ 
 
 // Read-modify-write on project.json must not interleave: an analysis takes a
 // minute or two, and a version added meanwhile would be lost when the stale
-// copy is saved. One promise chain per project serializes updates within this
-// server process, which is all v1's single-process local storage needs.
-const updateQueues = new Map<string, Promise<unknown>>();
+// copy is saved. Updates are serialized per project.
 
 /**
  * Re-reads the project, applies the update, and saves the result, serialized
@@ -149,20 +148,13 @@ export async function updateProject(
   id: string,
   update: (project: Project) => Project | Promise<Project>,
 ): Promise<Project | null> {
-  const previous = updateQueues.get(id) ?? Promise.resolve();
-  const run = previous.catch(() => undefined).then(async () => {
+  return serialized(`project:${id}`, async () => {
     const current = await getProject(id);
     if (!current) return null;
     const next = await update(current);
     await saveProject(next);
     return next;
   });
-  updateQueues.set(id, run);
-  try {
-    return await run;
-  } finally {
-    if (updateQueues.get(id) === run) updateQueues.delete(id);
-  }
 }
 
 /** Updates one version in place. Returns null when the project or version doesn't exist. */

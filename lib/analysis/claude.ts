@@ -8,6 +8,7 @@ import { tolerateUnparseableOutput } from "./structuredOutput";
 import { PITCH_SYSTEM_PROMPT } from "./pitch";
 import { PRICE_SYSTEM_PROMPT } from "./price";
 import { buildSystemPrompt } from "./prompt";
+import type { TurnUsage } from "../usage/pricing";
 import type { CallModel } from "./run";
 
 // Server-only. The API key is read from ANTHROPIC_API_KEY by the SDK and
@@ -25,6 +26,20 @@ const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 /** True when the server has a credential the SDK can use. Checked per request so adding a key only needs a restart. */
 export function isClaudeConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
+}
+
+/**
+ * Top-level usage covers the attempt that produced the returned message,
+ * priced at the model that served it (a declined attempt isn't billed).
+ */
+function usageOf(response: { model: string; usage: Anthropic.Beta.BetaUsage }): TurnUsage {
+  return {
+    model: response.model,
+    inputTokens: response.usage.input_tokens,
+    outputTokens: response.usage.output_tokens,
+    cacheWriteTokens: response.usage.cache_creation_input_tokens ?? 0,
+    cacheReadTokens: response.usage.cache_read_input_tokens ?? 0,
+  };
 }
 
 let client: Anthropic | undefined;
@@ -70,7 +85,7 @@ export const callClaude: CallModel = ({ images, text }) => tolerateUnparseableOu
     output: response.usage.output_tokens,
   });
 
-  return { stopReason: response.stop_reason, output: response.parsed_output };
+  return { stopReason: response.stop_reason, output: response.parsed_output, usage: usageOf(response) };
 });
 
 type TextCallerOptions = {
@@ -100,7 +115,7 @@ function makeTextCaller({ system, schema, effort, maxTokens, logTag }: TextCalle
         input: response.usage.input_tokens,
         output: response.usage.output_tokens,
       });
-      return { stopReason: response.stop_reason, output: response.parsed_output };
+      return { stopReason: response.stop_reason, output: response.parsed_output, usage: usageOf(response) };
     });
 }
 

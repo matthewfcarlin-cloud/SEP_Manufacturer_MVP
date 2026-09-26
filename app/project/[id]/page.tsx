@@ -12,6 +12,7 @@ import { getAccessibleProject } from "@/lib/access";
 import { ShopMatches } from "@/components/ShopMatches";
 import { BusinessCasePanel } from "@/components/businessCase/BusinessCasePanel";
 import { VersionTimeline } from "@/components/versions/VersionTimeline";
+import { AiBudgetNote } from "@/components/AiBudgetNote";
 import { AiInputsPanel } from "@/components/privacy/AiInputsPanel";
 import { DangerZone } from "@/components/privacy/DangerZone";
 import { resolveAiInputs } from "@/lib/aiInputs";
@@ -185,6 +186,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
               that are idle at local shops this month.
             </p>
             <RunAnalysisButton projectId={project.id} version={version.number} />
+            <AiBudgetNote />
           </div>
         )}
       </section>

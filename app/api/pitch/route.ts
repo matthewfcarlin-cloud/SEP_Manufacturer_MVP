@@ -6,6 +6,8 @@ import { buildPitchBrief, runPitchGeneration } from "@/lib/analysis/pitch";
 import { updateVersion } from "@/lib/projectStore";
 import { pitchEditSchema } from "@/lib/schemas";
 import type { PitchContent } from "@/lib/types";
+import { aiBudgetGate } from "@/lib/usage/gate";
+import { metered } from "@/lib/usage/metered";
 import { findVersion } from "@/lib/versionLookup";
 
 export const maxDuration = 120;
@@ -32,8 +34,11 @@ export async function POST(request: Request): Promise<Response> {
     return fail("AI writing isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
   }
 
+  const ownerHash = await aiBudgetGate("pitch");
+  if (ownerHash instanceof Response) return ownerHash;
+
   try {
-    const pitch = await runPitchGeneration(callClaudePitch, buildPitchBrief(found.project, found.version));
+    const pitch = await runPitchGeneration(metered(callClaudePitch, ownerHash, "pitch"), buildPitchBrief(found.project, found.version));
     return await savePitch(found.project.id, found.version.number, pitch);
   } catch (err) {
     return aiFailure(err, "api/pitch");

@@ -6,6 +6,8 @@ import { aiFailure } from "@/lib/analysis/errors";
 import { buildPriceBrief, runPriceSuggestion } from "@/lib/analysis/price";
 import { updateVersion } from "@/lib/projectStore";
 import type { BusinessCaseInputs, PriceSuggestion } from "@/lib/types";
+import { aiBudgetGate } from "@/lib/usage/gate";
+import { metered } from "@/lib/usage/metered";
 import { findVersion } from "@/lib/versionLookup";
 
 export const maxDuration = 60;
@@ -37,8 +39,11 @@ export async function POST(request: Request): Promise<Response> {
     return fail("AI pricing isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server. You can still enter a price yourself.", 503);
   }
 
+  const ownerHash = await aiBudgetGate("price");
+  if (ownerHash instanceof Response) return ownerHash;
+
   try {
-    const suggestion = await runPriceSuggestion(callClaudePrice, buildPriceBrief(found.project, found.version));
+    const suggestion = await runPriceSuggestion(metered(callClaudePrice, ownerHash, "price"), buildPriceBrief(found.project, found.version));
     const saved = await updateVersion(found.project.id, found.version.number, (v) => ({
       ...v,
       businessCase: v.businessCase ? { ...v.businessCase, priceSuggestion: suggestion } : startingInputs(suggestion),

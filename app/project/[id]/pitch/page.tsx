@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PitchDocument } from "@/components/pitch/PitchDocument";
+import { AiBudgetNote } from "@/components/AiBudgetNote";
 import { PitchToolbar } from "@/components/pitch/PitchToolbar";
 import { SharePanel } from "@/components/privacy/SharePanel";
 import { buildIterationStory } from "@/lib/iterationStory";
@@ -68,6 +69,7 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
           cadFileUrl={analyzed.cadFileUrl}
           hasRenders={Boolean(analyzed.renders?.length)}
         />
+        <AiBudgetNote />
         {access === "owner" ? (
           <SharePanel projectId={project.id} share={project.share} />
         ) : (
