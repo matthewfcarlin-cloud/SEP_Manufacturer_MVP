@@ -49,6 +49,11 @@ describe("compareVersions", () => {
     expect(cmp.summary).toBe("Unit cost −40%, tooling −$17.9k, switched from injection molding to sheet metal, fit score +20.");
   });
 
+  test("keeps acronyms when naming a process mid-sentence", () => {
+    const milled = version(3, { process: "cnc_milling", fitScore: 88, unitCostUsd: { low: 5, high: 7 }, toolingCostUsd: { low: 0, high: 300 } });
+    expect(compareVersions(summarizeVersion(bent), summarizeVersion(milled)).summary).toBe("Switched from sheet metal to CNC milling.");
+  });
+
   test("a worse version is marked worse", () => {
     const back = compareVersions(summarizeVersion(bent), summarizeVersion(molded));
     expect(back.rows.find((r) => r.key === "unitCost")!.direction).toBe("worse");
@@ -59,6 +64,23 @@ describe("compareVersions", () => {
     const same = compareVersions(summarizeVersion(bent), summarizeVersion({ ...bent, number: 3 }));
     expect(same.summary).toBe("No meaningful change in cost, tooling, or process.");
     expect(same.rows.every((r) => r.direction === "same")).toBe(true);
+  });
+
+  test("margin row compares each version's own business case at its target quantity", () => {
+    const priced = (v: ProjectVersion) => ({ ...v, businessCase: { retailPriceUsd: 40, priceSource: "user" as const, quantityTiers: [100], revenueShare: 0.5 } });
+    const withMargins = compareVersions(summarizeVersion(priced(molded)), summarizeVersion(priced(bent)));
+    const margin = withMargins.rows.find((r) => r.key === "margin")!;
+    expect(margin.a).toMatch(/%$/);
+    expect(margin.change).toMatch(/^\+\d+ pts$/);
+    expect(margin.direction).toBe("better");
+    expect(withMargins.summary).toContain("margin +");
+  });
+
+  test("margin row stays empty unless both versions have a business case", () => {
+    const margin = cmp.rows.find((r) => r.key === "margin")!;
+    expect(margin.change).toBeNull();
+    expect(margin.a).toBe("—");
+    expect(cmp.summary).not.toContain("margin");
   });
 
   test("flags when target quantities differ", () => {

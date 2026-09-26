@@ -1,8 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { analysisOutputSchema } from "../schemas";
+import { analysisOutputSchema, priceSuggestionOutputSchema } from "../schemas";
 import { getShops } from "../shops";
 import { summarizeCapacity } from "./capacity";
+import type { CallPriceModel } from "./price";
+import { tolerateUnparseableOutput } from "./structuredOutput";
+import { PRICE_SYSTEM_PROMPT } from "./price";
 import { buildSystemPrompt } from "./prompt";
 import type { CallModel } from "./run";
 
@@ -34,7 +37,7 @@ function getClient(): Anthropic {
 // cacheWrite then cacheRead of that size), which also makes retries cheaper.
 const systemPrompt = buildSystemPrompt(summarizeCapacity(getShops()));
 
-export const callClaude: CallModel = async ({ images, text }) => {
+export const callClaude: CallModel = ({ images, text }) => tolerateUnparseableOutput(async () => {
   const response = await getClient().beta.messages.parse({
     model: MODEL,
     max_tokens: MAX_TOKENS,
@@ -67,4 +70,28 @@ export const callClaude: CallModel = async ({ images, text }) => {
   });
 
   return { stopReason: response.stop_reason, output: response.parsed_output };
-};
+});
+
+// The price suggestion is a small, text-only question: low effort keeps it to
+// a few seconds.
+const PRICE_EFFORT = "low" as const;
+const PRICE_MAX_TOKENS = 8_000;
+
+export const callClaudePrice: CallPriceModel = (text) => tolerateUnparseableOutput(async () => {
+  const response = await getClient().beta.messages.parse({
+    model: MODEL,
+    max_tokens: PRICE_MAX_TOKENS,
+    betas: [FALLBACK_BETA],
+    fallbacks: "default",
+    output_config: { effort: PRICE_EFFORT, format: betaZodOutputFormat(priceSuggestionOutputSchema) },
+    system: PRICE_SYSTEM_PROMPT,
+    messages: [{ role: "user", content: text }],
+  });
+  console.info("[price] claude call", {
+    model: response.model,
+    stop: response.stop_reason,
+    input: response.usage.input_tokens,
+    output: response.usage.output_tokens,
+  });
+  return { stopReason: response.stop_reason, output: response.parsed_output };
+});

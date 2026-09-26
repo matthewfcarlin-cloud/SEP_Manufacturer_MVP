@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AppliedTweak, Analysis, GeometryStats, Machine, Project, ProjectVersion, Shop } from "./types";
+import type { AppliedTweak, Analysis, BusinessCaseInputs, GeometryStats, Machine, PriceSuggestion, Project, ProjectVersion, Shop } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -66,6 +67,54 @@ export const appliedTweakSchema = z.object({
   impact: z.string(),
 }) satisfies z.ZodType<AppliedTweak>;
 
+// ---------------------------------------------------------------------------
+// Business case (Phase 7). The price suggestion has the same two layers as
+// the analysis: a structural schema the model is constrained to, and business
+// rules that trigger one retry.
+// ---------------------------------------------------------------------------
+
+export const MAX_RETAIL_PRICE_USD = 1_000_000;
+export const MAX_TIER_QUANTITY = 10_000_000;
+const MIN_REASONING_WORDS = 6;
+
+export const priceSuggestionOutputSchema = z.object({
+  suggested: z.number().describe("The single retail price in USD you would launch at."),
+  low: z.number().describe("Low end of the plausible retail range in USD."),
+  high: z.number().describe("High end of the plausible retail range in USD."),
+  comparables: z
+    .array(z.string())
+    .describe("2-5 comparable products or categories with their typical retail price, e.g. 'Boutique fuzz pedals: $150-250'. Name a brand only if you are confident it exists and sells at that price."),
+  reasoning: z.string().describe("One or two sentences, under 45 words: why this price for this product and buyer."),
+});
+
+export const priceSuggestionSchema = priceSuggestionOutputSchema.superRefine((p, ctx) => {
+  if (p.low <= 0) ctx.addIssue({ code: "custom", path: ["low"], message: "must be more than $0" });
+  if (p.high > MAX_RETAIL_PRICE_USD) ctx.addIssue({ code: "custom", path: ["high"], message: "is implausibly high" });
+  if (!(p.low <= p.suggested && p.suggested <= p.high)) {
+    ctx.addIssue({ code: "custom", path: ["suggested"], message: "must be between low and high" });
+  }
+  if (p.reasoning.trim().split(/\s+/).length < MIN_REASONING_WORDS) {
+    ctx.addIssue({ code: "custom", path: ["reasoning"], message: "explain the price in a real sentence" });
+  }
+  if (p.comparables.length < 2 || p.comparables.length > 5) {
+    ctx.addIssue({ code: "custom", path: ["comparables"], message: `need 2-5 comparables, got ${p.comparables.length}` });
+  }
+}) satisfies z.ZodType<PriceSuggestion>;
+
+export const businessCaseInputsSchema = z.object({
+  retailPriceUsd: z.number().positive("Retail price must be more than $0.").max(MAX_RETAIL_PRICE_USD, "That retail price is too high."),
+  priceSource: z.enum(["ai", "user"]),
+  quantityTiers: z
+    .array(z.number().int("Quantities must be whole numbers.").min(1, "Quantities must be at least 1.").max(MAX_TIER_QUANTITY, "Quantities must be 10 million or less."))
+    .min(1, "Add at least one quantity.")
+    .max(MAX_QUANTITY_TIERS, `Use at most ${MAX_QUANTITY_TIERS} quantities.`)
+    .refine((tiers) => tiers.every((q, i) => i === 0 || q > tiers[i - 1]), { message: "Quantities must go from smallest to largest, without repeats." }),
+  revenueShare: z.number().min(0.05, "Your share of retail must be at least 5%.").max(1, "Your share of retail can't be more than 100%."),
+  // Structural only: the business rules above gate new AI answers, and must
+  // not make previously saved projects unreadable when they're tightened.
+  priceSuggestion: priceSuggestionOutputSchema.optional(),
+}) satisfies z.ZodType<BusinessCaseInputs>;
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -81,6 +130,7 @@ export const projectVersionSchema = z.object({
   basedOn: z.number().int().positive().optional(),
   changeNote: z.string().max(1000).optional(),
   appliedTweak: appliedTweakSchema.optional(),
+  businessCase: businessCaseInputsSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({

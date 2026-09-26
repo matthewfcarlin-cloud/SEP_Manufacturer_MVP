@@ -23,3 +23,9 @@ export const PROCESS_LABELS: Record<Process, string> = {
   laser_cutting: "Laser cutting",
   urethane_casting: "Urethane casting",
 };
+
+/** A process label for mid-sentence use: "injection molding", but "CNC milling" keeps its acronym. */
+export function processInSentence(process: Process): string {
+  const label = PROCESS_LABELS[process];
+  return /^[A-Z]{2}/.test(label) ? label : label.charAt(0).toLowerCase() + label.slice(1);
+}

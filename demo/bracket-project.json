@@ -370,6 +370,28 @@
             "seconds": 5
           }
         ]
+      },
+      "businessCase": {
+        "retailPriceUsd": 19,
+        "priceSource": "ai",
+        "quantityTiers": [
+          100,
+          1000,
+          10000
+        ],
+        "revenueShare": 0.5,
+        "priceSuggestion": {
+          "suggested": 19,
+          "low": 12,
+          "high": 29,
+          "comparables": [
+            "Generic wall mount brackets/shelves for power bricks or routers: $10-20",
+            "Branded e-bike/EV charger wall holsters and cable hangers: $20-40",
+            "Injection-molded tool/battery wall mounts (e.g. cordless tool holders): $8-15",
+            "Accessory-brand garage storage hooks and mounts: $15-25"
+          ],
+          "reasoning": "It's a small molded plastic accessory, so pricing follows the branded-accessory tier rather than generic hooks; around $19 leaves margin at 500 units while staying under the $25 impulse ceiling for a charger add-on."
+        }
       }
     },
     {
@@ -746,6 +768,28 @@
         "change": "Re-model as one 2 mm Aluminum 5052 flat blank ~140 × 60 mm with a single 90° bend and 4 mm bend-relief notches.",
         "why": "One bend on a brake replaces a mold cavity entirely and runs on idle local laser plus brake capacity.",
         "impact": "Drops unit cost from ~$18 (SLS) to ~$6 and removes all tooling spend."
+      },
+      "businessCase": {
+        "retailPriceUsd": 19,
+        "priceSource": "ai",
+        "quantityTiers": [
+          100,
+          1000,
+          10000
+        ],
+        "revenueShare": 0.5,
+        "priceSuggestion": {
+          "suggested": 19,
+          "low": 12,
+          "high": 29,
+          "comparables": [
+            "Generic steel/aluminum wall mounting brackets (pair): $10-20",
+            "Branded garage tool/accessory wall mounts: $15-30",
+            "Bike-brand accessory mounts and adapters: $20-40",
+            "Laptop/power-brick under-desk mounting brackets: $15-25"
+          ],
+          "reasoning": "It's a simple single-bend bracket, so it competes with commodity wall brackets, but selling it as a branded e-bike charger accessory supports a modest premium around $19."
+        }
       }
     }
   ]

@@ -1,4 +1,5 @@
-import { PROCESS_LABELS } from "./processes";
+import { buildBusinessCase, formatMarginRange } from "./businessCase";
+import { PROCESS_LABELS, processInSentence } from "./processes";
 import type { Process, ProjectVersion } from "./types";
 
 type Range = { low: number; high: number };
@@ -13,9 +14,11 @@ export type VersionSummary = {
   unitCost?: Range;
   tooling?: Range;
   topShop?: string;
+  /** Margin at the target quantity from this version's own business case, if it has one. */
+  margin?: Range & { mid: number };
 };
 
-export type DeltaKey = "unitCost" | "tooling" | "process" | "fitScore" | "topShop";
+export type DeltaKey = "unitCost" | "tooling" | "process" | "fitScore" | "margin" | "topShop";
 export type Direction = "better" | "worse" | "same" | "changed";
 
 export type DeltaRow = {
@@ -52,8 +55,15 @@ function formatRange(r: Range | undefined, fmt: (n: number) => string): string {
 }
 const compactUsd = (n: number) => usdCompact.format(n).replace("K", "k");
 
+function marginAtTarget(version: ProjectVersion) {
+  if (!version.analysis || !version.businessCase) return undefined;
+  const inputs = { ...version.businessCase, quantityTiers: [version.targetQuantity] };
+  return buildBusinessCase(version.analysis.paths, inputs).tiers[0].margin;
+}
+
 export function summarizeVersion(version: ProjectVersion, topShop?: string): VersionSummary {
   const best = version.analysis?.paths[0];
+  const margin = marginAtTarget(version);
   return {
     number: version.number,
     quantity: version.targetQuantity,
@@ -65,6 +75,7 @@ export function summarizeVersion(version: ProjectVersion, topShop?: string): Ver
       tooling: best.toolingCostUsd,
     }),
     ...(topShop && { topShop }),
+    ...(margin && { margin }),
   };
 }
 
@@ -104,13 +115,19 @@ function fitRow(a: VersionSummary, b: VersionSummary): DeltaRow {
   return { ...row, change: signed(delta, String(Math.abs(delta))), direction: delta === 0 ? "same" : delta > 0 ? "better" : "worse" };
 }
 
+function marginRow(a: VersionSummary, b: VersionSummary): DeltaRow {
+  const show = (m?: Range) => (m ? formatMarginRange(m) : "—");
+  const row = { key: "margin" as const, label: "Your margin, est.", a: show(a.margin), b: show(b.margin) };
+  if (!a.margin || !b.margin) return { ...row, change: null, direction: "same" };
+  const points = Math.round((b.margin.mid - a.margin.mid) * 100);
+  return { ...row, change: `${signed(points, String(Math.abs(points)))} pts`, direction: points === 0 ? "same" : points > 0 ? "better" : "worse" };
+}
+
 function topShopRow(a: VersionSummary, b: VersionSummary): DeltaRow {
   const row = { key: "topShop" as const, label: "Top shop match", a: a.topShop ?? "—", b: b.topShop ?? "—" };
   if (!a.analyzed || !b.analyzed) return { ...row, change: null, direction: "same" };
   return a.topShop === b.topShop ? { ...row, change: "Same", direction: "same" } : { ...row, change: "Changed", direction: "changed" };
 }
-
-const lowerFirst = (s: string) => s.charAt(0).toLowerCase() + s.slice(1);
 
 function summarize(rows: DeltaRow[], a: VersionSummary, b: VersionSummary): string {
   if (!a.analyzed || !b.analyzed) {
@@ -124,10 +141,11 @@ function summarize(rows: DeltaRow[], a: VersionSummary, b: VersionSummary): stri
   const parts: string[] = [];
   if (byKey.unitCost.direction !== "same") parts.push(`unit cost ${byKey.unitCost.change}`);
   if (byKey.tooling.direction !== "same") parts.push(`tooling ${byKey.tooling.change}`);
-  if (byKey.process.direction === "changed") {
-    parts.push(`switched from ${lowerFirst(byKey.process.a)} to ${lowerFirst(byKey.process.b)}`);
+  if (byKey.process.direction === "changed" && a.process && b.process) {
+    parts.push(`switched from ${processInSentence(a.process)} to ${processInSentence(b.process)}`);
   }
   if (byKey.fitScore.direction !== "same") parts.push(`fit score ${byKey.fitScore.change}`);
+  if (byKey.margin.direction !== "same") parts.push(`margin ${byKey.margin.change}`);
   if (parts.length === 0) return "No meaningful change in cost, tooling, or process.";
   const sentence = parts.join(", ");
   return `${sentence.charAt(0).toUpperCase()}${sentence.slice(1)}.`;
@@ -135,7 +153,7 @@ function summarize(rows: DeltaRow[], a: VersionSummary, b: VersionSummary): stri
 
 /** How version b differs from version a. Pure: the page does no math. */
 export function compareVersions(a: VersionSummary, b: VersionSummary): Comparison {
-  const rows = [unitCostRow(a, b), toolingRow(a, b), processRow(a, b), fitRow(a, b), topShopRow(a, b)];
+  const rows = [unitCostRow(a, b), toolingRow(a, b), processRow(a, b), fitRow(a, b), marginRow(a, b), topShopRow(a, b)];
   return {
     rows,
     summary: summarize(rows, a, b),

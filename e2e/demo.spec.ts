@@ -119,11 +119,41 @@ test("a new version gets its own measurements and appears in the timeline", asyn
 test("comparing the seeded bracket versions shows real deltas", async ({ page }) => {
   await page.goto(`/project/${BRACKET.id}/compare?a=1&b=2`);
   // The seeded v2 is a real saved analysis of the bent-sheet redesign.
-  await expect(page.getByRole("heading", { name: "Unit cost −14%, fit score +5." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /^Unit cost −14%, fit score \+5, margin \+\d+ pts\.$/ })).toBeVisible();
   const table = page.getByRole("table");
   await expect(table.getByRole("rowheader", { name: "Unit cost, est." })).toBeVisible();
   await expect(table.getByRole("rowheader", { name: "Top shop match" })).toBeVisible();
   await expect(page.locator("canvas")).toHaveCount(2);
+});
+
+test("business case recomputes the verdict as the price changes", async ({ page }) => {
+  await page.goto(`/project/${PEDAL.id}`);
+  const section = page.getByRole("region", { name: "Business case" });
+  const price = section.getByLabel("Retail price (USD)");
+  const original = await price.inputValue();
+  await expect(section.getByText("AI suggests")).toBeVisible();
+  await expect(section.getByRole("table")).toContainText("10,000");
+  await expect(section.getByRole("region", { name: "Cost per part vs. what you receive" })).toContainText("You receive");
+
+  await price.fill("400");
+  await expect(section.getByRole("status").first()).toContainText("Profitable at every volume shown at $400 retail.");
+  await price.fill("3");
+  await expect(section.getByRole("status").first()).toContainText("Not profitable at any volume shown at $3 retail.");
+
+  // Leave the seeded demo as it was.
+  await price.fill(original);
+  await expect(section.getByText("Saved")).toBeVisible();
+});
+
+test("a low price on the molded bracket names the tooling problem", async ({ page }) => {
+  await page.goto(`/project/${BRACKET.id}?v=1`);
+  const section = page.getByRole("region", { name: "Business case" });
+  const price = section.getByLabel("Retail price (USD)");
+  const original = await price.inputValue();
+  await price.fill("8");
+  await expect(section.getByRole("status").first()).toContainText("Tooling makes this unprofitable under");
+  await price.fill(original);
+  await expect(section.getByText("Saved")).toBeVisible();
 });
 
 test("uploading a STEP file converts it and measures it in millimeters", async ({ page }) => {

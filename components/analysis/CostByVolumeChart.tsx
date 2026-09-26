@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { cheapestByVolume, type CostCurve } from "@/lib/costCurve";
 import { formatUnitCostRange } from "@/lib/format";
 import { PROCESS_LABELS } from "@/lib/processes";
@@ -52,16 +52,33 @@ function placeLabels(ys: number[]): number[] {
   return placed;
 }
 
-type Props = { curves: CostCurve[]; targetQuantity: number };
+/** A horizontal reference line, e.g. the revenue per part: where a curve drops below it, that process makes money. */
+export type PriceLine = { value: number; label: string };
 
-export function CostByVolumeChart({ curves, targetQuantity }: Props) {
+type Props = {
+  curves: CostCurve[];
+  targetQuantity: number;
+  title?: string;
+  description?: React.ReactNode;
+  priceLine?: PriceLine;
+};
+
+const DEFAULT_DESCRIPTION = (
+  <>
+    Estimated all-in cost per part, with tooling spread over the run. AI estimates, shown as ranges. Cost only: the fit
+    score above also weighs finish, strength and lead time, so the best fit isn&apos;t always the cheapest.
+  </>
+);
+
+export function CostByVolumeChart({ curves, targetQuantity, title = "Cost per part by quantity", description = DEFAULT_DESCRIPTION, priceLine }: Props) {
+  const headingId = useId();
   const [ref, width] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const quantities = curves[0].points.map((p) => p.quantity);
   const summary = cheapestByVolume(curves);
 
   const geo = useMemo(() => {
-    const all = curves.flatMap((c) => c.points.flatMap((p) => [p.low, p.high]));
+    const all = [...curves.flatMap((c) => c.points.flatMap((p) => [p.low, p.high])), ...(priceLine ? [priceLine.value] : [])];
     const yMin = Math.min(...all) * 0.8;
     const yMax = Math.max(...all) * 1.25;
     const qMin = quantities[0];
@@ -74,7 +91,7 @@ export function CostByVolumeChart({ curves, targetQuantity }: Props) {
     const x = (q: number) => px(PAD.left + ((log(q) - log(qMin)) / (log(qMax) - log(qMin))) * plotW);
     const y = (v: number) => px(PAD.top + (1 - (log(v) - log(yMin)) / (log(yMax) - log(yMin))) * plotH);
     return { x, y, yTicks: logTicks(yMin, yMax), plotW, plotH, qMin, qMax };
-  }, [curves, quantities, width]);
+  }, [curves, quantities, width, priceLine]);
 
   const endYs = placeLabels(curves.map((c) => geo.y(c.points[c.points.length - 1].mid)));
   const showTarget = targetQuantity >= geo.qMin && targetQuantity <= geo.qMax;
@@ -90,13 +107,10 @@ export function CostByVolumeChart({ curves, targetQuantity }: Props) {
   };
 
   return (
-    <section aria-labelledby="cost-curve-heading" className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5">
+    <section aria-labelledby={headingId} className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5">
       <div className="flex flex-col gap-1">
-        <h3 id="cost-curve-heading" className="font-semibold">Cost per part by quantity</h3>
-        <p className="text-sm text-muted">
-          Estimated all-in cost per part, with tooling spread over the run. AI estimates, shown as ranges. Cost only: the
-          fit score above also weighs finish, strength and lead time, so the best fit isn&apos;t always the cheapest.
-        </p>
+        <h3 id={headingId} className="font-semibold">{title}</h3>
+        <p className="text-sm text-muted">{description}</p>
       </div>
       {summary && <p className="text-sm font-medium">{summary}</p>}
 
@@ -107,6 +121,12 @@ export function CostByVolumeChart({ curves, targetQuantity }: Props) {
             {PROCESS_LABELS[c.process]}
           </li>
         ))}
+        {priceLine && (
+          <li className="flex items-center gap-1.5">
+            <span aria-hidden className="w-4 border-t-2 border-dashed border-ink" />
+            {priceLine.label}
+          </li>
+        )}
       </ul>
 
       <div ref={ref} className="relative w-full">
@@ -130,6 +150,15 @@ export function CostByVolumeChart({ curves, targetQuantity }: Props) {
               <line x1={geo.x(targetQuantity)} x2={geo.x(targetQuantity)} y1={PAD.top} y2={PAD.top + geo.plotH} stroke="var(--ink)" strokeWidth={1} strokeDasharray="3 4" opacity={0.5} />
               <text x={geo.x(targetQuantity) + 6} y={PAD.top + 10} className="fill-[var(--ink)] text-[11px]">
                 Your {targetQuantity.toLocaleString("en-US")}
+              </text>
+            </g>
+          )}
+
+          {priceLine && (
+            <g>
+              <line x1={PAD.left} x2={PAD.left + geo.plotW} y1={geo.y(priceLine.value)} y2={geo.y(priceLine.value)} stroke="var(--ink)" strokeWidth={2} strokeDasharray="6 4" />
+              <text x={PAD.left + 6} y={geo.y(priceLine.value) - 6} className="fill-[var(--ink)] text-[11px] font-medium">
+                {priceLine.label} {usd(priceLine.value)}
               </text>
             </g>
           )}
@@ -176,6 +205,12 @@ export function CostByVolumeChart({ curves, targetQuantity }: Props) {
             style={{ left: Math.min(geo.x(quantities[hover]) + 12, width - 232) }}
           >
             <p className="mb-2 font-medium">{quantities[hover].toLocaleString("en-US")} units, per part</p>
+            {priceLine && (
+              <p className="mb-2 flex justify-between gap-2 border-b border-line pb-2">
+                <span>{priceLine.label}</span>
+                <span className="font-mono">{usd(priceLine.value)}</span>
+              </p>
+            )}
             <ul className="flex flex-col gap-1">
               {curves.map((c, i) => (
                 <li key={c.process} className="flex items-center justify-between gap-2">

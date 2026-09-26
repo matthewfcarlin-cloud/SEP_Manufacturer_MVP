@@ -379,6 +379,28 @@
             "seconds": 5
           }
         ]
+      },
+      "businessCase": {
+        "retailPriceUsd": 32,
+        "priceSource": "ai",
+        "quantityTiers": [
+          100,
+          1000,
+          10000
+        ],
+        "revenueShare": 0.5,
+        "priceSuggestion": {
+          "suggested": 32,
+          "low": 20,
+          "high": 55,
+          "comparables": [
+            "Blank 125B die-cast enclosures (Hammond 1590N1 style): $9-15",
+            "Pre-drilled powder-coated pedal enclosures from boutique suppliers: $20-35",
+            "Custom UV-printed/anodized drilled pedal enclosures, small batch: $35-60",
+            "Finished boutique fuzz pedals: $150-250"
+          ],
+          "reasoning": "The $180 target is the price of a complete pedal; this is only the shell, so it competes with drilled, finished 125B enclosures that sell for roughly $20-40, with a premium finish pushing toward the top."
+        }
       }
     }
   ]

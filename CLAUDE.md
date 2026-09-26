@@ -35,6 +35,8 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `POST /api/projects` – create a project (version 1); `POST /api/projects/[id]/versions` – add a version
 - `POST /api/analyze` `{ projectId, version? }` – runs AI analysis on a version, returns `Analysis`
 - `POST /api/match` `{ projectId, version? }` – returns ranked `ShopMatch[]`
+- `POST /api/business-case/suggest-price` `{ projectId, version }` – AI retail price; starts a business case if there is none, otherwise only replaces the suggestion
+- `PUT /api/business-case` `{ projectId, version, inputs }` – saves the user's inputs (keeps the suggestion)
 
 ## Data models
 ```ts
@@ -50,7 +52,17 @@ type ProjectVersion = {
   cadFileUrl?: string; imageUrls: string[];
   geometry?: GeometryStats; analysis?: Analysis; renders?: string[];
   basedOn?: number; changeNote?: string; appliedTweak?: AppliedTweak;
+  businessCase?: BusinessCaseInputs; // Phase 7: inputs only; outputs are computed
 };
+
+type BusinessCaseInputs = {
+  retailPriceUsd: number; priceSource: "ai" | "user";
+  quantityTiers: number[];   // 1-5, ascending
+  revenueShare: number;      // share of retail the maker receives, default 0.5
+  priceSuggestion?: PriceSuggestion;
+};
+
+type PriceSuggestion = { low: number; high: number; suggested: number; comparables: string[]; reasoning: string };
 
 type AppliedTweak = { fromVersion: number; process: Process; change: string; why: string; impact: string };
 
@@ -137,7 +149,7 @@ Each phase ends with a working, demoable app.
 | 4 | Pitch kit page + renders | Codex (branch `feat/pitch`) | Shareable pitch page from a real project |
 | 5 | Polish, loading states, demo parts, STEP support if time | Both | Full demo runs in <3 min without errors |
 | 6 | Iteration tracking (versions, compare, timeline) | Claude Code | Built; see Phases 6–9 below |
-| 7 | Business case per version | Claude Code | See Phases 6–9 below |
+| 7 | Business case per version | Claude Code | Built; see Phases 6–9 below |
 | 8 | Pitch to company (licensing pitch, PDF, video slot) | Claude Code | See Phases 6–9 below |
 | 9 | Privacy by default (ownership, share links, delete) | Claude Code | See Phases 6–9 below |
 
@@ -369,6 +381,12 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+- Business case (Phase 7): all math and the verdict live in `lib/businessCase.ts` (pure, client-safe, tested); the panel recomputes it on every keystroke and auto-saves inputs. Only inputs are stored. Costs between the AI's priced volumes are interpolated log-log; outside 10–10k they're clamped and flagged. The low-volume diagnosis ("tooling makes this unprofitable…") is made on the process that becomes profitable, and an alternative process is only suggested if it covers its own cost at the smallest run.
+- AI calls: `lib/analysis/claude.ts` has `callClaude` (analysis) and `callClaudePrice` (retail price, text-only, low effort). Both go through `tolerateUnparseableOutput`, so a cut-off structured answer gets the normal one retry instead of a 500. Route error mapping is shared: `aiFailure()` in `lib/analysis/errors.ts`. Price briefs (`lib/analysis/price.ts`) deliberately omit costs and the analysis summary, so the price comes from the market, not cost-plus.
+- Stored data vs. AI rules: stored `priceSuggestion` is validated structurally only; the business rules (`priceSuggestionSchema`) gate new AI answers. Tightening a rule must never make saved projects unreadable.
+- Route lookups: API routes load `{ project, version }` with `findVersion()` from `lib/versionLookup.ts`.
+- Process names mid-sentence: `processInSentence()` ("injection molding", but "CNC milling").
+- Don't run `npm run build` while `next dev` runs from the same folder: the build rewrites `.next` and the dev server then 404s routes added since it started. Stop dev, build, restart.
 - Wall thickness: `lib/wallThickness.ts` is shared by the server (sampled, for `GeometryStats`) and the browser (every triangle, for the viewer's "Show thin walls" overlay). Change the method there, not in two places.
 - Cost by quantity: `lib/costCurve.ts` turns `unitCostAtVolume` + tooling into all-in cost per part and a "cheapest by volume" sentence; `CostByVolumeChart` draws it. Series colors are the validated `--series-1..4` tokens in `app/globals.css`; keep their order.
 - Pages that read project files per request call `await connection()` (Next 16's replacement for `force-dynamic`).

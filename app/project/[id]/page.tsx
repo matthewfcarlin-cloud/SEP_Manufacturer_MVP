@@ -10,6 +10,7 @@ import { formatNumber, formatUsd } from "@/lib/format";
 import { matchVersion } from "@/lib/match";
 import { getProject } from "@/lib/projectStore";
 import { ShopMatches } from "@/components/ShopMatches";
+import { BusinessCasePanel } from "@/components/businessCase/BusinessCasePanel";
 import { VersionTimeline } from "@/components/versions/VersionTimeline";
 import type { ProjectVersion } from "@/lib/types";
 import { getVersion, latestVersion, parseVersionParam } from "@/lib/versions";
@@ -170,6 +171,16 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
           </div>
         )}
       </section>
+      {version.analysis && (
+        <BusinessCasePanel
+          key={version.number}
+          projectId={project.id}
+          version={version.number}
+          paths={version.analysis.paths}
+          targetQuantity={version.targetQuantity}
+          initial={version.businessCase}
+        />
+      )}
       {version.analysis && <ShopMatches matches={shopMatches} />}
     </div>
   );

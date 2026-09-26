@@ -29,6 +29,27 @@ export type ProjectVersion = {
   changeNote?: string;
   /** Set when the user picked one of the AI's design tweaks as the reason. */
   appliedTweak?: AppliedTweak;
+  /** Inputs for this version's business case (added in Phase 7). Outputs are computed, never stored. */
+  businessCase?: BusinessCaseInputs;
+};
+
+export type BusinessCaseInputs = {
+  retailPriceUsd: number;
+  priceSource: "ai" | "user";
+  /** 1-5 run sizes, ascending. */
+  quantityTiers: number[];
+  /** Share of retail the maker actually receives (the rest is retail/distribution margin). */
+  revenueShare: number;
+  priceSuggestion?: PriceSuggestion;
+};
+
+/** The AI's retail price estimate, from its general knowledge of similar products. */
+export type PriceSuggestion = {
+  low: number;
+  high: number;
+  suggested: number;
+  comparables: string[];
+  reasoning: string;
 };
 
 export type AppliedTweak = {
