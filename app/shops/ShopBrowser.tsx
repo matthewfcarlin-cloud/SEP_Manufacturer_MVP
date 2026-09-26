@@ -6,7 +6,7 @@ import { PROCESS_LABELS, PROCESSES } from "@/lib/processes";
 import { DEFAULT_SHOP_FILTER, filterShops, type ShopFilter } from "@/lib/shopFilter";
 import type { Process, Shop } from "@/lib/types";
 
-const chipBase = "rounded-full border px-3 py-1.5 text-sm transition-colors";
+const chipBase = "shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm transition-colors";
 const chipOn = "border-ink bg-ink text-bg";
 const chipOff = "border-line bg-surface text-muted hover:text-ink";
 
@@ -25,7 +25,7 @@ export function ShopBrowser({ shops }: { shops: readonly Shop[] }) {
             type="search"
             value={filter.query}
             onChange={(e) => update({ query: e.target.value })}
-            placeholder="Search shops, neighborhoods, machines, materials"
+            placeholder="Search shops or machines"
             aria-label="Search shops"
             className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink sm:max-w-md"
           />
@@ -39,7 +39,12 @@ export function ShopBrowser({ shops }: { shops: readonly Shop[] }) {
             Idle machines only
           </label>
         </div>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by process">
+        <div
+          className="-mx-4 flex flex-nowrap gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0"
+          role="group"
+          aria-label="Filter by process. Scroll horizontally on small screens."
+          tabIndex={0}
+        >
           {processOptions.map((p) => (
             <button
               key={p}

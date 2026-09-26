@@ -3,6 +3,10 @@ import { PROCESS_LABELS } from "@/lib/processes";
 import { getShopById } from "@/lib/shops";
 import type { ShopMatch } from "@/lib/types";
 
+// Labels by position: lib/match.ts emits reasons in this order, and
+// lib/match.test.ts fails if that order changes.
+const REASON_LABELS = ["Process", "Part size", "Material", "Order size", "Capacity"];
+
 export function ShopMatches({ matches }: { matches: ShopMatch[] }) {
   return (
     <section aria-labelledby="shop-matches-heading" className="flex flex-col gap-4 border-t border-line pt-8">
@@ -28,18 +32,26 @@ export function ShopMatches({ matches }: { matches: ShopMatch[] }) {
                     <DemoBadge />
                   </div>
                 </div>
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-bg p-3">
-                  <div>
-                    <p className="text-xs text-muted">Matched machine</p>
+                <div className="grid gap-3 rounded-xl bg-bg p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted">Matched machine</p>
                     <p className="font-medium">{match.matchedMachine.model}</p>
-                    <p className="text-xs text-muted">{PROCESS_LABELS[match.matchedMachine.type]}</p>
+                    <p className="text-sm text-muted">{PROCESS_LABELS[match.matchedMachine.type]} · {match.matchedMachine.envelopeMm.x} × {match.matchedMachine.envelopeMm.y} × {match.matchedMachine.envelopeMm.z} mm</p>
                   </div>
-                  <p className="text-2xl font-semibold tabular-nums">{match.score}<span className="text-sm font-normal text-muted"> / 100</span></p>
+                  <div className="sm:text-right">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted">Match score</p>
+                    <p className="text-2xl font-semibold tabular-nums">{match.score}<span className="text-sm font-normal text-muted"> / 100</span></p>
+                  </div>
                 </div>
                 <div>
                   <h4 className="mb-1 text-sm font-semibold">Why it matches</h4>
-                  <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-muted">
-                    {match.reasons.map((reason) => <li key={reason}>{reason}</li>)}
+                  <ul className="grid gap-2 sm:grid-cols-2">
+                    {match.reasons.map((reason, reasonIndex) => (
+                      <li key={reason} className="flex items-start gap-2 rounded-lg border border-line bg-bg/60 p-3 text-sm">
+                        <span aria-hidden className="mt-0.5 font-semibold text-accent">{reasonIndex + 1}.</span>
+                        <span><span className="mb-0.5 block text-xs font-medium uppercase tracking-wider text-muted">{REASON_LABELS[reasonIndex] ?? "Fit detail"}</span>{reason}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
                 {match.requiredTweaks.length > 0 && (

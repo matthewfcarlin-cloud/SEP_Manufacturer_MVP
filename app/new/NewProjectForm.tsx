@@ -263,6 +263,16 @@ export function NewProjectForm() {
           <PhotoPicker photos={photos} onAdd={addPhotos} onRemove={removePhoto} />
         </div>
 
+        <details className="rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+          <summary className="cursor-pointer font-medium">How your project data is used</summary>
+          <p className="mt-3 leading-relaxed text-muted">
+            Your files are stored with this project. When you ask for AI analysis, the project details,
+            geometry, notes, and selected photos are sent to this app&apos;s configured AI provider.
+            The demo shop directory does not receive your files. This MVP does not include NDA or
+            manufacturer file-sharing workflows.
+          </p>
+        </details>
+
         {error && (
           <p role="alert" className="rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm">
             {error}

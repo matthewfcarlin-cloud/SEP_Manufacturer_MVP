@@ -118,6 +118,11 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
               ways to make it with estimated costs, lead times, and design tweaks, favoring machines
               that are idle at local shops this month.
             </p>
+            <p className="max-w-2xl rounded-lg bg-surface p-4 text-sm text-muted">
+              <span className="font-semibold text-ink">Privacy before analysis. </span>
+              Your project details, geometry, notes, and photos are sent to this app&apos;s configured
+              AI provider when you run analysis. The demo shops do not receive your files.
+            </p>
             <RunAnalysisButton projectId={project.id} />
           </div>
         )}

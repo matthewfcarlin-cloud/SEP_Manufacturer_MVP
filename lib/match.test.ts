@@ -68,4 +68,14 @@ describe("matchProject", () => {
       expect(match.requiredTweaks.length).toBeLessThanOrEqual(2);
     }
   });
+
+  it("keeps reasons in the order ShopMatches labels them", () => {
+    // components/ShopMatches.tsx labels reasons by position:
+    // Process, Part size, Material, Order size, Capacity (only when idle).
+    const patterns = [/^Process matches/, /^Part (fits|exceeds)/, /^(Material match|No direct material)/, /^Target quantity/, /idle capacity/];
+    for (const match of matchProject(sampleProject as Project)) {
+      expect(match.reasons.length).toBe(match.idleBoost ? 5 : 4);
+      match.reasons.forEach((reason, i) => expect(reason).toMatch(patterns[i]));
+    }
+  });
 });

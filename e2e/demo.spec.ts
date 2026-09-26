@@ -20,7 +20,9 @@ async function removeCreatedProject(page: Page): Promise<void> {
 
 test("landing page opens a pre-analyzed example with paths and shop matches", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("link", { name: /Fuzz pedal enclosure/ }).click();
+  // The hero's example card links to the same project.
+  await expect(page.locator("article").getByRole("link", { name: "Fuzz pedal enclosure" })).toHaveAttribute("href", `/project/${PEDAL.id}`);
+  await page.getByRole("region", { name: "See an example" }).getByRole("link", { name: /Fuzz pedal enclosure/ }).click();
   await expect(page).toHaveURL(`/project/${PEDAL.id}`);
 
   await expect(page.locator("canvas")).toBeVisible();
