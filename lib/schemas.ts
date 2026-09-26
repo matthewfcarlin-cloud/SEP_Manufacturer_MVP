@@ -100,7 +100,7 @@ const manufacturingPathSchema = z.object({
   materials: z.array(z.string()).describe("Specific grades suited to this part, best first."),
   pros: z.array(z.string()),
   cons: z.array(z.string()),
-  designTweaks: z.array(designTweakSchema).describe("1-4 tweaks that make this path cheaper or more reliable."),
+  designTweaks: z.array(designTweakSchema).describe("2-3 tweaks that make this path cheaper or more reliable."),
 });
 
 const storyboardShotSchema = z.object({
@@ -111,11 +111,11 @@ const storyboardShotSchema = z.object({
 });
 
 export const analysisOutputSchema = z.object({
-  productSummary: z.string().describe("2-3 sentences: what the product is, who buys it, and the key manufacturing takeaway."),
-  detectedFeatures: z.array(z.string()).describe("Physical features of this part (bosses, ribs, pockets, undercuts, threads, cavities...)."),
+  productSummary: z.string().describe("2 sentences, under 50 words: what it is, who buys it, and the key manufacturing takeaway."),
+  detectedFeatures: z.array(z.string()).describe("4-8 short noun phrases (under 8 words each) naming physical features of this part."),
   paths: z.array(manufacturingPathSchema).describe("2-4 candidate processes, best fit first."),
-  topRecommendation: z.string().describe("One short paragraph: the path to take now, and when to switch if volume grows."),
-  risks: z.array(z.string()),
+  topRecommendation: z.string().describe("2-3 sentences, under 70 words: the path to take now, and the quantity where that changes."),
+  risks: z.array(z.string()).describe("3-5 one-sentence risks, most important first."),
   storyboard: z.array(storyboardShotSchema).describe("Exactly 6 shots of a 30-second commercial, seconds summing to 30."),
 });
 

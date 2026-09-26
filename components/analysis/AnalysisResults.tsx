@@ -26,7 +26,7 @@ function Storyboard({ shots }: { shots: Analysis["storyboard"] }) {
 export function AnalysisResults({ analysis, quantity }: { analysis: Analysis; quantity: number }) {
   return (
     <div className="flex flex-col gap-6">
-      <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+      <section className="grid items-start gap-4 lg:grid-cols-[1.5fr_1fr]">
         <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-5">
           <h3 className="font-semibold">Recommendation</h3>
           <p>{analysis.topRecommendation}</p>

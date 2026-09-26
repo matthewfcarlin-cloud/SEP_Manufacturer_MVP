@@ -29,7 +29,9 @@ function getClient(): Anthropic {
   return client;
 }
 
-// Stable across requests, so it's marked for prompt caching.
+// Stable across requests and marked for caching, but at ~1.5k tokens it is
+// under Opus's minimum cacheable prefix, so today it isn't actually cached
+// (cacheRead stays 0). It will start caching if the prompt grows past that.
 const systemPrompt = buildSystemPrompt(summarizeCapacity(getShops()));
 
 export const callClaude: CallModel = async ({ images, text }) => {
@@ -59,6 +61,7 @@ export const callClaude: CallModel = async ({ images, text }) => {
     model: response.model,
     stop: response.stop_reason,
     input: response.usage.input_tokens,
+    cacheWrite: response.usage.cache_creation_input_tokens,
     cacheRead: response.usage.cache_read_input_tokens,
     output: response.usage.output_tokens,
   });

@@ -26,6 +26,14 @@ How to answer:
 - The storyboard is a 30-second TV-commercial-style pitch aimed at a decision-maker at a company that might manufacture, license, or stock this product: how will we sell this? Exactly 6 shots whose durations add up to 30 seconds. "visual" is what the camera sees; "voiceover" is the spoken line.
 - Write plainly for a smart non-engineer. No marketing fluff outside the storyboard.
 
+Length: this is read on a results page and presented live, so every field is short and scannable. Put the reasoning into the numbers and the tweaks, not into prose.
+- productSummary: 2 sentences, under 50 words.
+- topRecommendation: 2-3 sentences, under 70 words: what to do now, and the quantity where that changes.
+- detectedFeatures: 4-8 items, each a short noun phrase under 8 words (e.g. "36 mm-deep open cavity").
+- risks: 3-5 items, one sentence each, most important first.
+- Per path: 2-4 pros and 2-4 cons, each under 15 words; 2-3 design tweaks, each "change" under 25 words, "why" and "impact" one sentence each.
+- Storyboard lines: visual under 25 words, voiceover under 20 words.
+
 Units: geometry comes from an STL and is read as millimeters. If the dimensions look implausible for the product described (for example a 3 mm guitar), say so in risks and reason about the likely intended scale.
 
 Local shop capacity this month (fictional demo shops around Los Angeles):
