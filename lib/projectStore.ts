@@ -112,3 +112,17 @@ export async function readProjectFile(id: string, fileName: string): Promise<Sto
     throw err;
   }
 }
+
+export type ProjectImage = { mediaType: "image/jpeg" | "image/png" | "image/webp"; base64: string };
+
+/** Loads a project's uploaded photos as base64, in upload order. */
+export async function getProjectImages(project: Project): Promise<ProjectImage[]> {
+  const names = project.imageUrls.map((url) => url.split("/").pop() ?? "");
+  const files = await Promise.all(names.map((name) => readProjectFile(project.id, name)));
+  return files
+    .filter((f): f is StoredFile => f !== null)
+    .map((f) => ({
+      mediaType: f.contentType as ProjectImage["mediaType"],
+      base64: Buffer.from(f.bytes).toString("base64"),
+    }));
+}

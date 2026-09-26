@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { AnalysisResults } from "@/components/analysis/AnalysisResults";
+import { RunAnalysisButton } from "@/components/analysis/RunAnalysisButton";
 import { GeometryPanel } from "@/components/GeometryPanel";
 import { ModelViewer } from "@/components/viewer";
 import { formatNumber, formatUsd } from "@/lib/format";
@@ -89,9 +91,25 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
         </section>
       )}
 
-      <section className="rounded-xl border border-dashed border-line p-6 text-sm text-muted">
-        <h2 className="mb-1 font-semibold text-ink">Manufacturing analysis</h2>
-        Not built yet. Phase 2 adds manufacturing paths, cost ranges, and design tweaks here.
+      <section aria-labelledby="analysis-heading" className="flex flex-col gap-4 border-t border-line pt-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 id="analysis-heading" className="text-2xl font-semibold tracking-tight">
+            How it could be made
+          </h2>
+          {project.analysis && <RunAnalysisButton projectId={project.id} variant="secondary" />}
+        </div>
+        {project.analysis ? (
+          <AnalysisResults analysis={project.analysis} quantity={project.targetQuantity} />
+        ) : (
+          <div className="flex flex-col gap-4 rounded-xl border border-dashed border-line p-6">
+            <p className="max-w-2xl text-muted">
+              An AI manufacturing engineer will read your part, photos, and notes, then suggest 2–4
+              ways to make it with estimated costs, lead times, and design tweaks, favoring machines
+              that are idle at local shops this month.
+            </p>
+            <RunAnalysisButton projectId={project.id} />
+          </div>
+        )}
       </section>
     </div>
   );

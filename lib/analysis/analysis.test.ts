@@ -1,0 +1,132 @@
+import { describe, expect, test, vi } from "vitest";
+import { getShops } from "../shops";
+import type { Project } from "../types";
+import { summarizeCapacity } from "./capacity";
+import { sampleAnalysis } from "./fixtures";
+import { buildProjectBrief, buildSystemPrompt } from "./prompt";
+import { AnalysisError, normalizeAnalysis, runAnalysis, type CallModel } from "./run";
+
+const input = { images: [], text: "brief" };
+
+describe("normalizeAnalysis", () => {
+  const normalized = normalizeAnalysis(sampleAnalysis());
+
+  test("sorts paths by fit score, best first", () => {
+    expect(normalized.paths.map((p) => p.fitScore)).toEqual([82, 64]);
+  });
+
+  test("rounds unit cost to cents and tooling and lead time to whole numbers", () => {
+    const cnc = normalized.paths[0];
+    expect(cnc.unitCostUsd).toEqual({ low: 18.33, high: 26.5 });
+    expect(cnc.toolingCostUsd).toEqual({ low: 150, high: 501 });
+    expect(cnc.leadTimeDays).toEqual({ low: 7, high: 12 });
+  });
+
+  test("renumbers storyboard shots from 1", () => {
+    expect(normalized.storyboard.map((s) => s.shot)).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  test("does not mutate its input", () => {
+    const original = sampleAnalysis();
+    const snapshot = structuredClone(original);
+    normalizeAnalysis(original);
+    expect(original).toEqual(snapshot);
+  });
+});
+
+describe("runAnalysis", () => {
+  test("returns the normalized analysis when the first answer is valid", async () => {
+    const call = vi.fn<CallModel>().mockResolvedValue({ stopReason: "end_turn", output: sampleAnalysis() });
+    const result = await runAnalysis(call, input);
+    expect(call).toHaveBeenCalledTimes(1);
+    expect(result.paths[0].process).toBe("cnc_milling");
+  });
+
+  test("retries once, naming the validation problems, then succeeds", async () => {
+    const bad = sampleAnalysis({ storyboard: sampleAnalysis().storyboard.slice(0, 4) });
+    const call = vi
+      .fn<CallModel>()
+      .mockResolvedValueOnce({ stopReason: "end_turn", output: bad })
+      .mockResolvedValueOnce({ stopReason: "end_turn", output: sampleAnalysis() });
+
+    await runAnalysis(call, input);
+
+    expect(call).toHaveBeenCalledTimes(2);
+    const retryText = call.mock.calls[1][0].text;
+    expect(retryText).toContain("brief");
+    expect(retryText).toMatch(/storyboard: need exactly 6 shots, got 4/);
+  });
+
+  test.each([
+    ["inverted cost range", { paths: [{ ...sampleAnalysis().paths[0], unitCostUsd: { low: 20, high: 5 } }, sampleAnalysis().paths[1]] }],
+    ["single path", { paths: [sampleAnalysis().paths[0]] }],
+    ["fit score over 100", { paths: [{ ...sampleAnalysis().paths[0], fitScore: 140 }, sampleAnalysis().paths[1]] }],
+    ["storyboard far from 30 s", { storyboard: sampleAnalysis().storyboard.map((s) => ({ ...s, seconds: 20 })) }],
+  ])("rejects %s and gives up after the retry", async (_label, patch) => {
+    const call = vi.fn<CallModel>().mockResolvedValue({ stopReason: "end_turn", output: sampleAnalysis(patch) });
+    await expect(runAnalysis(call, input)).rejects.toBeInstanceOf(AnalysisError);
+    expect(call).toHaveBeenCalledTimes(2);
+  });
+
+  test("retries after a truncated answer", async () => {
+    const call = vi
+      .fn<CallModel>()
+      .mockResolvedValueOnce({ stopReason: "max_tokens", output: null })
+      .mockResolvedValueOnce({ stopReason: "end_turn", output: sampleAnalysis() });
+    await expect(runAnalysis(call, input)).resolves.toBeDefined();
+    expect(call.mock.calls[1][0].text).toMatch(/cut off/);
+  });
+
+  test("does not retry a refusal", async () => {
+    const call = vi.fn<CallModel>().mockResolvedValue({ stopReason: "refusal", output: null });
+    await expect(runAnalysis(call, input)).rejects.toThrow(/declined/);
+    expect(call).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("prompts", () => {
+  const project: Project = {
+    id: "abcdefghij",
+    name: "Fuzz pedal enclosure",
+    createdAt: new Date().toISOString(),
+    notes: "Stompbox enclosure",
+    targetQuantity: 250,
+    budgetUsd: 4000,
+    materialHints: ["aluminum"],
+    imageUrls: [],
+    geometry: {
+      boundingBoxMm: { x: 122, y: 66, z: 39.5 },
+      volumeCm3: 53.985,
+      surfaceAreaCm2: 441.28,
+      triangleCount: 28,
+      isWatertight: true,
+      thinWallWarning: false,
+    },
+  };
+
+  test("the brief carries this part's numbers and a mass anchor", () => {
+    const brief = buildProjectBrief(project, 2);
+    expect(brief).toContain("122 × 66 × 39.5 mm");
+    expect(brief).toContain("250 units");
+    expect(brief).toContain("$4,000");
+    expect(brief).toContain("aluminum 6061 ~146 g"); // 53.985 cm³ × 2.7
+    expect(brief).toContain("attached above: 2");
+  });
+
+  test("the brief says so when there is no budget or geometry", () => {
+    const brief = buildProjectBrief({ ...project, budgetUsd: undefined, geometry: undefined }, 0);
+    expect(brief).toContain("Budget: not given");
+    expect(brief).toContain("No CAD geometry");
+  });
+
+  test("the system prompt lists every process with idle counts from the seed data", () => {
+    const capacity = summarizeCapacity(getShops());
+    expect(capacity.split("\n")).toHaveLength(9);
+    expect(capacity).toMatch(/CNC turning \(cnc_turning\): \d+ machines at \d+ shops, 4 idle this month/);
+    expect(buildSystemPrompt(capacity)).toContain(capacity);
+  });
+
+  test("the system prompt is deterministic, so it stays cacheable", () => {
+    expect(buildSystemPrompt(summarizeCapacity(getShops()))).toBe(buildSystemPrompt(summarizeCapacity(getShops())));
+  });
+});
