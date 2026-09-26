@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExampleProjects } from "@/components/home/ExampleProjects";
 import { getShops, summarizeShops } from "@/lib/shops";
 
 const STEPS = [
@@ -52,6 +53,8 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      <ExampleProjects />
 
       <section aria-labelledby="how-it-works" className="flex flex-col gap-6">
         <h2 id="how-it-works" className="text-sm font-medium uppercase tracking-widest text-muted">

@@ -1,6 +1,21 @@
 import { z } from "zod";
 
 export const MAX_STL_BYTES = 50 * 1024 * 1024;
+/** CAD file extensions the upload accepts. STEP is converted to STL on the server. */
+export const CAD_EXTENSIONS = [".stl", ".step", ".stp"] as const;
+
+export type CadFormat = "stl" | "step";
+
+/**
+ * Identifies the CAD format from the file's content, falling back to the
+ * extension only to tell ASCII STL from anything else. STEP files always
+ * begin with the ISO-10303-21 header.
+ */
+export function detectCadFormat(fileName: string, head: Uint8Array): CadFormat | null {
+  const text = new TextDecoder().decode(head.subarray(0, 64)).trimStart();
+  if (text.startsWith("ISO-10303-21")) return "step";
+  return fileName.toLowerCase().endsWith(".stl") ? "stl" : null;
+}
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // Claude's per-image limit
 export const MAX_IMAGES = 5;
 export const MAX_MATERIAL_HINTS = 10;

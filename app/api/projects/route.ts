@@ -1,6 +1,7 @@
 import { fail, ok } from "@/lib/api";
 import { analyzeStl, StlParseError } from "@/lib/geometry";
 import {
+  detectCadFormat,
   detectImageType,
   MAX_IMAGE_BYTES,
   MAX_IMAGES,
@@ -9,6 +10,7 @@ import {
   type ImageType,
 } from "@/lib/projectInput";
 import { createProject } from "@/lib/projectStore";
+import { StepParseError, stepToStl } from "@/lib/step";
 
 const TEXT_FIELDS = ["name", "notes", "targetQuantity", "budgetUsd", "materialHints"] as const;
 const MB = 1024 * 1024;
@@ -48,24 +50,30 @@ export async function POST(request: Request): Promise<Response> {
   const fields = parseProjectFields(raw);
   if (!fields.success) return fail(fields.error, 400);
 
-  const stlFile = form.get("stl");
-  if (!(stlFile instanceof File) || stlFile.size === 0) {
-    return fail("Attach an STL file of your part.", 400);
+  const cadFile = form.get("stl");
+  if (!(cadFile instanceof File) || cadFile.size === 0) {
+    return fail("Attach an STL or STEP file of your part.", 400);
   }
-  if (stlFile.size > MAX_STL_BYTES) {
-    return fail(`STL files must be under ${MAX_STL_BYTES / MB} MB.`, 400);
+  if (cadFile.size > MAX_STL_BYTES) {
+    return fail(`CAD files must be under ${MAX_STL_BYTES / MB} MB.`, 400);
   }
 
   const imageFiles = form.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
   const images = await readImages(imageFiles);
   if (typeof images === "string") return fail(images, 400);
 
-  const stlBuffer = await stlFile.arrayBuffer();
+  const cadBytes = new Uint8Array(await cadFile.arrayBuffer());
+  const format = detectCadFormat(cadFile.name, cadBytes);
+  if (!format) return fail("Upload an STL or STEP (.step, .stp) file.", 400);
+
+  let stlBuffer: ArrayBuffer;
   let geometry;
   try {
+    // Everything downstream (viewer, geometry, AI brief) works on STL.
+    stlBuffer = format === "step" ? await stepToStl(cadBytes) : cadBytes.buffer.slice(cadBytes.byteOffset, cadBytes.byteOffset + cadBytes.byteLength);
     geometry = analyzeStl(stlBuffer);
   } catch (err) {
-    if (err instanceof StlParseError) return fail(err.message, 400);
+    if (err instanceof StlParseError || err instanceof StepParseError) return fail(err.message, 400);
     console.error("[api/projects] geometry analysis failed", err);
     return fail("Something went wrong measuring this part. Try re-exporting the STL.", 500);
   }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { detectImageType, parseProjectFields } from "./projectInput";
+import { detectCadFormat, detectImageType, parseProjectFields } from "./projectInput";
 
 const valid = {
   name: "Fuzz pedal enclosure",
@@ -65,5 +65,21 @@ describe("detectImageType", () => {
   test("rejects anything else, whatever its extension claims", () => {
     expect(detectImageType(new TextEncoder().encode("<svg xmlns=...>"))).toBeNull();
     expect(detectImageType(new Uint8Array(2))).toBeNull();
+  });
+});
+
+describe("detectCadFormat", () => {
+  const bytes = (s: string) => new TextEncoder().encode(s);
+
+  test("recognizes STEP by its header, whatever the extension", () => {
+    expect(detectCadFormat("part.step", bytes("ISO-10303-21;\nHEADER;"))).toBe("step");
+    expect(detectCadFormat("part.STP", bytes("  ISO-10303-21;"))).toBe("step");
+    expect(detectCadFormat("renamed.stl", bytes("ISO-10303-21;"))).toBe("step");
+  });
+
+  test("treats other .stl files as STL and rejects unknown files", () => {
+    expect(detectCadFormat("part.STL", new Uint8Array(84))).toBe("stl");
+    expect(detectCadFormat("part.step", bytes("not really step"))).toBeNull();
+    expect(detectCadFormat("model.obj", bytes("v 0 0 0"))).toBeNull();
   });
 });

@@ -43,6 +43,9 @@ export function GeometryPanel({ geometry }: { geometry: GeometryStats }) {
         <Row label="Bounding box" value={formatDimensions(geometry.boundingBoxMm)} />
         <Row label="Volume" value={`${formatNumber(geometry.volumeCm3)} cm³`} />
         <Row label="Surface area" value={`${formatNumber(geometry.surfaceAreaCm2)} cm²`} />
+        {geometry.typicalWallMm !== undefined && (
+          <Row label="Typical wall" value={`${formatNumber(geometry.typicalWallMm)} mm`} />
+        )}
         <Row label="Triangles" value={formatNumber(geometry.triangleCount, 0)} />
       </dl>
 

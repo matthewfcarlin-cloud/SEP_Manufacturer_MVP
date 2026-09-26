@@ -45,6 +45,7 @@ type GeometryStats = {
   boundingBoxMm: { x: number; y: number; z: number };
   volumeCm3: number; surfaceAreaCm2: number; triangleCount: number;
   isWatertight: boolean; thinWallWarning?: boolean;
+  typicalWallMm?: number; // area-weighted median wall thickness (added Phase 5)
 };
 
 type Process = "cnc_milling" | "cnc_turning" | "fdm_print" | "sla_print" | "sls_print"
@@ -149,5 +150,5 @@ Each phase ends with a working, demoable app.
 - 3D viewer: import `ModelViewer` from `@/components/viewer` (client-only, loaded with `ssr: false`). Don't use drei `<Html>` as a Suspense fallback inside the Canvas; it crashes under React 19.
 - API routes return the `ApiResponse<T>` envelope from `lib/api.ts` (`ok()` / `fail()`).
 - Demo parts: `npm run demo:stl` regenerates `demo/*.stl` from `lib/meshes.ts`.
-- Sample project: `demo/sample-project.json` is a real saved Claude analysis of the pedal enclosure (250 units). Run `npm run demo:seed` to install it, then open `/project/CNETztynoc`. Build the matching and pitch features against it; no API key needed. A test keeps it valid against `projectSchema`.
+- Sample project: `demo/sample-project.json` is a real saved Claude analysis of the pedal enclosure (250 units). Run `npm run demo:seed` to install it, then open `/project/yAeM9-RDOE`. Build the matching and pitch features against it; no API key needed. A test keeps it valid against `projectSchema`.
 - AI analysis: `lib/analysis/` (`prompt.ts` builds the prompts, `run.ts` validates and retries once, `claude.ts` is the only file that calls the SDK). The model sees `analysisOutputSchema` (structural only); `analysisSchema` in `lib/schemas.ts` adds the business rules. Model and effort come from `IDLEFIT_MODEL` / `IDLEFIT_EFFORT` (default `claude-opus-5` / `high`). The local-capacity summary in the system prompt comes from `data/shops.json`, so editing shops changes the prompt.

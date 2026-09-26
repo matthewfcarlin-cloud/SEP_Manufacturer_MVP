@@ -23,6 +23,8 @@ export type GeometryStats = {
   triangleCount: number;
   isWatertight: boolean;
   thinWallWarning?: boolean;
+  /** Area-weighted median material thickness in mm (added in Phase 5). */
+  typicalWallMm?: number;
 };
 
 export type Process =

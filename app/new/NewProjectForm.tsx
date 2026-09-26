@@ -5,7 +5,7 @@ import { useRef, useState, type DragEvent, type FormEvent } from "react";
 import { ModelViewer } from "@/components/viewer";
 import type { ApiResponse } from "@/lib/api";
 import { resizeImageToJpeg } from "@/lib/client/resizeImage";
-import { MAX_IMAGES, MAX_STL_BYTES } from "@/lib/projectInput";
+import { CAD_EXTENSIONS, MAX_IMAGES, MAX_STL_BYTES } from "@/lib/projectInput";
 
 // Object URLs are created and revoked in event handlers only. Revoking in an
 // unmount effect would break under StrictMode's simulated unmount; the few
@@ -22,9 +22,12 @@ function formatBytes(bytes: number): string {
 const inputClass =
   "w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink";
 
-function validateStl(file: File): string | null {
-  if (!file.name.toLowerCase().endsWith(".stl")) return "That isn't an .stl file.";
-  if (file.size > MAX_STL_BYTES) return `STL files must be under ${MAX_STL_BYTES / MB} MB.`;
+const isStep = (file: File) => /\.(step|stp)$/i.test(file.name);
+
+function validateCad(file: File): string | null {
+  const name = file.name.toLowerCase();
+  if (!CAD_EXTENSIONS.some((ext) => name.endsWith(ext))) return "Upload an STL or STEP (.step, .stp) file.";
+  if (file.size > MAX_STL_BYTES) return `CAD files must be under ${MAX_STL_BYTES / MB} MB.`;
   return null;
 }
 
@@ -44,9 +47,9 @@ function StlPicker({ stl, onPick }: { stl: LocalFile | null; onPick: (f: File) =
       <input
         ref={inputRef}
         type="file"
-        accept=".stl,model/stl"
+        accept={CAD_EXTENSIONS.join(",")}
         className="sr-only"
-        aria-label="STL file"
+        aria-label="CAD file (STL or STEP)"
         onChange={(e) => {
           const picked = e.target.files?.[0];
           if (picked) onPick(picked);
@@ -55,7 +58,17 @@ function StlPicker({ stl, onPick }: { stl: LocalFile | null; onPick: (f: File) =
       />
       {stl ? (
         <>
-          <ModelViewer url={stl.previewUrl} className="aspect-[4/3] w-full" />
+          {isStep(stl.file) ? (
+            // The browser viewer reads STL only; STEP is converted on upload.
+            <div className="grid aspect-[4/3] w-full place-items-center rounded-xl border border-line bg-surface p-6 text-center">
+              <span className="flex flex-col gap-1">
+                <span className="font-medium">STEP file ready</span>
+                <span className="text-sm text-muted">It&apos;s converted to a 3D mesh when you create the project; the preview appears on the next page.</span>
+              </span>
+            </div>
+          ) : (
+            <ModelViewer url={stl.previewUrl} className="aspect-[4/3] w-full" />
+          )}
           <div className="flex items-center justify-between gap-2 text-sm">
             <span className="truncate text-muted">
               {stl.file.name} · {formatBytes(stl.file.size)}
@@ -80,7 +93,7 @@ function StlPicker({ stl, onPick }: { stl: LocalFile | null; onPick: (f: File) =
           }`}
         >
           <span className="flex flex-col gap-1">
-            <span className="font-medium">Drop your STL here</span>
+            <span className="font-medium">Drop your STL or STEP file here</span>
             <span className="text-sm text-muted">or click to browse · up to {MAX_STL_BYTES / MB} MB</span>
           </span>
         </button>
@@ -151,7 +164,7 @@ export function NewProjectForm() {
   const [submitting, setSubmitting] = useState(false);
 
   const pickStl = (file: File) => {
-    const problem = validateStl(file);
+    const problem = validateCad(file);
     setError(problem);
     if (problem) return;
     if (stl) URL.revokeObjectURL(stl.previewUrl);
@@ -177,7 +190,7 @@ export function NewProjectForm() {
   const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!stl) {
-      setError("Add an STL file of your part.");
+      setError("Add an STL or STEP file of your part.");
       return;
     }
     const body = new FormData(e.currentTarget);
@@ -201,7 +214,7 @@ export function NewProjectForm() {
     <form onSubmit={onSubmit} className="grid gap-8 lg:grid-cols-[1.1fr_1fr]" noValidate>
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium">
-          CAD file <span className="text-muted">(STL, in millimeters)</span>
+          CAD file <span className="text-muted">(STL in millimeters, or STEP)</span>
         </h2>
         <StlPicker stl={stl} onPick={pickStl} />
       </section>

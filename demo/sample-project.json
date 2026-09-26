@@ -1,15 +1,15 @@
 {
-  "id": "CNETztynoc",
+  "id": "yAeM9-RDOE",
   "name": "Fuzz pedal enclosure",
-  "createdAt": "2026-09-26T04:39:36.588Z",
-  "notes": "Enclosure for a boutique guitar fuzz pedal, similar in size to a Hammond 125B. One footswitch and two knobs on the top face, input/output jacks on the long sides, DC jack on the top end. It gets stomped on stage, so it has to be tough, and the finish matters because boutique pedals sell on looks. I want to sell them for around $180.",
+  "createdAt": "2026-09-26T05:50:52.420Z",
+  "notes": "Enclosure for a boutique guitar fuzz pedal, 125B-size. Top face: one 3PDT footswitch (12 mm hole) and two pots (7.5 mm holes). 1/4\" input and output jacks on the long sides, 9 V DC jack on the top end. Four corner bosses take M3 screws for a flat bottom plate. It gets stomped on stage, so it must be tough, and the finish matters because boutique pedals sell on looks. Retail target around $180.",
   "targetQuantity": 250,
   "budgetUsd": 4000,
   "materialHints": [
     "aluminum",
     "zinc die-cast"
   ],
-  "cadFileUrl": "/api/files/CNETztynoc/model.stl",
+  "cadFileUrl": "/api/files/yAeM9-RDOE/model.stl",
   "imageUrls": [],
   "geometry": {
     "boundingBoxMm": {
@@ -17,39 +17,40 @@
       "y": 66,
       "z": 39.5
     },
-    "volumeCm3": 53.985,
-    "surfaceAreaCm2": 441.28,
-    "triangleCount": 28,
+    "volumeCm3": 56.483,
+    "surfaceAreaCm2": 463.6,
+    "triangleCount": 3578,
     "isWatertight": true,
-    "thinWallWarning": false
+    "thinWallWarning": false,
+    "typicalWallMm": 2.5
   },
   "analysis": {
-    "productSummary": "A 122 × 66 × 39.5 mm hollow enclosure for a boutique stomp-box fuzz pedal, sold to guitarists at ~$180 and pitched to pedal brands or distributors. At 250 units, CNC-milled 6061 gives the tough, premium finish the market pays for without mold tooling.",
+    "productSummary": "A 122 × 66 × 39.5 mm hollow enclosure for a 125B-format boutique fuzz pedal, sold to guitarists at ~$180 retail. At 250 units the winning move is CNC work on aluminum — ideally on a bought-in die-cast blank rather than a solid billet.",
     "detectedFeatures": [
-      "Rectangular shell, 122 × 66 × 39.5 mm",
-      "Open-bottom cavity roughly 36 mm deep",
-      "Uniform wall thickness about 2.5 mm",
-      "Flat top face for footswitch and knobs",
-      "Sharp outer edges, no chamfer or radius modeled",
-      "No jack, pot, or footswitch holes present",
-      "No mounting bosses or bottom-plate lip",
-      "28-triangle mesh: simplified block placeholder"
+      "~36 mm-deep open bottom cavity",
+      "2.5 mm nominal shell walls",
+      "Four corner screw bosses for M3",
+      "12 mm footswitch hole, top face",
+      "Two 7.5 mm potentiometer holes",
+      "1/4\" jack holes on both long sides",
+      "9 V DC jack hole on end wall",
+      "Flat bottom-plate seating flange"
     ],
     "paths": [
       {
         "process": "cnc_milling",
-        "fitScore": 88,
+        "fitScore": 89,
         "unitCostUsd": {
-          "low": 26,
-          "high": 52
+          "low": 22,
+          "high": 48
         },
         "toolingCostUsd": {
-          "low": 300,
-          "high": 900
+          "low": 150,
+          "high": 600
         },
         "leadTimeDays": {
           "low": 12,
-          "high": 21
+          "high": 20
         },
         "materials": [
           "Aluminum 6061",
@@ -57,95 +58,93 @@
           "Brass 360"
         ],
         "pros": [
-          "Billet 6061 shell reads as premium; anodize or powder coat beautifully",
-          "No mold tooling, so 250 units fits a $4,000 NRE budget",
-          "Six idle mills locally; easy to re-run 50 at a time",
-          "Tough enough to be stomped for decades"
+          "Metal shell survives stage stomping and shields the circuit",
+          "Six idle mills locally; no mold tooling risk",
+          "Powder coat or anodize gives the boutique finish buyers pay for",
+          "Easy to revise hole pattern between batches"
         ],
         "cons": [
-          "Hogging ~264 cm³ of cavity is the cost driver",
-          "Side jack holes need extra setups",
-          "Unit cost never drops much below $25",
-          "Finishing (anodize/powder) is a separate $6-12 per part"
+          "Hogging a 36 mm cavity from billet wastes ~80% of the stock",
+          "Three hole faces means multiple setups unless redesigned",
+          "Unit cost 10x injection molding at high volume",
+          "Finishing is a separate vendor and lead time"
         ],
         "designTweaks": [
           {
-            "change": "Set all four internal cavity corners to R6.5 minimum so a 12.7 mm endmill roughs the 36 mm pocket.",
-            "why": "Lets one big cutter clear the cavity instead of a small one chattering down a deep corner.",
-            "impact": "Cuts cycle time roughly 25-35%, about $8-12 per part."
+            "change": "Buy off-the-shelf die-cast 125B blanks and CNC only the 12 mm, 7.5 mm and jack holes plus tapped bosses.",
+            "why": "Removes all cavity roughing; the shop only runs a 2-3 minute drill/tap cycle in a fixture.",
+            "impact": "Unit cost drops to roughly $9-16 including the blank, ~60% saving at 250 units."
           },
           {
-            "change": "Move input/output and DC jacks to the top face alongside the footswitch and two pots.",
-            "why": "All holes then drill in the same setup as the top face, with no fixture flip.",
-            "impact": "Removes two setups; ~20% lower unit cost and a popular top-jack pedalboard feature."
+            "change": "Move the 9 V DC jack from the end wall to one of the long sides, alongside the input jack.",
+            "why": "All side holes then fall in two fixture orientations instead of three.",
+            "impact": "Removes one setup, about 15-20% off machining time per part."
           },
           {
-            "change": "Replace sharp outer edges with a 1.5 mm × 45° chamfer and a 2 mm rabbet ledge for the bottom plate.",
-            "why": "A chamfer tool does one pass; the ledge lets a laser-cut 2 mm 5052 bottom drop in flush.",
-            "impact": "Saves a ball-nose finishing pass and eliminates a separate cover-machining op."
+            "change": "Radius the four internal cavity corners to R6 and make bosses 8 mm diameter, M3 tapped 6 mm deep.",
+            "why": "A single 12 mm end mill clears the pocket; fat bosses resist stripping under stomp loads.",
+            "impact": "Fewer tool changes, ~25% faster roughing on billet parts."
           }
         ]
       },
       {
-        "process": "sheet_metal",
-        "fitScore": 74,
+        "process": "urethane_casting",
+        "fitScore": 54,
         "unitCostUsd": {
-          "low": 13,
-          "high": 26
+          "low": 36,
+          "high": 70
         },
         "toolingCostUsd": {
-          "low": 150,
-          "high": 750
+          "low": 1200,
+          "high": 3000
         },
         "leadTimeDays": {
-          "low": 10,
-          "high": 18
+          "low": 14,
+          "high": 24
         },
         "materials": [
-          "Aluminum 5052",
-          "Mild steel (CRS)",
-          "Stainless 304"
+          "Urethane (ABS-like)",
+          "Urethane (PP-like)"
         ],
         "pros": [
-          "Half the cost of billet at 250 units",
-          "Three idle brakes locally; fast turnaround",
-          "2 mm 5052 folds into a genuinely stomp-proof box",
-          "Holes punched in the flat blank, no side setups"
+          "Low tooling; fits the $4,000 budget better than steel molds",
+          "Color can be cast in, no paint line needed",
+          "Silicone molds tolerate the undercut-free shell shape"
         ],
         "cons": [
-          "Folded corners look less boutique than billet",
-          "Needs welding or corner brackets for rigidity",
-          "Radiused bends limit how crisp the edges look",
-          "Powder coat only; no clean anodized billet look"
+          "No RF shielding without conductive paint; fuzz circuits hum",
+          "Impact resistance below aluminum for a stomped product",
+          "250 units needs ~10 molds; each mold fades after ~25 pulls",
+          "Cast M3 threads strip; inserts add labor"
         ],
         "designTweaks": [
           {
-            "change": "Redraw as a single 2 mm 5052 blank: top face plus four 39.5 mm skirts, corners TIG-welded and ground.",
-            "why": "One blank, four bends, one weld pass runs on idle laser + brake capacity.",
-            "impact": "Unit cost falls to roughly $15-20, about 55% under billet."
+            "change": "Add 2-3° draft to the four cavity walls over the 36 mm depth and radius all internal corners to R3.",
+            "why": "Straight walls tear silicone molds and force slow demolding.",
+            "impact": "Roughly doubles mold life, cutting tooling spend per 250 parts by ~30%."
           },
           {
-            "change": "Add 0.5 × material bend reliefs at each corner and keep all holes 5 mm from bend tangents.",
-            "why": "Prevents tearing and hole distortion when the 39.5 mm skirts are folded.",
-            "impact": "Avoids 5-10% scrap and rework on the first article."
+            "change": "Redesign the four corner bosses to accept cast-in M3 brass heat-set inserts, 5 mm OD x 6 mm.",
+            "why": "Urethane threads fail after a few bottom-plate removals.",
+            "impact": "Eliminates the top warranty failure mode for about $0.60/part."
           },
           {
-            "change": "Spec PEM self-clinching M3 standoffs in the skirts instead of tapped bosses for the bottom plate.",
-            "why": "Sheet at 2 mm cannot hold reliable threads; PEMs install on the flat.",
-            "impact": "Adds ~$1.20 per part but removes tapping and stripped-thread warranty returns."
+            "change": "Add a flat 15 x 15 mm masked pad on the inside end wall for the ground lug.",
+            "why": "Gives conductive shielding paint a reliable electrical tie point.",
+            "impact": "Makes the plastic option viable for a high-gain circuit."
           }
         ]
       },
       {
         "process": "injection_molding",
-        "fitScore": 48,
+        "fitScore": 38,
         "unitCostUsd": {
-          "low": 2.2,
-          "high": 4.8
+          "low": 3.5,
+          "high": 7
         },
         "toolingCostUsd": {
-          "low": 6000,
-          "high": 14000
+          "low": 9000,
+          "high": 20000
         },
         "leadTimeDays": {
           "low": 35,
@@ -157,128 +156,79 @@
           "Nylon PA66"
         ],
         "pros": [
-          "Under $5 a part; huge margin at a $180 retail price",
-          "Logo, model name, and jack labels mold in free",
-          "Part fits easily in the idle 400 × 350 × 180 mm presses"
+          "Cheapest per part once volume arrives",
+          "2.5 mm walls and 18% fill are already mold-friendly",
+          "Fits the 400 x 350 x 180 mm idle press envelope easily"
         ],
         "cons": [
-          "Tooling alone is 1.5-3.5× the stated $4,000 budget",
+          "Tooling is 2-5x the entire stated $4,000 budget",
           "250 units cannot amortize the mold",
-          "Plastic pedal reads as cheap to boutique buyers",
-          "Side jack holes need side actions, adding $2-4k to tooling"
+          "Side jack holes need two slides, adding tool cost",
+          "Plastic reads as cheap in the boutique pedal market"
         ],
         "designTweaks": [
           {
-            "change": "Add 1.5° draft to all four 36 mm inner cavity walls and thin walls to a uniform 2.5 mm.",
-            "why": "Straight-pull release and even cooling prevent sink marks and ejector-pin witness on the show face.",
-            "impact": "Keeps a single-cavity straight-pull tool near the $6-8k end instead of $12k+."
+            "change": "Put the input and output 1/4\" jack holes on the same long wall so only one slide is needed.",
+            "why": "Each side action adds cost and maintenance to the tool.",
+            "impact": "Saves roughly $2,000-4,000 in tooling."
           },
           {
-            "change": "Put all jacks on the top face and form the footswitch hole through the top only.",
-            "why": "Eliminates side actions entirely; the tool becomes two plates.",
-            "impact": "Saves $2,000-4,000 in tooling and ~2 weeks of build time."
+            "change": "Core the four corner bosses to 2.5 mm wall and tie them in with 1.5 mm gusset ribs.",
+            "why": "Solid bosses in a 2.5 mm shell sink and leave visible dimples on the show face.",
+            "impact": "Removes cosmetic scrap on the top face, the surface that sells the pedal."
           },
           {
-            "change": "Add four 5 mm corner bosses with 1 mm gusset ribs for the bottom plate screws.",
-            "why": "Screw pull-out is the main failure mode on a stomped plastic box.",
-            "impact": "Roughly triples stomp-load capacity for pennies per part."
-          }
-        ]
-      },
-      {
-        "process": "sls_print",
-        "fitScore": 36,
-        "unitCostUsd": {
-          "low": 38,
-          "high": 68
-        },
-        "toolingCostUsd": {
-          "low": 0,
-          "high": 0
-        },
-        "leadTimeDays": {
-          "low": 5,
-          "high": 10
-        },
-        "materials": [
-          "Glass-filled PA12",
-          "Nylon PA12",
-          "Nylon PA11"
-        ],
-        "pros": [
-          "No tooling; geometry changes are free between batches",
-          "Part fits the 165 × 165 × 300 mm build well",
-          "Fastest path to a sellable first 25 units"
-        ],
-        "cons": [
-          "Grainy sintered surface hurts a looks-driven boutique product",
-          "Only two idle SLS machines; 250 units is many builds",
-          "Costs more than billet aluminum at this size",
-          "Nylon flexes underfoot unless walls thicken"
-        ],
-        "designTweaks": [
-          {
-            "change": "Thicken the wall to 3.5 mm within 15 mm of the footswitch hole and add a 2 mm boss ring.",
-            "why": "Concentrated stomp load cracks 2.5 mm sintered nylon at hole edges.",
-            "impact": "Roughly doubles fatigue life at ~4 g added material cost."
-          },
-          {
-            "change": "Lay the part with the top face down and nest 12-16 per build in the 165 mm envelope.",
-            "why": "Packing density is what sets SLS price per part.",
-            "impact": "Can lower unit cost 20-30% versus a sparsely packed build."
-          },
-          {
-            "change": "Emboss the brand name 0.6 mm proud on the top face instead of screen printing.",
-            "why": "SLS resolves embossed text cleanly and it survives dyeing.",
-            "impact": "Removes a $3-5 per part printing step."
+            "change": "Apply 1.5° draft to all four cavity walls and add a light texture to the outer faces.",
+            "why": "Enables a straight-pull core and hides knit lines around the 12 mm switch hole.",
+            "impact": "Shortens cycle time and reduces polish cost on the cavity."
           }
         ]
       }
     ],
-    "topRecommendation": "Run the 250 units as CNC-milled 6061 with a laser-cut bottom plate: no tooling, premium anodized finish, roughly $30-45 landed against a $180 retail price. Budget about $9,000-13,000 for the batch, not $4,000. Injection molding only makes sense past roughly 2,500 units, when the mold amortizes under $4 per part.",
+    "topRecommendation": "Run 250 CNC'd aluminum enclosures, but start from bought-in die-cast 125B blanks and machine only the holes and bosses — that lands near $9-16 each plus powder coat, inside budget. Switch to a molded or custom die-cast tool only above roughly 2,500-3,000 units a year, when $10k-plus tooling pays back.",
     "risks": [
-      "The 28-triangle STL is a plain hollow box with no footswitch, pot, jack, or DC holes, so every quote here is an estimate until the real hole pattern is modeled.",
-      "Your $4,000 budget covers about 100 CNC parts, not 250; either raise the budget, cut to sheet metal, or run the first batch smaller.",
-      "Zinc die casting is not available in the local shop pool, so the die-cast Hammond look has to be approximated in billet or folded aluminum.",
-      "No bottom plate, lip, or screw bosses exist in the model, and that closure detail drives both cost and stomp durability.",
-      "Anodizing or powder coating is a separate outside vendor adding $6-12 per part and 5-8 days that is not in the machining lead time."
+      "The $4,000 budget buys about 100-150 fully billet-machined aluminum enclosures, not 250, so the blank-plus-drill route is effectively mandatory.",
+      "Plastic paths need conductive shielding paint and a ground pad, or a high-gain fuzz circuit will pick up noise.",
+      "The STL is a plain solid shell: hole positions, footswitch nut clearance and the 3PDT's ~32 mm body depth are unverified against the 36 mm internal height.",
+      "No photos were supplied, so the finish spec (anodize, powder coat, screen print) and its cost are unconfirmed.",
+      "Cast or printed M3 threads in the corner bosses will strip on stage; brass inserts or tapped aluminum are required."
     ],
     "storyboard": [
       {
         "shot": 1,
-        "visual": "Dark stage, close on a boot slamming down on a small anodized pedal. Amp roars.",
-        "voiceover": "Boutique pedals live or die on two things: tone and how they feel.",
+        "visual": "Dark stage, a boot slams down on a glossy pedal; amp speaker cone flexes in slow motion.",
+        "voiceover": "Boutique fuzz sells on two things: how it sounds, and how it looks.",
         "seconds": 5
       },
       {
         "shot": 2,
-        "visual": "Slow rotate of the milled 6061 enclosure, light raking across chamfered edges.",
-        "voiceover": "This one is solid billet aluminum. 122 millimeters of unapologetic hardware.",
+        "visual": "Overhead spin of the 122 x 66 mm enclosure, footswitch and two knobs catching the light.",
+        "voiceover": "This is a 125B enclosure built for both.",
         "seconds": 5
       },
       {
         "shot": 3,
-        "visual": "Exploded view: shell, laser-cut bottom plate, top-mounted jacks, two knobs.",
-        "voiceover": "Top-mounted jacks, flat bottom plate, five holes in one machine setup.",
+        "visual": "CAD ghost view showing the 2.5 mm shell, four corner bosses, jack holes on each side.",
+        "voiceover": "Aluminum shell, four M3 bosses, every jack already placed.",
         "seconds": 5
       },
       {
         "shot": 4,
-        "visual": "Split screen, CNC mill cutting the cavity beside a map of idle LA shops.",
-        "voiceover": "Six idle mills within an hour of downtown. No mold. No waiting.",
+        "visual": "CNC mill drilling a die-cast blank in a fixture; chips fly, six parts finish in a row.",
+        "voiceover": "We machine bought-in blanks, so tooling cost is nearly zero.",
         "seconds": 5
       },
       {
         "shot": 5,
-        "visual": "Clean graphic: 250 units, roughly $35 landed, $180 retail, delivered in three weeks.",
-        "voiceover": "Thirty-five dollars landed. One-eighty retail. Two hundred fifty units, three weeks.",
-        "seconds": 5
+        "visual": "Rack of finished enclosures in six powder-coat colors sliding past camera, logos crisp.",
+        "voiceover": "Two hundred fifty units, under budget, any color your brand wants.",
+        "seconds": 6
       },
       {
         "shot": 6,
-        "visual": "Row of finished pedals in anodized colors on a shop counter, logo appears.",
-        "voiceover": "Built tough. Built local. Ready to stock this quarter.",
-        "seconds": 5
+        "visual": "Hand sets finished pedal on a retail shelf; price tag reads $180. Logo card.",
+        "voiceover": "Ready to build. Let's put it on your shelf.",
+        "seconds": 4
       }
     ]
   }

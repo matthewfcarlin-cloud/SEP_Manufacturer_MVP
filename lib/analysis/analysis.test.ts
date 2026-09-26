@@ -68,6 +68,21 @@ describe("runAnalysis", () => {
     expect(call).toHaveBeenCalledTimes(2);
   });
 
+  test("keeps the four best-fit paths when the model returns extras, without retrying", async () => {
+    const base = sampleAnalysis().paths[0];
+    const scores = [55, 90, 20, 70, 35, 80];
+    const paths = scores.map((fitScore, i) => ({
+      ...base,
+      fitScore,
+      // The weakest extra is a "not viable" placeholder with zero costs.
+      ...(i === 2 && { unitCostUsd: { low: 0, high: 0 }, leadTimeDays: { low: 0, high: 0 } }),
+    }));
+    const call = vi.fn<CallModel>().mockResolvedValue({ stopReason: "end_turn", output: sampleAnalysis({ paths }) });
+    const result = await runAnalysis(call, input);
+    expect(call).toHaveBeenCalledTimes(1);
+    expect(result.paths.map((p) => p.fitScore)).toEqual([90, 80, 70, 55]);
+  });
+
   test("retries after a truncated answer", async () => {
     const call = vi
       .fn<CallModel>()
@@ -101,6 +116,7 @@ describe("prompts", () => {
       triangleCount: 28,
       isWatertight: true,
       thinWallWarning: false,
+      typicalWallMm: 2.5,
     },
   };
 
@@ -111,6 +127,13 @@ describe("prompts", () => {
     expect(brief).toContain("$4,000");
     expect(brief).toContain("aluminum 6061 ~146 g"); // 53.985 cm³ × 2.7
     expect(brief).toContain("attached above: 2");
+  });
+
+  test("the brief gives measured wall thickness and fill, not mesh resolution", () => {
+    const brief = buildProjectBrief(project, 0);
+    expect(brief).toContain("Typical wall thickness (area-weighted median, measured): 2.5 mm");
+    expect(brief).toContain("Material fills 17% of the bounding box"); // 53.985 / 318.054
+    expect(brief).not.toContain("triangles");
   });
 
   test("the brief says so when there is no budget or geometry", () => {

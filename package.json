@@ -10,13 +10,15 @@
     "test": "vitest run",
     "typecheck": "next typegen && tsc --noEmit",
     "demo:stl": "node scripts/make-demo-stl.ts",
-    "demo:seed": "node scripts/seed-demo.ts"
+    "demo:seed": "node scripts/seed-demo.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
     "next": "16.3.6",
+    "occt-import-js": "^0.0.23",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "three": "^0.186.1",
@@ -24,6 +26,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.19.0",
     "@types/react": "^19",
@@ -31,6 +34,7 @@
     "@types/three": "^0.186.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
+    "manifold-3d": "^3.5.4",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.2"

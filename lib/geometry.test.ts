@@ -29,6 +29,12 @@ describe("analyzeStl on a 100 × 50 × 20 mm box", () => {
   test("no thin-wall warning for a solid block", () => {
     expect(stats.thinWallWarning).toBe(false);
   });
+
+  test("typical wall is the block's thinnest dimension", () => {
+    // Area-weighted median: the two 100 × 50 faces (10 000 of 16 000 mm²)
+    // see 20 mm of material, so the median is 20 mm.
+    expect(stats.typicalWallMm).toBeCloseTo(20, 1);
+  });
 });
 
 describe("analyzeStl on an enclosure shell", () => {
@@ -38,6 +44,7 @@ describe("analyzeStl on an enclosure shell", () => {
     expect(stats.volumeCm3).toBeCloseTo(53.985, 2);
     expect(stats.isWatertight).toBe(true);
     expect(stats.thinWallWarning).toBe(false);
+    expect(stats.typicalWallMm).toBeCloseTo(2.5, 1);
   });
 
   test("flags walls thinner than 1 mm", () => {

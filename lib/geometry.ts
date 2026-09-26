@@ -99,30 +99,52 @@ function isWatertight(p: Float32Array): boolean {
   return edgeCounts.size > 0;
 }
 
+type WallMeasurement = { thinWallWarning: boolean; typicalWallMm: number | undefined };
+
+/** Area-weighted median of the sampled thicknesses. */
+function weightedMedian(samples: { thickness: number; area: number }[]): number | undefined {
+  if (samples.length === 0) return undefined;
+  const sorted = [...samples].sort((a, b) => a.thickness - b.thickness);
+  const half = sorted.reduce((sum, s) => sum + s.area, 0) / 2;
+  let running = 0;
+  for (const s of sorted) {
+    running += s.area;
+    if (running >= half) return s.thickness;
+  }
+  return sorted[sorted.length - 1].thickness;
+}
+
 /**
  * Casts a ray inward from a sample of faces and measures how far it travels
- * before leaving the part. Area-weighted, so a few tiny thin features don't
- * trip the warning but a thin shell does.
+ * before leaving the part: that's the material thickness under that face.
+ * Area-weighted, so a few tiny thin features don't trip the warning but a
+ * thin shell does, and the median reflects what most of the part is like.
  */
-function hasThinWalls(p: Float32Array, triangleCount: number, outwardSign: number): boolean {
+function measureWalls(p: Float32Array, triangleCount: number, outwardSign: number): WallMeasurement {
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new BufferAttribute(p.slice(), 3));
   const bvh = new MeshBVH(geometry);
   const stride = Math.max(1, Math.floor(triangleCount / MAX_THICKNESS_SAMPLES));
 
-  let sampledArea = 0;
-  let thinArea = 0;
+  const samples: { thickness: number; area: number }[] = [];
   for (let t = 0; t < triangleCount; t += stride) {
     const { area, normal, centroid } = measureTriangle(p, t);
     if (area === 0) continue;
     const inward = normal.multiplyScalar(-outwardSign);
     const origin = centroid.addScaledVector(inward, RAY_OFFSET_MM);
-    const hit = bvh.raycastFirst(new Ray(origin, inward), DoubleSide, 0, MIN_WALL_MM);
-    sampledArea += area;
-    if (hit) thinArea += area;
+    const hit = bvh.raycastFirst(new Ray(origin, inward), DoubleSide);
+    // A miss means an open mesh let the ray escape; skip rather than guess.
+    if (hit) samples.push({ thickness: hit.distance + RAY_OFFSET_MM, area });
   }
   geometry.dispose();
-  return sampledArea > 0 && thinArea / sampledArea > THIN_AREA_FRACTION;
+
+  const sampledArea = samples.reduce((sum, s) => sum + s.area, 0);
+  const thinArea = samples.filter((s) => s.thickness < MIN_WALL_MM).reduce((sum, s) => sum + s.area, 0);
+  const typical = weightedMedian(samples);
+  return {
+    thinWallWarning: sampledArea > 0 && thinArea / sampledArea > THIN_AREA_FRACTION,
+    typicalWallMm: typical === undefined ? undefined : round(typical, 1),
+  };
 }
 
 const round = (n: number, places: number) => Number(n.toFixed(places));
@@ -151,6 +173,6 @@ export function analyzeStl(data: ArrayBuffer): GeometryStats {
     surfaceAreaCm2: round(areaMm2 / 100, 2),
     triangleCount,
     isWatertight: watertight,
-    thinWallWarning: hasThinWalls(positions, triangleCount, outwardSign),
+    ...measureWalls(positions, triangleCount, outwardSign),
   };
 }

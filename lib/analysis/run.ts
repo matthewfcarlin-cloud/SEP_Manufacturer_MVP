@@ -1,4 +1,4 @@
-import { analysisSchema } from "../schemas";
+import { analysisOutputSchema, analysisSchema, MAX_PATHS } from "../schemas";
 import type { Analysis } from "../types";
 
 export type ImageInput = { mediaType: "image/jpeg" | "image/png" | "image/webp"; base64: string };
@@ -44,6 +44,10 @@ export function normalizeAnalysis(a: Analysis): Analysis {
   };
 }
 
+function keepBestPaths(a: Analysis): Analysis {
+  return { ...a, paths: [...a.paths].sort((x, y) => y.fitScore - x.fitScore).slice(0, MAX_PATHS) };
+}
+
 type Attempt = { ok: true; analysis: Analysis } | { ok: false; problems: string[] };
 
 function checkTurn(turn: ModelTurn): Attempt {
@@ -56,7 +60,12 @@ function checkTurn(turn: ModelTurn): Attempt {
   if (turn.output == null) {
     return { ok: false, problems: ["No structured analysis was returned."] };
   }
-  const result = analysisSchema.safeParse(turn.output);
+  // The model sometimes lists a 5th or 6th option (often a "not viable"
+  // placeholder with zero costs). Paths are ranked, so keep the best
+  // MAX_PATHS instead of spending a full retry on it.
+  const structural = analysisOutputSchema.safeParse(turn.output);
+  const candidate = structural.success ? keepBestPaths(structural.data) : turn.output;
+  const result = analysisSchema.safeParse(candidate);
   if (result.success) return { ok: true, analysis: normalizeAnalysis(result.data) };
   return {
     ok: false,

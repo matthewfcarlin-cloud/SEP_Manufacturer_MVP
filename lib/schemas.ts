@@ -53,6 +53,7 @@ export const geometryStatsSchema = z.object({
   triangleCount: z.number().int().positive(),
   isWatertight: z.boolean(),
   thinWallWarning: z.boolean().optional(),
+  typicalWallMm: z.number().positive().optional(),
 }) satisfies z.ZodType<GeometryStats>;
 
 export const PROJECT_ID_PATTERN = /^[A-Za-z0-9_-]{10}$/;

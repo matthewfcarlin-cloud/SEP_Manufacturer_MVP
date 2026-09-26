@@ -40,6 +40,12 @@ Local shop capacity this month (fictional demo shops around Los Angeles):
 ${capacitySummary}`;
 }
 
+function fillPercent(g: NonNullable<Project["geometry"]>): number {
+  const { x, y, z } = g.boundingBoxMm;
+  const boxCm3 = (x * y * z) / 1000;
+  return boxCm3 > 0 ? Math.round((g.volumeCm3 / boxCm3) * 100) : 0;
+}
+
 function formatMass(volumeCm3: number): string {
   return MASS_REFERENCE.map(([name, density]) => `${name} ~${Math.round(volumeCm3 * density)} g`).join(", ");
 }
@@ -52,7 +58,11 @@ export function buildProjectBrief(project: Project, imageCount: number): string 
         `Bounding box: ${g.boundingBoxMm.x} × ${g.boundingBoxMm.y} × ${g.boundingBoxMm.z} mm`,
         `Material volume: ${g.volumeCm3} cm³ (if solid: ${formatMass(g.volumeCm3)})`,
         `Surface area: ${g.surfaceAreaCm2} cm²`,
-        `Mesh: ${g.triangleCount} triangles, ${g.isWatertight ? "watertight" : "NOT watertight (open edges; volume may be unreliable)"}`,
+        `Material fills ${fillPercent(g)}% of the bounding box`,
+        ...(g.typicalWallMm !== undefined
+          ? [`Typical wall thickness (area-weighted median, measured): ${g.typicalWallMm} mm`]
+          : []),
+        `Mesh: ${g.isWatertight ? "watertight" : "NOT watertight (open edges; volume may be unreliable)"}`,
         `Thin walls: ${g.thinWallWarning ? `yes, a meaningful share of the surface is under ${MIN_WALL_MM} mm thick` : `none significant under ${MIN_WALL_MM} mm`}`,
       ].join("\n")
     : "No CAD geometry was provided.";

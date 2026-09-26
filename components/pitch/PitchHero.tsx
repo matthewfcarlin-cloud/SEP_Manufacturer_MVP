@@ -6,6 +6,33 @@ import { RENDER_ANGLES, STUDIO_BACKDROP } from "@/components/viewer/renderAngles
 
 const CAPTIONS = RENDER_ANGLES.map((a) => a.label);
 
+function RenderFigure({
+  src,
+  caption,
+  projectName,
+  hero = false,
+}: {
+  src: string;
+  caption: string;
+  projectName: string;
+  hero?: boolean;
+}) {
+  return (
+    <figure className="overflow-hidden rounded-xl border border-line" style={{ background: STUDIO_BACKDROP }}>
+      {/* Captured locally from the project's own WebGL canvas as a data URL. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={`${projectName}, ${caption.toLowerCase()} view`}
+        className={hero ? "w-full" : "aspect-[4/3] w-full object-cover"}
+      />
+      <figcaption className="border-t border-line px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted">
+        {caption} view
+      </figcaption>
+    </figure>
+  );
+}
+
 export function PitchHero({ projectName, cadFileUrl }: { projectName: string; cadFileUrl?: string }) {
   const [renders, setRenders] = useState<string[]>([]);
   const [renderFailed, setRenderFailed] = useState(false);
@@ -26,6 +53,17 @@ export function PitchHero({ projectName, cadFileUrl }: { projectName: string; ca
             <div className="grid min-h-64 place-items-center rounded-xl border border-dashed border-line bg-surface p-6 text-center text-sm text-muted">
               Renders weren’t available from the 3D viewer in this browser.
             </div>
+          ) : renders.length === CAPTIONS.length ? (
+            // Once captured, the stills replace the live canvas: no duplicate
+            // view on screen, and images print where a WebGL canvas may not.
+            <div className="flex flex-col gap-3 md:gap-4">
+              <RenderFigure src={renders[0]} caption={CAPTIONS[0]} projectName={projectName} hero />
+              <div className="grid grid-cols-3 gap-3 md:gap-4">
+                {renders.slice(1).map((render, i) => (
+                  <RenderFigure key={CAPTIONS[i + 1]} src={render} caption={CAPTIONS[i + 1]} projectName={projectName} />
+                ))}
+              </div>
+            </div>
           ) : (
             <ModelViewer
               url={cadFileUrl}
@@ -35,22 +73,6 @@ export function PitchHero({ projectName, cadFileUrl }: { projectName: string; ca
               onRenderError={markRenderFailed}
               className="h-[480px] w-full"
             />
-          )}
-          {renders.length === CAPTIONS.length ? (
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              {renders.map((render, index) => (
-                <figure key={CAPTIONS[index]} className="overflow-hidden rounded-xl border border-line" style={{ background: STUDIO_BACKDROP }}>
-                  {/* These images are captured locally from the project's own WebGL canvas. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={render} alt={`${projectName}, ${CAPTIONS[index].toLowerCase()} view`} className="aspect-[4/3] w-full object-cover" />
-                  <figcaption className="border-t border-line px-3 py-2 text-xs font-medium uppercase tracking-wider text-muted">{CAPTIONS[index]} view</figcaption>
-                </figure>
-              ))}
-            </div>
-          ) : !renderFailed && (
-            <div className="grid min-h-64 place-items-center rounded-xl border border-line bg-surface text-sm text-muted">
-              Preparing studio renders…
-            </div>
           )}
         </>
       ) : (
