@@ -100,6 +100,34 @@ function chargerBracket(): Solid {
   );
 }
 
+/**
+ * The same bracket after its first design tweak (demo v2): one 2 mm
+ * aluminum blank with a single 90° bend (2 mm inside radius), no gussets,
+ * and bend-relief notches where the bend meets the side edges. Same four
+ * holes, so it mounts the same charger.
+ */
+function chargerBracketSheet(): Solid {
+  const WIDTH = 80, BASE = 60, UP = 50, T = 2, R_IN = 2, RELIEF = 2;
+  const R_OUT = R_IN + T;
+  const base = box(-WIDTH / 2, WIDTH / 2, R_OUT, BASE, 0, T);
+  const upright = box(-WIDTH / 2, WIDTH / 2, 0, T, R_OUT, UP);
+
+  // Quarter of a tube along X, joining the base and upright.
+  const tube = (r: number) => Manifold.cylinder(WIDTH, r, r, SEGMENTS, true).rotate([0, 90, 0]).translate([0, R_OUT, R_OUT]);
+  const bend = tube(R_OUT).subtract(tube(R_IN)).intersect(box(-WIDTH / 2, WIDTH / 2, 0, R_OUT, 0, R_OUT));
+
+  const reliefs = [-WIDTH / 2, WIDTH / 2 - RELIEF].map((x0) => box(x0, x0 + RELIEF, -1, R_OUT + 2, -1, R_OUT + 2));
+  return Manifold.union([base, upright, bend]).subtract(
+    Manifold.union([
+      ...reliefs,
+      holeZ(3.25, 10, -25, 42, T / 2),
+      holeZ(3.25, 10, 25, 42, T / 2),
+      holeY(2.25, 10, -25, T / 2, 38),
+      holeY(2.25, 10, 25, T / 2, 38),
+    ]),
+  );
+}
+
 function toTriangles(solid: Solid): Triangle[] {
   const mesh = solid.getMesh();
   const { numProp, vertProperties: v, triVerts: t } = mesh;
@@ -118,3 +146,4 @@ writeStl(pedalEnclosure(), "demo/pedal-enclosure.stl");
 // Also served statically for the landing page's 3D hero.
 writeStl(pedalEnclosure(), "public/models/pedal-enclosure.stl");
 writeStl(chargerBracket(), "demo/charger-bracket.stl");
+writeStl(chargerBracketSheet(), "demo/charger-bracket-sheet.stl");

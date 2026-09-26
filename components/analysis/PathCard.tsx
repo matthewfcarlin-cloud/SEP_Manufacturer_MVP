@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatDaysRange, formatToolingRange, formatUnitCostRange } from "@/lib/format";
 import { PROCESS_LABELS } from "@/lib/processes";
 import type { ManufacturingPath } from "@/lib/types";
@@ -41,8 +42,12 @@ function List({ title, items, tone }: { title: string; items: string[]; tone: "g
   );
 }
 
-export function PathCard({ path, rank, quantity }: { path: ManufacturingPath; rank: number; quantity: number }) {
-  const isTop = rank === 1;
+export type TweakLink = { projectId: string; version: number };
+
+type Props = { path: ManufacturingPath; pathIndex: number; quantity: number; tweakLink?: TweakLink };
+
+export function PathCard({ path, pathIndex, quantity, tweakLink }: Props) {
+  const isTop = pathIndex === 0;
   return (
     <article
       id={`path-${path.process}`}
@@ -81,6 +86,14 @@ export function PathCard({ path, rank, quantity }: { path: ManufacturingPath; ra
                     <p className="font-medium">{t.change}</p>
                     <p className="mt-1 text-muted">{t.why}</p>
                     <p className="mt-1 text-idle">{t.impact}</p>
+                    {tweakLink && (
+                      <Link
+                        href={`/project/${tweakLink.projectId}/versions/new?from=${tweakLink.version}&tweak=${pathIndex}.${i}`}
+                        className="eyebrow mt-3 inline-flex items-center gap-1 text-accent hover:underline"
+                      >
+                        Try this tweak as a new version <span aria-hidden>→</span>
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ol>

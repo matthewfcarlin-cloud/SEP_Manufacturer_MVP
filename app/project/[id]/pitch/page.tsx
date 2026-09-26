@@ -5,11 +5,12 @@ import { DemoBadge, IdleBadge } from "@/components/Badges";
 import { PitchHero } from "@/components/pitch/PitchHero";
 import { PrintButton } from "@/components/pitch/PrintButton";
 import { formatToolingRange, formatUnitCostRange, formatUsd } from "@/lib/format";
-import { matchProject } from "@/lib/match";
+import { matchVersion } from "@/lib/match";
 import { PROCESS_LABELS } from "@/lib/processes";
 import { getShopById } from "@/lib/shops";
 import { getProject } from "@/lib/projectStore";
 import type { ManufacturingPath } from "@/lib/types";
+import { latestAnalyzedVersion, latestVersion } from "@/lib/versions";
 
 export async function generateMetadata(props: PageProps<"/project/[id]/pitch">): Promise<Metadata> {
   const { id } = await props.params;
@@ -55,12 +56,14 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
   const { id } = await props.params;
   const project = await getProject(id);
   if (!project) notFound();
+  // Pitch the newest version that has been analyzed.
+  const version = latestAnalyzedVersion(project) ?? latestVersion(project);
 
-  const topPath = project.analysis?.paths.reduce<ManufacturingPath | undefined>(
+  const topPath = version.analysis?.paths.reduce<ManufacturingPath | undefined>(
     (best, path) => !best || path.fitScore > best.fitScore ? path : best,
     undefined,
   );
-  const matches = matchProject(project);
+  const matches = matchVersion(version);
   const topMatch = topPath && matches.find((match) => match.matchedMachine.type === topPath.process);
   const matchedShop = topMatch ? getShopById(topMatch.shopId) : undefined;
 
@@ -71,7 +74,7 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
         <PrintButton />
       </header>
 
-      {!project.analysis ? (
+      {!version.analysis ? (
         <section className="rounded-2xl border border-line bg-surface p-8">
           <p className="eyebrow text-accent">Pitch kit</p>
           <h1 className="display-type mt-2 text-4xl">{project.name}</h1>
@@ -82,17 +85,17 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
         <>
           <section className="grid gap-8 border-b border-line pb-9 md:grid-cols-[1.1fr_0.9fr] md:items-end print:grid-cols-2">
             <div>
-              <p className="eyebrow text-accent">Product pitch · {project.targetQuantity.toLocaleString("en-US")} unit run</p>
+              <p className="eyebrow text-accent">Product pitch · {version.targetQuantity.toLocaleString("en-US")} unit run</p>
               <h1 className="display-type mt-4 max-w-3xl text-[clamp(2.8rem,7vw,6rem)]">{project.name}</h1>
-              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{project.analysis.productSummary}</p>
+              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{version.analysis.productSummary}</p>
             </div>
             <div className="rounded-2xl bg-ink p-6 text-bg sm:p-8">
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-bg/60">The opportunity</p>
-              <p className="mt-3 text-xl font-medium leading-relaxed">{project.analysis.topRecommendation}</p>
+              <p className="mt-3 text-xl font-medium leading-relaxed">{version.analysis.topRecommendation}</p>
             </div>
           </section>
 
-          <PitchHero projectName={project.name} cadFileUrl={project.cadFileUrl} />
+          <PitchHero projectName={project.name} cadFileUrl={version.cadFileUrl} />
 
           {topPath && (
             <section aria-labelledby="manufacturing-heading" className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
@@ -125,7 +128,7 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
             </section>
           )}
 
-          {topPath && <CostCard path={topPath} quantity={project.targetQuantity} />}
+          {topPath && <CostCard path={topPath} quantity={version.targetQuantity} />}
 
           <section aria-labelledby="storyboard-heading" className="flex flex-col gap-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
@@ -136,7 +139,7 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
               <p className="text-sm text-muted">A first pass for the product conversation</p>
             </div>
             <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-3">
-              {project.analysis.storyboard.map((shot) => (
+              {version.analysis.storyboard.map((shot) => (
                 <li key={shot.shot} className="flex min-h-48 flex-col justify-between rounded-xl border border-line bg-surface p-5">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wider text-accent">Frame {String(shot.shot).padStart(2, "0")} <span className="text-muted">· {shot.seconds}s</span></p>

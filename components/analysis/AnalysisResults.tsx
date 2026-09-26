@@ -2,7 +2,7 @@ import { effectiveCostCurve, type CostCurve } from "@/lib/costCurve";
 import type { Analysis, ShopMatch } from "@/lib/types";
 import { AtAGlance } from "./AtAGlance";
 import { CostByVolumeChart } from "./CostByVolumeChart";
-import { PathCard } from "./PathCard";
+import { PathCard, type TweakLink } from "./PathCard";
 import { PathComparison } from "./PathComparison";
 
 function Storyboard({ shots }: { shots: Analysis["storyboard"] }) {
@@ -27,9 +27,15 @@ function Storyboard({ shots }: { shots: Analysis["storyboard"] }) {
   );
 }
 
-type Props = { analysis: Analysis; quantity: number; topMatch?: ShopMatch };
+type Props = {
+  analysis: Analysis;
+  quantity: number;
+  topMatch?: ShopMatch;
+  /** When set, each design tweak links to a new version that applies it. */
+  tweakLink?: TweakLink;
+};
 
-export function AnalysisResults({ analysis, quantity, topMatch }: Props) {
+export function AnalysisResults({ analysis, quantity, topMatch, tweakLink }: Props) {
   const curves = analysis.paths.map(effectiveCostCurve).filter((c): c is CostCurve => c !== null);
   const hasCurves = curves.length === analysis.paths.length && curves.length > 0;
 
@@ -85,7 +91,7 @@ export function AnalysisResults({ analysis, quantity, topMatch }: Props) {
         <PathComparison paths={analysis.paths} quantity={quantity} />
         <div className="flex flex-col gap-3">
           {analysis.paths.map((p, i) => (
-            <PathCard key={`${p.process}-${i}`} path={p} rank={i + 1} quantity={quantity} />
+            <PathCard key={`${p.process}-${i}`} path={p} pathIndex={i} quantity={quantity} tweakLink={tweakLink} />
           ))}
         </div>
       </section>

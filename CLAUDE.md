@@ -29,17 +29,30 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `/project/[id]` – analysis results: viewer, paths, tweaks, shop matches
 - `/project/[id]/pitch` – shareable pitch kit
 - `/shops` – browse seeded shops (idle capacity visible)
-- `POST /api/analyze` – runs AI analysis, returns `Analysis`
-- `POST /api/match` – returns ranked `ShopMatch[]`
+- `/project/[id]?v=2` – a specific version (default: latest)
+- `/project/[id]/versions/new?from=1&tweak=0.0` – new-version form, optionally applying an AI tweak
+- `/project/[id]/compare?a=1&b=2` – side-by-side version comparison
+- `POST /api/projects` – create a project (version 1); `POST /api/projects/[id]/versions` – add a version
+- `POST /api/analyze` `{ projectId, version? }` – runs AI analysis on a version, returns `Analysis`
+- `POST /api/match` `{ projectId, version? }` – returns ranked `ShopMatch[]`
 
 ## Data models
 ```ts
 type Project = {
   id: string; name: string; createdAt: string;
+  versions: ProjectVersion[]; // ascending by number, never empty (Phase 6)
+};
+
+// Everything that describes one iteration of the part lives on its version.
+type ProjectVersion = {
+  number: number; createdAt: string; // numbers are never reused after a delete
   notes: string; targetQuantity: number; budgetUsd?: number; materialHints?: string[];
   cadFileUrl?: string; imageUrls: string[];
   geometry?: GeometryStats; analysis?: Analysis; renders?: string[];
+  basedOn?: number; changeNote?: string; appliedTweak?: AppliedTweak;
 };
+
+type AppliedTweak = { fromVersion: number; process: Process; change: string; why: string; impact: string };
 
 type GeometryStats = {
   boundingBoxMm: { x: number; y: number; z: number };
@@ -123,6 +136,198 @@ Each phase ends with a working, demoable app.
 | 3 | `/api/match` + shop match UI | Codex (branch `feat/matching`) | Ranked matches with idle highlights |
 | 4 | Pitch kit page + renders | Codex (branch `feat/pitch`) | Shareable pitch page from a real project |
 | 5 | Polish, loading states, demo parts, STEP support if time | Both | Full demo runs in <3 min without errors |
+| 6 | Iteration tracking (versions, compare, timeline) | Claude Code | Built; see Phases 6–9 below |
+| 7 | Business case per version | Claude Code | See Phases 6–9 below |
+| 8 | Pitch to company (licensing pitch, PDF, video slot) | Claude Code | See Phases 6–9 below |
+| 9 | Privacy by default (ownership, share links, delete) | Claude Code | See Phases 6–9 below |
+
+## Phases 6–9
+
+Build one phase at a time, in order. Stop after each for manual testing. Every phase must keep the existing demo flow working: landing → example project → pitch kit, and upload → analyze. `npm test`, `typecheck`, `lint`, `build` and `test:e2e` pass at the end of each phase. Type changes go into `lib/types.ts` **and** the "Data models" section above in the same commit.
+
+### Where the app is today (what these phases build on)
+- A project is one flat record: `project.json` in `.data/projects/<id>/` holds the brief, `geometry`, and `analysis`. Files sit beside it as `model.stl` and `image-N.ext`; the allowlist regex in `lib/projectStore.ts` is the only thing that decides which files `/api/files/[id]/[file]` serves.
+- Shop matches aren't stored. `matchProject(project)` recomputes them on every render from `geometry` and `analysis`.
+- Pitch renders are captured in the browser on every visit to the pitch page and never saved. `Project.renders` exists but nothing writes it.
+- There are no accounts, owners or sessions. `/projects` lists every project and `/api/files` serves every file to anyone who has the 10-character id. Nothing is private today.
+- `unitCostAtVolume` (priced at 10/100/1k/10k) exists on every path in both demo projects. Older analyses may not have it.
+
+### Phase 6 – Iteration tracking
+
+**Data model** (`lib/types.ts`)
+```ts
+type Project = {
+  id: string; name: string; createdAt: string;
+  versions: ProjectVersion[];     // ascending by number, never empty
+  // Phase 9 adds: owner, share, isExample
+};
+
+type ProjectVersion = {
+  number: number;                 // 1, 2, 3… never reused after a delete
+  createdAt: string;
+  notes: string; targetQuantity: number; budgetUsd?: number; materialHints?: string[];
+  cadFileUrl?: string; imageUrls: string[];
+  geometry?: GeometryStats; analysis?: Analysis; renders?: string[];
+  changeNote?: string;            // "what changed", from the new-version form
+  appliedTweak?: AppliedTweak;    // set when the user picked an AI tweak as the reason
+};
+
+type AppliedTweak = { fromVersion: number; process: Process; change: string; why: string; impact: string };
+```
+- Per-version fields are exactly the fields that are flat on `Project` today, so each version carries its own brief, CAD, photos, geometry and analysis. Matches stay derived: `matchProject` becomes `matchVersion(version)`, still deterministic.
+- Files: version 1 keeps its existing unprefixed names (`model.stl`, `image-0.jpg`), so no stored file or URL moves. Versions 2 and up use `v2-model.stl`, `v2-image-0.jpg`. The allowlist becomes `^(v\d{1,3}-)?(model\.stl|image-[0-4]\.(jpg|png|webp))$`.
+- Migration is lazy and pure. `migrateProject(raw)` in `lib/projectMigration.ts` turns a legacy flat `project.json` into `{ id, name, createdAt, versions: [v1] }`. `getProject` runs it on every read, and the next `saveProject` writes the new shape. `demo/*.json` get converted to the new shape, and a legacy fixture test keeps the migration path covered.
+- Add `lib/versions.ts` with helpers: `latestVersion(p)`, `getVersion(p, n)`, `nextVersionNumber(p)`.
+
+**Routes**
+- `/project/[id]` shows the latest version. `/project/[id]?v=2` shows a specific one. Everything on the page (viewer, geometry, brief, analysis, matches) reads from the selected version.
+- `/project/[id]/versions/new` is the "New version" form. It reuses the `NewProjectForm` fields with the previous version's notes, quantity and budget prefilled, plus a required "What changed?" note and an optional tweak picker listing every `designTweaks` entry from the previous version's analysis. `?tweak=<pathIndex>.<tweakIndex>` preselects a tweak, and a "Try this tweak" link on each `PathCard` tweak links there.
+- `POST /api/projects/[id]/versions`: multipart, same validation as `POST /api/projects` (the shared parts get extracted rather than copied). Returns `{ id, version }`.
+- `POST /api/analyze` and `POST /api/match` take `{ projectId, version? }` and default to the latest version.
+- `/project/[id]/compare?a=1&b=2` is the comparison view.
+- When a version has `changeNote` or `appliedTweak`, `buildProjectBrief` adds a short "Revision" block ("v2 revised from v1: <change>. v1's top path was <process> at <unit cost>.") so the AI judges the change instead of starting from zero.
+
+**UI**
+- Version timeline on the project page: a horizontal strip of version chips (number, date, best process, unit-cost midpoint, change note), with the selected one highlighted. Actions: "New version" and "Compare".
+- Comparison view: two version pickers, then a side-by-side table of unit cost at target quantity, tooling cost, best process, fit score and top shop match. Each row gets a delta column with a signed percent and a color. A one-line summary sits on top ("Unit cost −40%, tooling −$18k, switched from injection molding to sheet metal"). If the two target quantities differ, a warning says the costs aren't like-for-like. Unanalyzed versions show "Not analyzed yet" instead of numbers.
+- Deltas come from a pure function, `compareVersions(a, b)` in `lib/compare.ts`, that compares range midpoints, with unit tests. The page does no math.
+
+**Done when**
+- Both demo projects and every existing `.data` project open unchanged as "v1", and their file URLs still work.
+- Creating v2 of the bracket by applying the "sheet metal" tweak produces its own geometry, analysis and matches, while v1's are untouched.
+- The comparison of v1 and v2 shows correct deltas and a summary sentence. `compareVersions` and `migrateProject` are unit-tested, including the legacy fixture.
+- E2E: open example → New version → upload → v2 appears in the timeline → Compare renders.
+
+### Phase 7 – Business case (per version)
+
+**Data model**
+```ts
+type BusinessCaseInputs = {
+  retailPriceUsd: number;
+  priceSource: "ai" | "user";
+  quantityTiers: number[];         // 1–5 tiers, ascending, default [100, 1000, 10000]
+  revenueShare: number;            // share of retail the maker actually receives, default 0.5 (see open question)
+  priceSuggestion?: PriceSuggestion;
+};
+type PriceSuggestion = {
+  low: number; high: number; suggested: number;
+  comparables: string[];           // "similar products" named by the AI, from its own knowledge
+  reasoning: string;               // one or two sentences
+};
+// ProjectVersion gains: businessCase?: BusinessCaseInputs
+```
+- Only the inputs and the AI suggestion are stored. Every output is computed by `lib/businessCase.ts` (pure and tested), so the output always reflects the current analysis:
+  - `unitCostAt(path, q)`: log-log interpolation over `unitCostAtVolume`. Tiers outside 10–10k are clamped and flagged `extrapolated`. Legacy analyses with no curve fall back to the flat `unitCostUsd`, flagged in the same way.
+  - Per tier: the cheapest path at that tier (by all-in midpoint, the same rule as `cheapestByVolume`), its unit cost range, all-in cost range including amortized tooling, and margin range. The low margin uses the high cost, so the ranges stay honest.
+  - Tooling break-even: the smallest quantity where cumulative contribution (`price × revenueShare − unitCost(q)`) covers tooling, solved over the interpolated curve and given as a range. "Never at this price" is a valid answer.
+  - `verdict(result)` builds the plain-English line from templates, with thresholds as named constants (e.g. `MIN_HEALTHY_MARGIN = 0.3`). Examples: "Profitable at 1,000+ units at $49 retail (est. margin 31–44%)." / "Tooling makes this unprofitable under ~5,000 units. Consider <lowest-tooling path> or <top tweak>." / "Not profitable at any tier shown: cost floor is ~$X, so retail would need to be ≥ $Y." The "consider X" part comes deterministically from the analysis, not from a new AI call.
+
+**Routes**
+- `POST /api/business-case/suggest-price` `{ projectId, version }` makes a small, separate Claude call (`lib/analysis/price.ts`, its own zod output schema, low effort) that returns a `PriceSuggestion`. It doesn't rerun the full analysis.
+- `PUT /api/business-case` `{ projectId, version, retailPriceUsd, quantityTiers, revenueShare }` validates and saves the inputs.
+
+**UI**
+- A "Business case" section on the project page, below the analysis. It has a price input with an "AI suggests $45 ($39–55), based on …" chip that shows the comparables and can be applied or edited, tier inputs, and the revenue-share assumption stated in plain words.
+- A results table per tier: process, unit cost, all-in cost and margin, all as ranges.
+- A cost-per-unit vs quantity chart: an all-in cost band, a horizontal line at your revenue per unit, and a marker at the break-even point. It extends `CostByVolumeChart`'s approach and series tokens, and gets built with the dataviz skill.
+- The verdict line in large type.
+- Every number is labeled "est." The section footer says: "Estimates from the AI analysis. Retail suggestion is based on the AI's general knowledge of similar products, not live market data."
+
+**Done when**
+- The pedal demo shows a business case with an AI-suggested price, three tiers, a chart and a verdict. Changing the price updates the verdict at once, client-side, with no refetch.
+- The bracket demo's verdict names the tooling problem when the price is set low.
+- `lib/businessCase.ts` has unit tests for interpolation, clamping, the legacy fallback, break-even (including "never") and each verdict template.
+- Each version keeps its own business case, and the Phase 6 comparison view gains a margin row.
+
+### Phase 8 – Pitch to company
+
+**Data model**
+```ts
+type PitchContent = {
+  oneLiner: string;
+  problem: string;                 // who hurts and how, 2–3 sentences
+  product: string;                 // what it is and why it's better
+  audience: string;                // who buys it / which company would license it
+  ask: string;                     // what the inventor wants from the company
+  editedByUser: boolean;
+};
+type PitchVideo = { status: "none" } | { status: "ready"; url: string; provider: string };
+// ProjectVersion gains: pitch?: PitchContent
+// Project gains: pitchVideo?: PitchVideo   (always { status: "none" } until a video API is wired)
+```
+- The pitch shows the latest analyzed version, and the iteration story draws on all versions.
+
+**Routes**
+- `POST /api/pitch` `{ projectId, version }` makes a small Claude call that generates `PitchContent` from the brief, analysis, business case and change notes, and saves it.
+- `PUT /api/pitch` saves user edits.
+- `POST /api/projects/[id]/versions/[n]/renders` persists the four captured renders as PNGs (`v2-render-0.png`; the allowlist gains `render-[0-3]\.png`) and sets `version.renders`. Once they're saved, the pitch page shows the stills with no WebGL, so it loads fast, prints reliably and works on the Phase 9 shared page. A "Re-render" button redoes the capture.
+- `/project/[id]/pitch` is the owner's view and gets inline edit affordances. The read-only body is one `PitchDocument` component that Phase 9's share page reuses.
+
+**UI**: sections in this order, each a print page
+1. Cover: name, one-liner, hero render.
+2. The problem.
+3. The product, with the 3 other renders.
+4. How it gets made: top path, the matched shop's spec-level fit, lead time.
+5. Unit economics: the Phase 7 table, chart and verdict. If there's no business case yet, it says so, with a link to set one up, rather than showing made-up numbers.
+6. Iteration story: a version-by-version strip showing each change note or applied tweak with its `compareVersions` delta ("v1 → v2: switched to sheet metal, unit cost −40%"). Hidden when there's only one version.
+7. The 30-second storyboard: 6 frames.
+8. Video placeholder: a 16:9 slot titled "Pitch video" that shows "Not generated yet" and presents the storyboard as the script. It renders `PitchVideo.url` when `status: "ready"`.
+9. The ask, plus a footer with estimate and demo-data labels.
+
+**PDF**: done with a print stylesheet. Landscape Letter via `@page`, one section per page (`break-before: page`), no nav, stored renders only. "Download PDF" opens the print dialog with the filename set through `document.title`. No server-side PDF dependency.
+
+**Done when**
+- The pedal demo's pitch shows all 9 sections, and editing the problem text persists.
+- Print preview in Chrome gives a clean page per section with no clipped charts or blank renders.
+- With two versions, the iteration story shows the delta. With one, the section is hidden.
+- E2E updated: the existing "four non-blank renders" test still passes against persisted renders.
+
+### Phase 9 – Privacy by default
+
+> **Scope (decided 2026-09-26): MVP-light.** This is a club demo, so outreach and privacy only need to *look* ready and be implementable later; no real shop contact, no accounts. One hard line: the UI never claims a protection the code doesn't provide. Build the cheap version that makes "private by default" true (owner cookie, hidden listings, 404s, share links, real deletes) and cut anything heavier than that. Stubbed flows (e.g. contacting a shop) are labeled as demo, not presented as working.
+
+**Ownership (this app has no accounts)**: projects are owned by the browser that created them.
+- On first project creation the server issues a random 256-bit owner key in an `httpOnly`, `SameSite=Lax`, `Secure`-in-production cookie (`idlefit_owner`). The project stores only its SHA-256 hash.
+- `lib/access.ts` exports `canView(project, request)` / `requireOwner(...)`, called explicitly in every page and API route that reads or writes a project, and in `/api/files`. Pages that fail the check show 404, not 403, so a project's existence isn't revealed.
+- Demo examples are marked `isExample: true`: readable by anyone, never deletable, never mutated by visitors. Visitors who want to iterate on one get "Duplicate to my projects".
+- `/projects` lists only your projects plus the examples.
+
+**Data model**
+```ts
+// Project gains:
+owner?: { keyHash: string };        // absent only on examples
+isExample?: true;
+share?: { token: string; enabled: boolean; createdAt: string }; // token: 128-bit random, base64url
+// ProjectVersion gains:
+aiInputs: { includePhotos: boolean; includeNotes: boolean };   // default both true, migrated as true
+```
+
+**Routes**
+- `/p/[token]` is the public pitch page and the only unauthenticated way in. It renders `PitchDocument` from stored renders and never exposes the CAD file, photos, notes or project id. Its files come through `/api/share/[token]/[file]`, restricted to `render-*.png`.
+- `.data/shares/<token>.json` maps token → projectId, so lookups don't scan every project.
+- `PUT /api/projects/[id]/share` `{ enabled }` toggles sharing. `POST /api/projects/[id]/share/rotate` revokes by issuing a new token, which deletes the old index file and kills the old link.
+- `DELETE /api/projects/[id]` removes the project folder recursively plus its share index. `DELETE /api/projects/[id]/versions/[n]` removes that version's files and entry. Deleting the only version is refused; the UI offers project deletion instead. Both require the typed project name in a confirm dialog.
+- `/api/files` switches from `max-age=31536000, immutable` to `private, no-store`, so deleted or revoked files don't live on in browser caches.
+- `/privacy` is a short page.
+
+**UI**
+- "What the AI sees" panel on the upload form, the new-version form, and next to "Analyze". It lists exactly what gets sent: the name, notes, quantity, budget, material hints, each photo as a thumbnail, and the measured geometry lines. The project-page panel shows the literal `buildProjectBrief` text. It states plainly that "Your CAD file itself is not sent, only these measurements". That matches `lib/analysis/prompt.ts` today, and a test pins it. Toggles exclude photos or notes and are saved to `aiInputs`, and `/api/analyze` honors them.
+- Shop matches show a "What this shop would see" spec summary (bounding size, material, quantity, process) built by `lib/specSummary.ts`, plus an honest line: "Demo shops are fictional and receive nothing. When real shops are connected, they'll see only this summary until you choose to share more." There's no "share more" button until there's a real shop to share with.
+- A share panel on the pitch page: off by default, with a toggle, copy link, and "Revoke and create a new link".
+- Delete buttons for the project and for each version, in the timeline.
+- Privacy note (in the upload form, the analysis panel and `/privacy`), with no claims the code doesn't back:
+  - Projects are private to this browser.
+  - Photos, notes and measurements are sent to Anthropic's API for analysis, under Anthropic's API data policies.
+  - Deleting here removes the files from this server but can't recall what was already sent for analysis.
+  - Clearing cookies loses access, because there are no accounts yet.
+  - Shared links are viewable by anyone who has them.
+
+**Done when**
+- A second browser can't see a project, its files, its pitch or its `/projects` entry, and gets 404s.
+- Turning sharing on makes `/p/<token>` work for that browser. Turning it off, or rotating, makes the old link 404.
+- The analyze request honors the photo and notes toggles, proven by a unit test on the built request.
+- After deleting a version or project, its files are gone from `.data` (asserted in tests) and its URLs 404.
+- Demo examples still open for everyone, and the full demo flow still passes E2E.
 
 ## Agent coordination
 - `lib/types.ts` is the contract. Don't change shared types without updating this file.
@@ -146,11 +351,12 @@ Each phase ends with a working, demoable app.
 - Process names and display labels: `lib/processes.ts` (`PROCESSES`, `PROCESS_LABELS`).
 - Colors are theme tokens in `app/globals.css` (`bg`, `surface`, `ink`, `muted`, `line`, `accent`, `idle`, `demo`) with light and dark values. Use them instead of raw Tailwind colors.
 - Badges: `DemoBadge` and `IdleBadge` in `components/Badges.tsx`. Any UI showing a shop must show `DemoBadge`.
-- Projects: read and write only through `lib/projectStore.ts` (`getProject`, `saveProject`, `createProject`). Storage is `.data/projects/<id>/` (gitignored); uploads are served by `GET /api/files/[id]/[file]` with an allowlist of file names.
+- Projects: read and write only through `lib/projectStore.ts` (`getProject`, `createProject`, `addVersion`, `updateProject`, `updateVersion`). Storage is `.data/projects/<id>/` (gitignored); uploads are served by `GET /api/files/[id]/[file]` with an allowlist of file names. Every read-modify-write goes through `updateProject`/`updateVersion`, which re-read under a per-project lock. Never do `getProject` → long await → `saveProject`: a version added meanwhile would be lost.
+- Versions (Phase 6): helpers in `lib/versions.ts` (`latestVersion`, `latestAnalyzedVersion`, `getVersion`, `parseVersionParam`). Version 1 files keep their original names (`model.stl`, `image-0.jpg`); version n > 1 files are `vn-model.stl` etc. Pre-Phase-6 flat `project.json` files are migrated on read by `lib/projectMigration.ts` (fixture: `test/fixtures/legacy-project.json`). Matches are per version: `matchVersion(version)`. Version deltas come only from `compareVersions` in `lib/compare.ts`. AI tweak picks are sent as `pathIndex.tweakIndex` and resolved server-side by `lib/tweaks.ts`, so the stored text is always the real analysis text.
 - Geometry: `analyzeStl()` in `lib/geometry.ts` runs server-side at upload and stores `GeometryStats` on the project. STL is assumed to be in mm.
 - 3D viewer: import `ModelViewer` from `@/components/viewer` (client-only, loaded with `ssr: false`). Don't use drei `<Html>` as a Suspense fallback inside the Canvas; it crashes under React 19.
 - API routes return the `ApiResponse<T>` envelope from `lib/api.ts` (`ok()` / `fail()`).
-- Demo parts: `npm run demo:stl` regenerates `demo/*.stl` from `lib/meshes.ts`.
+- Demo parts: `npm run demo:stl` regenerates `demo/*.stl` (script: `scripts/make-demo-stl.ts`). `charger-bracket-sheet.stl` is the bracket after its sheet-metal tweak (demo v2). `lib/demoProjects.ts` maps each demo's stored file names to their sources.
 - Sample project: `demo/sample-project.json` is a real saved Claude analysis of the pedal enclosure (250 units). Run `npm run demo:seed` to install it, then open `/project/yAeM9-RDOE`. Build the matching and pitch features against it; no API key needed. A test keeps it valid against `projectSchema`.
 - AI analysis: `lib/analysis/` (`prompt.ts` builds the prompts, `run.ts` validates and retries once, `claude.ts` is the only file that calls the SDK). The model sees `analysisOutputSchema` (structural only); `analysisSchema` in `lib/schemas.ts` adds the business rules. Model and effort come from `IDLEFIT_MODEL` / `IDLEFIT_EFFORT` (default `claude-opus-5` / `high`). The local-capacity summary in the system prompt comes from `data/shops.json`, so editing shops changes the prompt.
 

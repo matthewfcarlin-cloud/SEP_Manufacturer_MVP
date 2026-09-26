@@ -1,9 +1,11 @@
 import { randomBytes } from "node:crypto";
-import { mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { IMAGE_CONTENT_TYPES, type ImageType, type ProjectFields } from "./projectInput";
+import { IMAGE_CONTENT_TYPES, type ImageType, type ProjectFields, type VersionFields } from "./projectInput";
+import { migrateProject } from "./projectMigration";
 import { PROJECT_ID_PATTERN, projectSchema } from "./schemas";
-import type { GeometryStats, Project } from "./types";
+import type { AppliedTweak, GeometryStats, Project, ProjectVersion } from "./types";
+import { appendVersion, getVersion, nextVersionNumber, replaceVersion, versionFileName } from "./versions";
 
 // v1 storage: one folder per project under .data/projects/<id>/ holding
 // project.json plus the uploaded files. Swappable for Supabase later without
@@ -11,7 +13,8 @@ import type { GeometryStats, Project } from "./types";
 // projects won't survive a cold start until storage moves off-disk.
 
 const STL_FILE = "model.stl";
-const FILE_NAME_PATTERN = /^(model\.stl|image-[0-4]\.(jpg|png|webp))$/;
+// Version 1 uses the bare names; version n > 1 prefixes them with "vn-".
+const FILE_NAME_PATTERN = /^(v[1-9]\d{0,3}-)?(model\.stl|image-[0-4]\.(jpg|png|webp))$/;
 
 function dataRoot(): string {
   return process.env.IDLEFIT_DATA_DIR ?? path.join(process.cwd(), ".data");
@@ -41,38 +44,140 @@ async function writeAtomic(filePath: string, data: string | Uint8Array): Promise
   await rename(tmp, filePath);
 }
 
-export type NewProjectInput = {
-  fields: ProjectFields;
+type UploadedFiles = {
   stl: Uint8Array;
   geometry: GeometryStats;
   images: { type: ImageType; bytes: Uint8Array }[];
 };
 
+export type NewProjectInput = UploadedFiles & { fields: ProjectFields };
+
+export type NewVersionInput = UploadedFiles & {
+  fields: VersionFields;
+  basedOn: number;
+  appliedTweak?: AppliedTweak;
+  /** Copy the base version's photos when no new ones were uploaded. */
+  keepPhotosFrom?: ProjectVersion;
+};
+
+/** Writes a version's CAD file and photos and returns their URLs. */
+async function writeVersionFiles(id: string, number: number, files: UploadedFiles) {
+  const dir = projectDir(id);
+  const stlName = versionFileName(number, STL_FILE);
+  const imageNames = files.images.map((img, i) => versionFileName(number, `image-${i}.${img.type}`));
+  await writeAtomic(path.join(dir, stlName), files.stl);
+  await Promise.all(files.images.map((img, i) => writeAtomic(path.join(dir, imageNames[i]), img.bytes)));
+  return { cadFileUrl: fileUrl(id, stlName), imageUrls: imageNames.map((name) => fileUrl(id, name)) };
+}
+
+/** Copies another version's photos under this version's names. */
+async function copyPhotos(id: string, from: ProjectVersion, toNumber: number): Promise<string[]> {
+  const dir = projectDir(id);
+  const names = from.imageUrls.map((url) => url.split("/").pop() ?? "").filter((n) => FILE_NAME_PATTERN.test(n));
+  const copies = names.map((name, i) => versionFileName(toNumber, `image-${i}.${name.split(".").pop()}`));
+  await Promise.all(names.map((name, i) => copyFile(path.join(dir, name), path.join(dir, copies[i]))));
+  return copies.map((name) => fileUrl(id, name));
+}
+
+const briefFields = (fields: Omit<VersionFields, "changeNote">) => ({
+  notes: fields.notes,
+  targetQuantity: fields.targetQuantity,
+  ...(fields.budgetUsd !== undefined && { budgetUsd: fields.budgetUsd }),
+  materialHints: fields.materialHints,
+});
+
 export async function createProject(input: NewProjectInput): Promise<Project> {
   const id = newProjectId();
-  const dir = projectDir(id);
-  await mkdir(dir, { recursive: true });
-
-  await writeAtomic(path.join(dir, STL_FILE), input.stl);
-  const imageNames = input.images.map((img, i) => `image-${i}.${img.type}`);
-  await Promise.all(
-    input.images.map((img, i) => writeAtomic(path.join(dir, imageNames[i]), img.bytes)),
-  );
-
+  await mkdir(projectDir(id), { recursive: true });
+  const createdAt = new Date().toISOString();
   const project: Project = {
     id,
     name: input.fields.name,
-    createdAt: new Date().toISOString(),
-    notes: input.fields.notes,
-    targetQuantity: input.fields.targetQuantity,
-    ...(input.fields.budgetUsd !== undefined && { budgetUsd: input.fields.budgetUsd }),
-    materialHints: input.fields.materialHints,
-    cadFileUrl: fileUrl(id, STL_FILE),
-    imageUrls: imageNames.map((name) => fileUrl(id, name)),
-    geometry: input.geometry,
+    createdAt,
+    versions: [
+      {
+        number: 1,
+        createdAt,
+        ...briefFields(input.fields),
+        ...(await writeVersionFiles(id, 1, input)),
+        geometry: input.geometry,
+      },
+    ],
   };
   await saveProject(project);
   return project;
+}
+
+/** Adds the next version to a project. Returns null if the project doesn't exist. */
+export async function addVersion(id: string, input: NewVersionInput): Promise<{ project: Project; version: ProjectVersion } | null> {
+  let added: ProjectVersion | undefined;
+  const project = await updateProject(id, async (current) => {
+    const number = nextVersionNumber(current);
+    const files = await writeVersionFiles(id, number, input);
+    const imageUrls =
+      input.images.length === 0 && input.keepPhotosFrom ? await copyPhotos(id, input.keepPhotosFrom, number) : files.imageUrls;
+    added = {
+      number,
+      createdAt: new Date().toISOString(),
+      ...briefFields(input.fields),
+      cadFileUrl: files.cadFileUrl,
+      imageUrls,
+      geometry: input.geometry,
+      basedOn: input.basedOn,
+      ...(input.fields.changeNote && { changeNote: input.fields.changeNote }),
+      ...(input.appliedTweak && { appliedTweak: input.appliedTweak }),
+    };
+    return appendVersion(current, added);
+  });
+  return project && added ? { project, version: added } : null;
+}
+
+// Read-modify-write on project.json must not interleave: an analysis takes a
+// minute or two, and a version added meanwhile would be lost when the stale
+// copy is saved. One promise chain per project serializes updates within this
+// server process, which is all v1's single-process local storage needs.
+const updateQueues = new Map<string, Promise<unknown>>();
+
+/**
+ * Re-reads the project, applies the update, and saves the result, serialized
+ * per project. Returns null when the project doesn't exist.
+ */
+export async function updateProject(
+  id: string,
+  update: (project: Project) => Project | Promise<Project>,
+): Promise<Project | null> {
+  const previous = updateQueues.get(id) ?? Promise.resolve();
+  const run = previous.catch(() => undefined).then(async () => {
+    const current = await getProject(id);
+    if (!current) return null;
+    const next = await update(current);
+    await saveProject(next);
+    return next;
+  });
+  updateQueues.set(id, run);
+  try {
+    return await run;
+  } finally {
+    if (updateQueues.get(id) === run) updateQueues.delete(id);
+  }
+}
+
+/** Updates one version in place. Returns null when the project or version doesn't exist. */
+export async function updateVersion(
+  id: string,
+  number: number,
+  update: (version: ProjectVersion) => ProjectVersion,
+): Promise<Project | null> {
+  let found = true;
+  const project = await updateProject(id, (current) => {
+    const version = getVersion(current, number);
+    if (!version) {
+      found = false;
+      return current;
+    }
+    return replaceVersion(current, update(version));
+  });
+  return found ? project : null;
 }
 
 export async function saveProject(project: Project): Promise<void> {
@@ -90,7 +195,7 @@ export async function getProject(id: string): Promise<Project | null> {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
     throw err;
   }
-  const parsed = projectSchema.safeParse(JSON.parse(raw));
+  const parsed = projectSchema.safeParse(migrateProject(JSON.parse(raw)));
   if (!parsed.success) {
     throw new Error(`Project ${id} has a corrupt project.json: ${parsed.error.message}`);
   }
@@ -115,10 +220,10 @@ export async function readProjectFile(id: string, fileName: string): Promise<Sto
 
 export type ProjectImage = { mediaType: "image/jpeg" | "image/png" | "image/webp"; base64: string };
 
-/** Loads a project's uploaded photos as base64, in upload order. */
-export async function getProjectImages(project: Project): Promise<ProjectImage[]> {
-  const names = project.imageUrls.map((url) => url.split("/").pop() ?? "");
-  const files = await Promise.all(names.map((name) => readProjectFile(project.id, name)));
+/** Loads a version's uploaded photos as base64, in upload order. */
+export async function getVersionImages(projectId: string, version: ProjectVersion): Promise<ProjectImage[]> {
+  const names = version.imageUrls.map((url) => url.split("/").pop() ?? "");
+  const files = await Promise.all(names.map((name) => readProjectFile(projectId, name)));
   return files
     .filter((f): f is StoredFile => f !== null)
     .map((f) => ({

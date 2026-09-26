@@ -18,9 +18,9 @@ const STAGES = [
 ];
 const STAGE_MS = 9000;
 
-type Props = { projectId: string; variant?: "primary" | "secondary" };
+type Props = { projectId: string; version: number; variant?: "primary" | "secondary" };
 
-export function RunAnalysisButton({ projectId, variant = "primary" }: Props) {
+export function RunAnalysisButton({ projectId, version, variant = "primary" }: Props) {
   const router = useRouter();
   const [running, setRunning] = useState(false);
   const [stage, setStage] = useState(0);
@@ -40,7 +40,7 @@ export function RunAnalysisButton({ projectId, variant = "primary" }: Props) {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ projectId }),
+        body: JSON.stringify({ projectId, version }),
       });
       const json = (await res.json()) as ApiResponse<Analysis>;
       if (!json.success) throw new Error(json.error);

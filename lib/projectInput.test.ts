@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { detectCadFormat, detectImageType, parseProjectFields } from "./projectInput";
+import { detectCadFormat, detectImageType, parseProjectFields, parseVersionFields } from "./projectInput";
 
 const valid = {
   name: "Fuzz pedal enclosure",
@@ -81,5 +81,29 @@ describe("detectCadFormat", () => {
     expect(detectCadFormat("part.STL", new Uint8Array(84))).toBe("stl");
     expect(detectCadFormat("part.step", bytes("not really step"))).toBeNull();
     expect(detectCadFormat("model.obj", bytes("v 0 0 0"))).toBeNull();
+  });
+});
+
+describe("parseVersionFields", () => {
+  const brief = { notes: valid.notes, targetQuantity: valid.targetQuantity, budgetUsd: valid.budgetUsd, materialHints: valid.materialHints };
+
+  test("parses the brief plus a trimmed change note, without a name", () => {
+    const result = parseVersionFields({ ...brief, changeNote: "  Switched to a bent sheet part.  " });
+    expect(result.success && result.data).toEqual({
+      notes: valid.notes,
+      targetQuantity: 250,
+      budgetUsd: 3000,
+      materialHints: ["aluminum", "ABS"],
+      changeNote: "Switched to a bent sheet part.",
+    });
+  });
+
+  test("requires a change note", () => {
+    const result = parseVersionFields({ ...brief, changeNote: "   " });
+    expect(result).toMatchObject({ success: false, field: "changeNote" });
+  });
+
+  test("applies the same quantity rules as a new project", () => {
+    expect(parseVersionFields({ ...brief, changeNote: "x", targetQuantity: "0" })).toMatchObject({ success: false, field: "targetQuantity" });
   });
 });

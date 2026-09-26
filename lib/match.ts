@@ -1,22 +1,24 @@
 import { getShops } from "@/lib/shops";
 import { PROCESS_LABELS } from "@/lib/processes";
-import type { Machine, Project, ShopMatch } from "@/lib/types";
+import type { Machine, ProjectVersion, ShopMatch } from "@/lib/types";
 
 const SLIGHT_OVERAGE_RATIO = 0.15;
 const MAX_MATCHES = 5;
 
 type Dims = { x: number; y: number; z: number };
 
-/** Deterministically rank shop machines against a project's analyzed processes. */
-export function matchProject(project: Project): ShopMatch[] {
-  if (!project.geometry || !project.analysis) return [];
+type Matchable = Pick<ProjectVersion, "geometry" | "analysis" | "targetQuantity">;
 
-  const part = project.geometry.boundingBoxMm;
+/** Deterministically rank shop machines against one version's analyzed processes. */
+export function matchVersion(version: Matchable): ShopMatch[] {
+  if (!version.geometry || !version.analysis) return [];
+
+  const part = version.geometry.boundingBoxMm;
   const matches: ShopMatch[] = [];
 
   for (const shop of getShops()) {
     for (const machine of shop.machines) {
-      for (const path of project.analysis.paths) {
+      for (const path of version.analysis.paths) {
         if (machine.type !== path.process) continue;
 
         const maxOverage = envelopeOverage(part, machine.envelopeMm);
@@ -26,10 +28,10 @@ export function matchProject(project: Project): ShopMatch[] {
         const overlap = path.materials.filter((material) =>
           machine.materials.some((available) => normalize(available).includes(normalize(material)) || normalize(material).includes(normalize(available))),
         );
-        const quantityFits = project.targetQuantity >= shop.minOrderQty && project.targetQuantity <= shop.maxOrderQty;
-        const quantityNear = project.targetQuantity < shop.minOrderQty
-          ? shop.minOrderQty / Math.max(project.targetQuantity, 1) <= 2
-          : project.targetQuantity / shop.maxOrderQty <= 2;
+        const quantityFits = version.targetQuantity >= shop.minOrderQty && version.targetQuantity <= shop.maxOrderQty;
+        const quantityNear = version.targetQuantity < shop.minOrderQty
+          ? shop.minOrderQty / Math.max(version.targetQuantity, 1) <= 2
+          : version.targetQuantity / shop.maxOrderQty <= 2;
 
         let score = path.fitScore * 0.7 + (overlap.length ? 15 : 0);
         if (quantityFits) score += 10;
@@ -45,8 +47,8 @@ export function matchProject(project: Project): ShopMatch[] {
           ? `Material match: ${overlap.join(", ")}.`
           : "No direct material overlap was listed; confirm an alternative with the shop.");
         reasons.push(quantityFits
-          ? `Target quantity (${project.targetQuantity}) is within this shop's ${shop.minOrderQty}–${shop.maxOrderQty} unit range.`
-          : `Target quantity (${project.targetQuantity}) is outside this shop's ${shop.minOrderQty}–${shop.maxOrderQty} unit range.`);
+          ? `Target quantity (${version.targetQuantity}) is within this shop's ${shop.minOrderQty}–${shop.maxOrderQty} unit range.`
+          : `Target quantity (${version.targetQuantity}) is outside this shop's ${shop.minOrderQty}–${shop.maxOrderQty} unit range.`);
         if (machine.idleThisMonth) reasons.push("This machine has idle capacity this month.");
 
         matches.push({

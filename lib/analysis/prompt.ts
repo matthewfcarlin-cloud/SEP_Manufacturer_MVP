@@ -1,7 +1,10 @@
 import { MIN_WALL_MM } from "../geometryLimits";
 import { estimateMassGrams, REFERENCE_DENSITIES } from "../materials";
 import { PROCESSES } from "../processes";
-import type { Project } from "../types";
+import { formatToolingRange, formatUnitCostRange } from "../format";
+import { PROCESS_LABELS } from "../processes";
+import type { GeometryStats, Project, ProjectVersion } from "../types";
+import { getVersion } from "../versions";
 
 export function buildSystemPrompt(capacitySummary: string): string {
   return `You are a veteran manufacturing engineer and product developer. You have spent thirty years taking products from sketch to production in Los Angeles job shops: CNC, 3D printing, urethane casting, injection molding, sheet metal, and laser cutting. You are advising an independent inventor or small hardware team who has uploaded a part.
@@ -34,7 +37,7 @@ Local shop capacity this month (fictional demo shops around Los Angeles):
 ${capacitySummary}`;
 }
 
-function fillPercent(g: NonNullable<Project["geometry"]>): number {
+function fillPercent(g: GeometryStats): number {
   const { x, y, z } = g.boundingBoxMm;
   const boxCm3 = (x * y * z) / 1000;
   return boxCm3 > 0 ? Math.round((g.volumeCm3 / boxCm3) * 100) : 0;
@@ -44,9 +47,32 @@ function formatMass(volumeCm3: number): string {
   return REFERENCE_DENSITIES.map((m) => `${m.name} ~${estimateMassGrams(volumeCm3, m.gPerCm3)} g`).join(", ");
 }
 
-/** The per-project text block that follows the photos in the user turn. */
-export function buildProjectBrief(project: Project, imageCount: number): string {
-  const g = project.geometry;
+/**
+ * Tells the model what this version changed, so it judges the change instead
+ * of analyzing from zero. Empty for a first version.
+ */
+function revisionBlock(project: Project, version: ProjectVersion): string {
+  if (version.basedOn === undefined) return "";
+  const base = getVersion(project, version.basedOn);
+  const best = base?.analysis?.paths[0];
+  const lines = [`Revision: this is version ${version.number}, revised from version ${version.basedOn}.`];
+  if (version.changeNote) lines.push(`What the inventor changed: ${version.changeNote}`);
+  if (version.appliedTweak) {
+    const t = version.appliedTweak;
+    lines.push(`It applies your earlier suggested tweak for ${PROCESS_LABELS[t.process]}: "${t.change}" (expected impact: ${t.impact})`);
+  }
+  if (base && best) {
+    lines.push(
+      `Version ${base.number}'s best path was ${PROCESS_LABELS[best.process]} (${best.fitScore}/100 fit) at ${formatUnitCostRange(best.unitCostUsd)} per unit, tooling ${formatToolingRange(best.toolingCostUsd)}, for ${base.targetQuantity.toLocaleString("en-US")} units.`,
+    );
+  }
+  lines.push("Say in topRecommendation whether the change achieved what it set out to do.");
+  return `\n${lines.join("\n")}\n`;
+}
+
+/** The per-version text block that follows the photos in the user turn. */
+export function buildProjectBrief(project: Project, version: ProjectVersion, imageCount: number): string {
+  const g = version.geometry;
   const geometry = g
     ? [
         `Bounding box: ${g.boundingBoxMm.x} × ${g.boundingBoxMm.y} × ${g.boundingBoxMm.z} mm`,
@@ -64,16 +90,16 @@ export function buildProjectBrief(project: Project, imageCount: number): string 
   return `Project: ${project.name}
 
 What the inventor says it is:
-${project.notes.trim() || "(no notes given)"}
+${version.notes.trim() || "(no notes given)"}
 
-Target quantity: ${project.targetQuantity.toLocaleString("en-US")} units
-Budget: ${project.budgetUsd !== undefined ? `$${project.budgetUsd.toLocaleString("en-US")}` : "not given"}
-Material ideas: ${project.materialHints?.length ? project.materialHints.join(", ") : "none given"}
+Target quantity: ${version.targetQuantity.toLocaleString("en-US")} units
+Budget: ${version.budgetUsd !== undefined ? `$${version.budgetUsd.toLocaleString("en-US")}` : "not given"}
+Material ideas: ${version.materialHints?.length ? version.materialHints.join(", ") : "none given"}
 
 Geometry measured from the STL:
 ${geometry}
 
 Photos or sketches attached above: ${imageCount}
-
+${revisionBlock(project, version)}
 Analyze this part.`;
 }

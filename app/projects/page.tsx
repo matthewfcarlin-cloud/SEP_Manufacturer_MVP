@@ -6,6 +6,7 @@ import { DEMO_PROJECTS } from "@/lib/demoProjects";
 import { formatUnitCostRange } from "@/lib/format";
 import { PROCESS_LABELS } from "@/lib/processes";
 import { listProjects } from "@/lib/projectStore";
+import { latestVersion } from "@/lib/versions";
 
 export const metadata: Metadata = { title: "Projects" };
 
@@ -36,20 +37,24 @@ export default async function ProjectsPage() {
       ) : (
         <ul className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => {
-            const best = p.analysis?.paths[0];
-            const g = p.geometry;
+            const version = latestVersion(p);
+            const best = version.analysis?.paths[0];
+            const g = version.geometry;
             return (
               <li key={p.id}>
                 <Link href={`/project/${p.id}`} className="flex h-full flex-col gap-3 rounded-xl border border-line bg-surface p-5 transition-colors hover:border-ink">
                   <div className="flex items-start justify-between gap-2">
                     <h2 className="display-type text-2xl">{p.name}</h2>
+                    {p.versions.length > 1 && (
+                      <span className="shrink-0 rounded-full bg-ink px-2 py-0.5 text-xs text-bg">v{version.number}</span>
+                    )}
                     {EXAMPLE_IDS.has(p.id) && (
                       <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-xs text-muted">Example</span>
                     )}
                   </div>
                   <p className="text-xs text-muted">
                     {new Date(p.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} ·{" "}
-                    {p.targetQuantity.toLocaleString("en-US")} units
+                    {version.targetQuantity.toLocaleString("en-US")} units
                     {g && ` · ${Math.round(g.boundingBoxMm.x)} × ${Math.round(g.boundingBoxMm.y)} × ${Math.round(g.boundingBoxMm.z)} mm`}
                   </p>
                   {best ? (

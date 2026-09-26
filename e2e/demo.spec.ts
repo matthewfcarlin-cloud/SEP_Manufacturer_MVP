@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { DEMO_PROJECTS } from "../lib/demoProjects";
 
 // The demo, end to end, against seeded projects (see global-setup.ts).
-const [PEDAL] = DEMO_PROJECTS;
+const [PEDAL, BRACKET] = DEMO_PROJECTS;
 
 // Remove any project a test created, even if the test failed midway.
 test.afterEach(async ({ page }) => {
@@ -83,6 +83,47 @@ test("uploading an STL creates a measured project", async ({ page }) => {
   await expect(geometry).toContainText("80 × 60 × 50 mm");
   await expect(geometry).toContainText("3 mm");
   await expect(page.getByRole("button", { name: "Analyze manufacturing" })).toBeVisible();
+});
+
+test("a new version gets its own measurements and appears in the timeline", async ({ page }) => {
+  await page.goto("/new");
+  await page.getByLabel("CAD file (STL or STEP)").setInputFiles("demo/charger-bracket.stl");
+  await page.getByLabel("Project name").fill("E2E versions");
+  await page.getByLabel("Target quantity").fill("500");
+  await page.getByRole("button", { name: "Create project" }).click();
+  await expect(page).toHaveURL(/\/project\/[A-Za-z0-9_-]{10}$/);
+  const projectUrl = page.url();
+
+  await page.getByRole("link", { name: "New version" }).click();
+  await page.getByLabel("CAD file (STL or STEP)").setInputFiles("demo/charger-bracket-sheet.stl");
+  await page.getByLabel("What changed?").fill("Redrawn as one bent 2 mm sheet");
+  await page.getByRole("button", { name: "Create version" }).click();
+
+  await expect(page).toHaveURL(/\?v=2$/);
+  await expect(page.getByRole("region", { name: "Part geometry" })).toContainText("2 mm");
+  const timeline = page.getByRole("region", { name: /Versions/ });
+  await expect(timeline.getByRole("link", { name: /^v1/ })).toBeVisible();
+  await expect(timeline.getByRole("link", { name: /^v2/ })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByText("Redrawn as one bent 2 mm sheet").first()).toBeVisible();
+
+  // v1 is untouched.
+  await page.goto(`${projectUrl}?v=1`);
+  await expect(page.getByRole("region", { name: "Part geometry" })).toContainText("3 mm");
+
+  // Comparing before either is analyzed asks for analysis rather than inventing deltas.
+  await page.getByRole("link", { name: "Compare versions" }).click();
+  await expect(page.getByRole("heading", { name: "Analyze v1 and v2 to compare them." })).toBeVisible();
+  await page.goto(projectUrl); // so afterEach finds and removes the project
+});
+
+test("comparing the seeded bracket versions shows real deltas", async ({ page }) => {
+  await page.goto(`/project/${BRACKET.id}/compare?a=1&b=2`);
+  // The seeded v2 is a real saved analysis of the bent-sheet redesign.
+  await expect(page.getByRole("heading", { name: "Unit cost −14%, fit score +5." })).toBeVisible();
+  const table = page.getByRole("table");
+  await expect(table.getByRole("rowheader", { name: "Unit cost, est." })).toBeVisible();
+  await expect(table.getByRole("rowheader", { name: "Top shop match" })).toBeVisible();
+  await expect(page.locator("canvas")).toHaveCount(2);
 });
 
 test("uploading a STEP file converts it and measures it in millimeters", async ({ page }) => {

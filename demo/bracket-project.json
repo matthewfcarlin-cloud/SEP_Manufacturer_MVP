@@ -2,369 +2,751 @@
   "id": "Dr9z34I2mA",
   "name": "E-bike charger wall bracket",
   "createdAt": "2026-09-26T05:50:52.439Z",
-  "notes": "Wall-mount bracket that holds our e-bike charger brick (about 600 g) off the garage floor. Drawn for injection molding in glass-filled nylon, with two gussets. Two screws into the wall through the base, two screws into the charger through the upright. First production run is 500 units",
-  "targetQuantity": 500,
-  "budgetUsd": 4000,
-  "materialHints": [
-    "glass-filled nylon"
-  ],
-  "cadFileUrl": "/api/files/Dr9z34I2mA/model.stl",
-  "imageUrls": [],
-  "geometry": {
-    "boundingBoxMm": {
-      "x": 80,
-      "y": 60,
-      "z": 50
+  "versions": [
+    {
+      "number": 1,
+      "createdAt": "2026-09-26T05:50:52.439Z",
+      "notes": "Wall-mount bracket that holds our e-bike charger brick (about 600 g) off the garage floor. Drawn for injection molding in glass-filled nylon, with two gussets. Two screws into the wall through the base, two screws into the charger through the upright. First production run is 500 units",
+      "targetQuantity": 500,
+      "budgetUsd": 4000,
+      "materialHints": [
+        "glass-filled nylon"
+      ],
+      "cadFileUrl": "/api/files/Dr9z34I2mA/model.stl",
+      "imageUrls": [],
+      "geometry": {
+        "boundingBoxMm": {
+          "x": 80,
+          "y": 60,
+          "z": 50
+        },
+        "volumeCm3": 28.085,
+        "surfaceAreaCm2": 199.47,
+        "triangleCount": 842,
+        "isWatertight": true,
+        "thinWallWarning": false,
+        "typicalWallMm": 3
+      },
+      "analysis": {
+        "productSummary": "A small wall bracket (80 × 60 × 50 mm, 28 cm³, 3 mm walls) that cantilevers a 600 g e-bike charger off the garage floor. Sold to e-bike OEMs and accessory retailers. At 500 units, injection mold tooling blows the $4,000 budget; a bent sheet-metal version ships for less.",
+        "detectedFeatures": [
+          "80 × 60 × 50 mm L-shaped bracket body",
+          "3 mm nominal wall throughout",
+          "Two triangular support gussets",
+          "Two wall-mount screw holes in base",
+          "Two charger-mount screw holes in upright",
+          "Open charger pocket, 12% box fill",
+          "Cantilevered upright carrying ~600 g load",
+          "Watertight mesh, no sub-1 mm walls"
+        ],
+        "paths": [
+          {
+            "process": "sheet_metal",
+            "fitScore": 88,
+            "unitCostUsd": {
+              "low": 5,
+              "high": 9
+            },
+            "toolingCostUsd": {
+              "low": 0,
+              "high": 300
+            },
+            "leadTimeDays": {
+              "low": 7,
+              "high": 12
+            },
+            "materials": [
+              "Aluminum 5052 (2.0 mm)",
+              "Mild steel CRS (1.8 mm)",
+              "Stainless 304 (1.5 mm)"
+            ],
+            "pros": [
+              "Fits the $4,000 budget at 500 units with room to spare",
+              "No tooling; five idle brake/laser machines locally",
+              "Stronger than 3 mm glass-filled nylon at the gusset root",
+              "Flat blank ships and stores cheaply"
+            ],
+            "cons": [
+              "Needs a redraw from molded solid to flat pattern",
+              "Bare metal needs powder coat or anodize for garage humidity",
+              "Sharp edges require deburr spec",
+              "Loses the molded charger pocket contour"
+            ],
+            "designTweaks": [
+              {
+                "change": "Re-model as one 2 mm Aluminum 5052 flat blank ~140 × 60 mm with a single 90° bend and 4 mm bend-relief notches.",
+                "why": "One bend on a brake replaces a mold cavity entirely and runs on idle local laser plus brake capacity.",
+                "impact": "Drops unit cost from ~$18 (SLS) to ~$6 and removes all tooling spend."
+              },
+              {
+                "change": "Replace the two 3 mm gussets with 10 mm upturned side flanges along the 60 mm edges, formed in the same setup.",
+                "why": "Flanges stiffen the cantilever without welding or a separate part.",
+                "impact": "Same stiffness, zero welding cost, ~$1.50/part saved versus welded gussets."
+              },
+              {
+                "change": "Make the two charger holes 5 mm keyhole slots and the two wall holes 5.5 mm with 4 mm edge distance.",
+                "why": "Keyholes let the charger hang on pre-set screws; edge distance prevents tear-out at the bend.",
+                "impact": "Eliminates one assembly step for the end user and reduces field warranty returns."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 22,
+                "high": 40
+              },
+              {
+                "quantity": 100,
+                "low": 8,
+                "high": 14
+              },
+              {
+                "quantity": 1000,
+                "low": 4,
+                "high": 7
+              },
+              {
+                "quantity": 10000,
+                "low": 2.5,
+                "high": 4.5
+              }
+            ]
+          },
+          {
+            "process": "injection_molding",
+            "fitScore": 68,
+            "unitCostUsd": {
+              "low": 2,
+              "high": 4
+            },
+            "toolingCostUsd": {
+              "low": 3000,
+              "high": 7000
+            },
+            "leadTimeDays": {
+              "low": 30,
+              "high": 50
+            },
+            "materials": [
+              "30% glass-filled Nylon PA66",
+              "Polycarbonate",
+              "PC/ABS"
+            ],
+            "pros": [
+              "Cheapest part cost long-term: under $2 at volume",
+              "Molded pocket can match the charger brick exactly",
+              "Four idle presses locally, 400 × 350 mm platen is ample"
+            ],
+            "cons": [
+              "Tooling alone exceeds the entire $4,000 budget at 500 units",
+              "6-8 week first-article lead time",
+              "GF nylon sinks and warps at 3 mm next to 3 mm gussets",
+              "Design locked once steel is cut"
+            ],
+            "designTweaks": [
+              {
+                "change": "Thin the two gussets to 1.5 mm (60% of the 3 mm wall) and add a 1.5° draft on the 50 mm upright faces.",
+                "why": "Gussets at full wall thickness sink on the visible outer face and slow cooling; draft frees a straight-pull tool.",
+                "impact": "Removes sink marks and cuts cycle ~15%, avoiding any side-action (~$1,200 tooling saved)."
+              },
+              {
+                "change": "Core the base to a uniform 2.5 mm shell with 1 mm internal ribs on 15 mm centers instead of solid sections.",
+                "why": "Uniform wall is the single biggest driver of warp in glass-filled nylon.",
+                "impact": "Shot weight drops ~20%, cycle time ~3 s shorter, ~$0.30/part."
+              },
+              {
+                "change": "Add 0.5 mm radii at both gusset-to-upright roots and counterbore the two charger holes in the mold.",
+                "why": "Sharp roots are where a notch-sensitive GF nylon cracks under the 600 g cantilever load.",
+                "impact": "Meaningfully raises drop/fatigue margin; removes a secondary drilling operation."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 60,
+                "high": 200
+              },
+              {
+                "quantity": 100,
+                "low": 8,
+                "high": 20
+              },
+              {
+                "quantity": 1000,
+                "low": 1.6,
+                "high": 3
+              },
+              {
+                "quantity": 10000,
+                "low": 0.8,
+                "high": 1.6
+              }
+            ]
+          },
+          {
+            "process": "sls_print",
+            "fitScore": 58,
+            "unitCostUsd": {
+              "low": 14,
+              "high": 22
+            },
+            "toolingCostUsd": {
+              "low": 0,
+              "high": 0
+            },
+            "leadTimeDays": {
+              "low": 7,
+              "high": 12
+            },
+            "materials": [
+              "Glass-filled PA12",
+              "Nylon PA12",
+              "Nylon PA11"
+            ],
+            "pros": [
+              "Keeps the exact drawn geometry, no redesign",
+              "Zero tooling, parts in under two weeks",
+              "Isotropic nylon is genuinely strong enough for 600 g"
+            ],
+            "cons": [
+              "500 units costs ~$9,000, over double the budget",
+              "Only two idle SLS machines; 165 mm chamber limits nesting",
+              "Grainy finish, needs dyeing for a retail look"
+            ],
+            "designTweaks": [
+              {
+                "change": "Hollow the base and upright to 2.5 mm shells with two 4 mm powder-escape holes on the hidden underside.",
+                "why": "SLS is priced mostly by material volume and packed build height.",
+                "impact": "Cuts volume ~30%, roughly $4-6 off each part."
+              },
+              {
+                "change": "Orient the part with the 50 mm upright along Z and pack 40+ per build in the 165 mm chamber.",
+                "why": "Nesting density is the other half of SLS unit cost.",
+                "impact": "~20% lower per-part cost versus loose single-part builds."
+              },
+              {
+                "change": "Print the four screw holes 0.4 mm undersize and spec heat-set M4 inserts in the two charger holes.",
+                "why": "SLS holes close slightly and self-tapping into nylon strips after a few cycles.",
+                "impact": "Reliable re-serviceable mounting; ~$0.60/part insert cost."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 28,
+                "high": 48
+              },
+              {
+                "quantity": 100,
+                "low": 18,
+                "high": 30
+              },
+              {
+                "quantity": 1000,
+                "low": 12,
+                "high": 20
+              },
+              {
+                "quantity": 10000,
+                "low": 10,
+                "high": 18
+              }
+            ]
+          },
+          {
+            "process": "cnc_milling",
+            "fitScore": 45,
+            "unitCostUsd": {
+              "low": 16,
+              "high": 28
+            },
+            "toolingCostUsd": {
+              "low": 150,
+              "high": 500
+            },
+            "leadTimeDays": {
+              "low": 10,
+              "high": 18
+            },
+            "materials": [
+              "Aluminum 6061",
+              "Delrin (POM)",
+              "HDPE"
+            ],
+            "pros": [
+              "Six idle mills locally, fast quotes",
+              "Aluminum version is essentially unbreakable at 76 g",
+              "Good for a premium or OEM-branded SKU"
+            ],
+            "cons": [
+              "12% box fill means ~88% of the billet is chips",
+              "Needs 2-3 setups plus a soft-jaw fixture",
+              "~$11,000 for 500 units, far over budget"
+            ],
+            "designTweaks": [
+              {
+                "change": "Machine from 50.8 mm 6061 plate with a flat back face, so the part runs in two setups on standard soft jaws.",
+                "why": "A flat datum face lets one vise hold the base while the upright and gussets are cut.",
+                "impact": "Removes a third setup, roughly 20% of unit cost."
+              },
+              {
+                "change": "Open all internal corners to 6 mm radius and replace the two gussets with a single 12 mm fillet.",
+                "why": "A 12 mm endmill can then rough the whole pocket at full depth without small-tool passes.",
+                "impact": "Cycle time down ~25%, about $5/part at 500."
+              },
+              {
+                "change": "Pocket the base underside to a 5 mm floor with 8 mm ribs instead of leaving it solid.",
+                "why": "Less billet mass and lighter stock reduces both material and cycle cost.",
+                "impact": "~15% material saving and a lighter shipping weight."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 55,
+                "high": 110
+              },
+              {
+                "quantity": 100,
+                "low": 25,
+                "high": 45
+              },
+              {
+                "quantity": 1000,
+                "low": 14,
+                "high": 24
+              },
+              {
+                "quantity": 10000,
+                "low": 11,
+                "high": 20
+              }
+            ]
+          }
+        ],
+        "topRecommendation": "Redraw this as a bent 2 mm aluminum 5052 L-bracket and run 500 on idle local laser and brake capacity for roughly $3,000 delivered, inside budget with no tooling. Keep the molded glass-filled nylon design on the shelf and cut steel when your committed order reaches about 2,000-2,500 units, where the $3,000-7,000 tool pays back.",
+        "risks": [
+          "At 500 units the injection-mold path costs $4,000-9,000 in tooling alone, before a single part, which breaks the stated budget.",
+          "No photos or charger dimensions were supplied, so the 60 mm-wide pocket and the two charger screw holes may not match the real brick.",
+          "Glass-filled nylon is notch-sensitive: the sharp gusset-to-upright roots are the likely crack site under a 600 g cantilevered load plus cable tug.",
+          "Two screws into drywall will pull out under 600 g plus cable load; the product needs specified anchors or a stud-spacing hole pattern.",
+          "A 3 mm wall meeting 3 mm gussets in 30% GF nylon will sink and warp unless the gussets are thinned before the tool is cut."
+        ],
+        "storyboard": [
+          {
+            "shot": 1,
+            "visual": "Garage floor: charger brick in a puddle, cable coiled in dirt, bike tire rolling past.",
+            "voiceover": "Every e-bike ships with a charger. Nobody ships a place to put it.",
+            "seconds": 5
+          },
+          {
+            "shot": 2,
+            "visual": "Hands snap the bracket onto two wall screws; charger slides into place with a click.",
+            "voiceover": "This bracket mounts in ninety seconds with two screws.",
+            "seconds": 5
+          },
+          {
+            "shot": 3,
+            "visual": "Close-up rotating on the bent aluminum bracket, powder-coated, loaded with the charger.",
+            "voiceover": "Bent aluminum. Holds six hundred grams. No tooling to cut.",
+            "seconds": 5
+          },
+          {
+            "shot": 4,
+            "visual": "Flat blanks stacking off a laser table, then a brake folding one in a single hit.",
+            "voiceover": "Five hundred units off idle L.A. machines, delivered in under two weeks.",
+            "seconds": 5
+          },
+          {
+            "shot": 5,
+            "visual": "Split screen: cost chart showing $6 at five hundred, under $2 molded at ten thousand.",
+            "voiceover": "Six dollars today. Under two when volume justifies a mold.",
+            "seconds": 5
+          },
+          {
+            "shot": 6,
+            "visual": "Bracket on a clean garage wall beside the bike; logo and part number on the base.",
+            "voiceover": "Your charger, off the floor. Let's put it in every box.",
+            "seconds": 5
+          }
+        ]
+      }
     },
-    "volumeCm3": 28.085,
-    "surfaceAreaCm2": 199.47,
-    "triangleCount": 842,
-    "isWatertight": true,
-    "thinWallWarning": false,
-    "typicalWallMm": 3
-  },
-  "analysis": {
-    "productSummary": "A small wall bracket (80 × 60 × 50 mm, 28 cm³, 3 mm walls) that cantilevers a 600 g e-bike charger off the garage floor. Sold to e-bike OEMs and accessory retailers. At 500 units, injection mold tooling blows the $4,000 budget; a bent sheet-metal version ships for less.",
-    "detectedFeatures": [
-      "80 × 60 × 50 mm L-shaped bracket body",
-      "3 mm nominal wall throughout",
-      "Two triangular support gussets",
-      "Two wall-mount screw holes in base",
-      "Two charger-mount screw holes in upright",
-      "Open charger pocket, 12% box fill",
-      "Cantilevered upright carrying ~600 g load",
-      "Watertight mesh, no sub-1 mm walls"
-    ],
-    "paths": [
-      {
+    {
+      "number": 2,
+      "createdAt": "2026-09-26T21:29:00.124Z",
+      "notes": "Wall-mount bracket that holds our e-bike charger brick (about 600 g) off the garage floor. Redrawn as one 2 mm aluminum 5052 sheet with a single 90° bend and bend-relief notches; no gussets. Two screws into the wall through the base, two screws into the charger through the upright. First production run is 500 units.",
+      "targetQuantity": 500,
+      "budgetUsd": 4000,
+      "materialHints": [
+        "aluminum 5052"
+      ],
+      "cadFileUrl": "/api/files/Dr9z34I2mA/v2-model.stl",
+      "imageUrls": [],
+      "geometry": {
+        "boundingBoxMm": {
+          "x": 80,
+          "y": 60,
+          "z": 50
+        },
+        "volumeCm3": 16.806,
+        "surfaceAreaCm2": 177.09,
+        "triangleCount": 932,
+        "isWatertight": true,
+        "thinWallWarning": false,
+        "typicalWallMm": 2
+      },
+      "analysis": {
+        "productSummary": "A 2 mm aluminum 5052 wall bracket that lifts a ~600 g e-bike charger brick off the garage floor: one flat blank, one 90° bend, four screw holes. It is now a pure laser-and-brake part, so 500 units need no tooling and land near $6 each.",
+        "detectedFeatures": [
+          "Single 90° formed bend",
+          "~140 × 60 mm flat blank, 2 mm thick",
+          "Two wall-mount screw holes in base",
+          "Two charger-mount holes in upright",
+          "4 mm bend-relief notches at bend ends",
+          "Uniform 2 mm wall, no gussets or ribs",
+          "80 × 60 × 50 mm folded envelope"
+        ],
+        "paths": [
+          {
+            "process": "sheet_metal",
+            "fitScore": 93,
+            "unitCostUsd": {
+              "low": 4.5,
+              "high": 7.5
+            },
+            "toolingCostUsd": {
+              "low": 0,
+              "high": 250
+            },
+            "leadTimeDays": {
+              "low": 7,
+              "high": 14
+            },
+            "materials": [
+              "Aluminum 5052-H32 2 mm",
+              "Mild steel (CRS) 1.5 mm",
+              "Stainless 304 1.5 mm"
+            ],
+            "pros": [
+              "One bend, one blank: cheapest possible route at 500 units",
+              "Zero hard tooling; fits the $4,000 budget with room",
+              "Three idle brake/punch shops locally this month",
+              "5052 bends cleanly at 2 mm without cracking"
+            ],
+            "cons": [
+              "Setup cost dominates below ~50 pieces",
+              "2 mm unribbed upright may flex under a 600 g cantilever",
+              "Bend angle tolerance ±1° affects wall fit",
+              "Cosmetic finish needs a separate tumble or anodize step"
+            ],
+            "designTweaks": [
+              {
+                "change": "Lengthen the upright's rear edge into a 10 mm return flange folded the same direction, adding a second bend on the same brake setup.",
+                "why": "A 2 mm 5052 upright with no gussets is the weak point under a 600 g offset load.",
+                "impact": "Roughly triples upright stiffness for about $0.40/part and no new tooling."
+              },
+              {
+                "change": "Change the two wall holes to 5.5 × 11 mm slots and keep all holes ≥8 mm from the bend line.",
+                "why": "Slots absorb stud-spacing error; holes too near the bend distort during forming.",
+                "impact": "Eliminates field drilling complaints and scrapped parts from oval holes."
+              },
+              {
+                "change": "Nest the ~140 × 60 mm blanks on common lines with 3 mm corner radii on a 1220 × 2440 sheet.",
+                "why": "Shared cut lines and radii cut pierce count and laser travel per blank.",
+                "impact": "~15-20% less cut time and about 10% better material yield."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 26,
+                "high": 55
+              },
+              {
+                "quantity": 100,
+                "low": 8,
+                "high": 14
+              },
+              {
+                "quantity": 1000,
+                "low": 3.75,
+                "high": 6.5
+              },
+              {
+                "quantity": 10000,
+                "low": 2.6,
+                "high": 4.4
+              }
+            ]
+          },
+          {
+            "process": "laser_cutting",
+            "fitScore": 72,
+            "unitCostUsd": {
+              "low": 3,
+              "high": 5.5
+            },
+            "toolingCostUsd": {
+              "low": 0,
+              "high": 0
+            },
+            "leadTimeDays": {
+              "low": 5,
+              "high": 10
+            },
+            "materials": [
+              "Aluminum 5052 2 mm",
+              "Mild steel (CRS) 2 mm",
+              "Stainless 304 1.5 mm"
+            ],
+            "pros": [
+              "Five idle laser beds locally; blanks in under a week",
+              "No tooling at all, fastest quote turnaround",
+              "Holes, slots and relief notches cut in one hit"
+            ],
+            "cons": [
+              "Flat blank only; forming must be bought separately",
+              "Adds a vendor handoff and extra freight leg",
+              "Cut edges on aluminum need deburring before folding"
+            ],
+            "designTweaks": [
+              {
+                "change": "Add two 3 mm tooling holes on the base centerline, 100 mm apart, outside the screw pattern.",
+                "why": "Gives the brake operator a hard locating datum instead of scribing the bend line.",
+                "impact": "Cuts bend setup time and holds leg length within ±0.3 mm."
+              },
+              {
+                "change": "Etch the bend line and part revision as a 0.2 mm laser score on the inside face.",
+                "why": "Prevents mis-folded parts when blanks move between two shops.",
+                "impact": "Near-zero cost, removes a common 2-5% scrap cause on split-vendor jobs."
+              },
+              {
+                "change": "Order blanks in tabbed sheets of 10 rather than loose parts.",
+                "why": "Reduces handling and part-count fees at the laser and during transport.",
+                "impact": "Saves roughly $0.30-0.60 per part at 500 units."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 18,
+                "high": 38
+              },
+              {
+                "quantity": 100,
+                "low": 5.5,
+                "high": 10
+              },
+              {
+                "quantity": 1000,
+                "low": 2.6,
+                "high": 4.5
+              },
+              {
+                "quantity": 10000,
+                "low": 1.9,
+                "high": 3.2
+              }
+            ]
+          },
+          {
+            "process": "cnc_milling",
+            "fitScore": 42,
+            "unitCostUsd": {
+              "low": 16,
+              "high": 28
+            },
+            "toolingCostUsd": {
+              "low": 150,
+              "high": 500
+            },
+            "leadTimeDays": {
+              "low": 10,
+              "high": 18
+            },
+            "materials": [
+              "Aluminum 6061-T6",
+              "Aluminum 5052 plate",
+              "Delrin (POM)"
+            ],
+            "pros": [
+              "No bend-angle variation; sharp repeatable 90°",
+              "Can be cut as a solid angle for maximum stiffness",
+              "Six idle mills locally, easy to source"
+            ],
+            "cons": [
+              "3-4x the sheet metal unit cost at 500 units",
+              "Wastes ~90% of the plate stock as chips",
+              "Needs a soft-jaw fixture for the second face"
+            ],
+            "designTweaks": [
+              {
+                "change": "Mill from 2 mm extruded 6061 angle stock instead of plate, machining only the holes and outline.",
+                "why": "Buying the 90° as stock removes most of the metal removal and one setup.",
+                "impact": "Drops unit cost to roughly $9-14 and halves cycle time."
+              },
+              {
+                "change": "Fixture 6 parts per vise setup using a common 3 mm dowel pattern in the base.",
+                "why": "Load/unload time, not cutting, dominates cost on a 45 g part.",
+                "impact": "~30% lower unit cost at 500 pieces."
+              },
+              {
+                "change": "Drop any countersinks; use pan-head screws with straight 5.5 mm clearance holes.",
+                "why": "Countersinks add a tool change and second operation for no functional gain.",
+                "impact": "Removes ~15 seconds of cycle time per part."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 45,
+                "high": 85
+              },
+              {
+                "quantity": 100,
+                "low": 22,
+                "high": 38
+              },
+              {
+                "quantity": 1000,
+                "low": 13,
+                "high": 22
+              },
+              {
+                "quantity": 10000,
+                "low": 10,
+                "high": 17
+              }
+            ]
+          },
+          {
+            "process": "fdm_print",
+            "fitScore": 24,
+            "unitCostUsd": {
+              "low": 6,
+              "high": 12
+            },
+            "toolingCostUsd": {
+              "low": 0,
+              "high": 0
+            },
+            "leadTimeDays": {
+              "low": 3,
+              "high": 8
+            },
+            "materials": [
+              "Carbon-fiber nylon",
+              "Polycarbonate",
+              "ASA"
+            ],
+            "pros": [
+              "Good for 5-20 fit-check samples before committing the blank",
+              "No tooling, next-day parts from six idle machines"
+            ],
+            "cons": [
+              "Layer lines run across the bend corner: the weakest direction",
+              "Garage heat and UV degrade most FDM plastics over time",
+              "Cost never falls below ~$6; shops cap at 1,000 units",
+              "Creep under a sustained 600 g load"
+            ],
+            "designTweaks": [
+              {
+                "change": "Print with the L-corner flat on the bed so layers run along, not across, the loaded corner.",
+                "why": "FDM parts fail along layer boundaries at the inside radius of an L.",
+                "impact": "Two to three times higher failure load with no cost change."
+              },
+              {
+                "change": "Add a 6 mm triangular gusset at the inside corner and a 5 mm inside fillet.",
+                "why": "Plastic cannot match 2 mm aluminum stiffness without added section.",
+                "impact": "Makes a printed prototype usable for real load testing."
+              },
+              {
+                "change": "Thicken walls to 4 mm and use brass heat-set inserts at the charger holes.",
+                "why": "Screws into 2 mm printed plastic strip out on first install.",
+                "impact": "Adds ~$1.50/part but removes the main prototype failure mode."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 11,
+                "high": 22
+              },
+              {
+                "quantity": 100,
+                "low": 7,
+                "high": 14
+              },
+              {
+                "quantity": 1000,
+                "low": 6,
+                "high": 11
+              },
+              {
+                "quantity": 10000,
+                "low": 6,
+                "high": 11
+              }
+            ]
+          }
+        ],
+        "topRecommendation": "Yes, the revision worked: one flat blank, one bend and relief notches puts this squarely in sheet metal at roughly $4.50-$7.50 per part with no hard tooling, about $3,000 for 500 and inside budget. Buy laser-cut blanks and forming from one shop. Only at 25,000+ units would a progressive die or molded PA66 bracket beat it.",
+        "risks": [
+          "A 2 mm 5052 upright with no gussets may flex or fatigue under a 600 g charger cantilevered off the wall; load-test three parts before releasing 500.",
+          "Mounting relies on two screws into the charger housing, whose plastic bosses may not be rated to carry the brick's weight.",
+          "Holes placed closer than ~8 mm to the bend line will distort during forming and cause assembly fit problems.",
+          "The 80 × 60 × 50 mm folded envelope implies ~50 mm of upright; confirm it actually clears your charger body and cable exit.",
+          "Bend angle on 5052 typically varies ±1°, so a bracket that is square on the CAD may sit slightly off the wall."
+        ],
+        "storyboard": [
+          {
+            "shot": 1,
+            "visual": "Garage floor, charger brick sitting in a puddle beside a bike tire, cable coiled in dust.",
+            "voiceover": "Every e-bike charger ends up on the floor. That's where they die.",
+            "seconds": 5
+          },
+          {
+            "shot": 2,
+            "visual": "Hands snap the aluminum bracket to the wall with two screws; charger clicks into place.",
+            "voiceover": "Two screws. Thirty seconds. Charger off the floor, for good.",
+            "seconds": 5
+          },
+          {
+            "shot": 3,
+            "visual": "Close macro pan across the brushed 5052 surface and the clean 90° bend.",
+            "voiceover": "One piece of two-millimeter aluminum. One bend. Nothing to break.",
+            "seconds": 5
+          },
+          {
+            "shot": 4,
+            "visual": "Laser cutting nested blanks, then a press brake folding one in a single stroke.",
+            "voiceover": "Laser-cut and folded locally. No molds, no tooling, no minimum order.",
+            "seconds": 5
+          },
+          {
+            "shot": 5,
+            "visual": "Clean text on white: $6 landed cost, 500 units, ten days.",
+            "voiceover": "Six dollars a unit. Five hundred in ten days. Ready to ship.",
+            "seconds": 5
+          },
+          {
+            "shot": 6,
+            "visual": "Tidy garage wall, bracket holding charger, bike below, logo fades in.",
+            "voiceover": "The bracket every e-bike should already ship with. Let's make it yours.",
+            "seconds": 5
+          }
+        ]
+      },
+      "basedOn": 1,
+      "changeNote": "Applied the sheet metal tweak: Re-model as one 2 mm Aluminum 5052 flat blank ~140 × 60 mm with a single 90° bend and 4 mm bend-relief notches.",
+      "appliedTweak": {
+        "fromVersion": 1,
         "process": "sheet_metal",
-        "fitScore": 88,
-        "unitCostUsd": {
-          "low": 5,
-          "high": 9
-        },
-        "toolingCostUsd": {
-          "low": 0,
-          "high": 300
-        },
-        "leadTimeDays": {
-          "low": 7,
-          "high": 12
-        },
-        "materials": [
-          "Aluminum 5052 (2.0 mm)",
-          "Mild steel CRS (1.8 mm)",
-          "Stainless 304 (1.5 mm)"
-        ],
-        "pros": [
-          "Fits the $4,000 budget at 500 units with room to spare",
-          "No tooling; five idle brake/laser machines locally",
-          "Stronger than 3 mm glass-filled nylon at the gusset root",
-          "Flat blank ships and stores cheaply"
-        ],
-        "cons": [
-          "Needs a redraw from molded solid to flat pattern",
-          "Bare metal needs powder coat or anodize for garage humidity",
-          "Sharp edges require deburr spec",
-          "Loses the molded charger pocket contour"
-        ],
-        "designTweaks": [
-          {
-            "change": "Re-model as one 2 mm Aluminum 5052 flat blank ~140 × 60 mm with a single 90° bend and 4 mm bend-relief notches.",
-            "why": "One bend on a brake replaces a mold cavity entirely and runs on idle local laser plus brake capacity.",
-            "impact": "Drops unit cost from ~$18 (SLS) to ~$6 and removes all tooling spend."
-          },
-          {
-            "change": "Replace the two 3 mm gussets with 10 mm upturned side flanges along the 60 mm edges, formed in the same setup.",
-            "why": "Flanges stiffen the cantilever without welding or a separate part.",
-            "impact": "Same stiffness, zero welding cost, ~$1.50/part saved versus welded gussets."
-          },
-          {
-            "change": "Make the two charger holes 5 mm keyhole slots and the two wall holes 5.5 mm with 4 mm edge distance.",
-            "why": "Keyholes let the charger hang on pre-set screws; edge distance prevents tear-out at the bend.",
-            "impact": "Eliminates one assembly step for the end user and reduces field warranty returns."
-          }
-        ],
-        "unitCostAtVolume": [
-          {
-            "quantity": 10,
-            "low": 22,
-            "high": 40
-          },
-          {
-            "quantity": 100,
-            "low": 8,
-            "high": 14
-          },
-          {
-            "quantity": 1000,
-            "low": 4,
-            "high": 7
-          },
-          {
-            "quantity": 10000,
-            "low": 2.5,
-            "high": 4.5
-          }
-        ]
-      },
-      {
-        "process": "injection_molding",
-        "fitScore": 68,
-        "unitCostUsd": {
-          "low": 2,
-          "high": 4
-        },
-        "toolingCostUsd": {
-          "low": 3000,
-          "high": 7000
-        },
-        "leadTimeDays": {
-          "low": 30,
-          "high": 50
-        },
-        "materials": [
-          "30% glass-filled Nylon PA66",
-          "Polycarbonate",
-          "PC/ABS"
-        ],
-        "pros": [
-          "Cheapest part cost long-term: under $2 at volume",
-          "Molded pocket can match the charger brick exactly",
-          "Four idle presses locally, 400 × 350 mm platen is ample"
-        ],
-        "cons": [
-          "Tooling alone exceeds the entire $4,000 budget at 500 units",
-          "6-8 week first-article lead time",
-          "GF nylon sinks and warps at 3 mm next to 3 mm gussets",
-          "Design locked once steel is cut"
-        ],
-        "designTweaks": [
-          {
-            "change": "Thin the two gussets to 1.5 mm (60% of the 3 mm wall) and add a 1.5° draft on the 50 mm upright faces.",
-            "why": "Gussets at full wall thickness sink on the visible outer face and slow cooling; draft frees a straight-pull tool.",
-            "impact": "Removes sink marks and cuts cycle ~15%, avoiding any side-action (~$1,200 tooling saved)."
-          },
-          {
-            "change": "Core the base to a uniform 2.5 mm shell with 1 mm internal ribs on 15 mm centers instead of solid sections.",
-            "why": "Uniform wall is the single biggest driver of warp in glass-filled nylon.",
-            "impact": "Shot weight drops ~20%, cycle time ~3 s shorter, ~$0.30/part."
-          },
-          {
-            "change": "Add 0.5 mm radii at both gusset-to-upright roots and counterbore the two charger holes in the mold.",
-            "why": "Sharp roots are where a notch-sensitive GF nylon cracks under the 600 g cantilever load.",
-            "impact": "Meaningfully raises drop/fatigue margin; removes a secondary drilling operation."
-          }
-        ],
-        "unitCostAtVolume": [
-          {
-            "quantity": 10,
-            "low": 60,
-            "high": 200
-          },
-          {
-            "quantity": 100,
-            "low": 8,
-            "high": 20
-          },
-          {
-            "quantity": 1000,
-            "low": 1.6,
-            "high": 3
-          },
-          {
-            "quantity": 10000,
-            "low": 0.8,
-            "high": 1.6
-          }
-        ]
-      },
-      {
-        "process": "sls_print",
-        "fitScore": 58,
-        "unitCostUsd": {
-          "low": 14,
-          "high": 22
-        },
-        "toolingCostUsd": {
-          "low": 0,
-          "high": 0
-        },
-        "leadTimeDays": {
-          "low": 7,
-          "high": 12
-        },
-        "materials": [
-          "Glass-filled PA12",
-          "Nylon PA12",
-          "Nylon PA11"
-        ],
-        "pros": [
-          "Keeps the exact drawn geometry, no redesign",
-          "Zero tooling, parts in under two weeks",
-          "Isotropic nylon is genuinely strong enough for 600 g"
-        ],
-        "cons": [
-          "500 units costs ~$9,000, over double the budget",
-          "Only two idle SLS machines; 165 mm chamber limits nesting",
-          "Grainy finish, needs dyeing for a retail look"
-        ],
-        "designTweaks": [
-          {
-            "change": "Hollow the base and upright to 2.5 mm shells with two 4 mm powder-escape holes on the hidden underside.",
-            "why": "SLS is priced mostly by material volume and packed build height.",
-            "impact": "Cuts volume ~30%, roughly $4-6 off each part."
-          },
-          {
-            "change": "Orient the part with the 50 mm upright along Z and pack 40+ per build in the 165 mm chamber.",
-            "why": "Nesting density is the other half of SLS unit cost.",
-            "impact": "~20% lower per-part cost versus loose single-part builds."
-          },
-          {
-            "change": "Print the four screw holes 0.4 mm undersize and spec heat-set M4 inserts in the two charger holes.",
-            "why": "SLS holes close slightly and self-tapping into nylon strips after a few cycles.",
-            "impact": "Reliable re-serviceable mounting; ~$0.60/part insert cost."
-          }
-        ],
-        "unitCostAtVolume": [
-          {
-            "quantity": 10,
-            "low": 28,
-            "high": 48
-          },
-          {
-            "quantity": 100,
-            "low": 18,
-            "high": 30
-          },
-          {
-            "quantity": 1000,
-            "low": 12,
-            "high": 20
-          },
-          {
-            "quantity": 10000,
-            "low": 10,
-            "high": 18
-          }
-        ]
-      },
-      {
-        "process": "cnc_milling",
-        "fitScore": 45,
-        "unitCostUsd": {
-          "low": 16,
-          "high": 28
-        },
-        "toolingCostUsd": {
-          "low": 150,
-          "high": 500
-        },
-        "leadTimeDays": {
-          "low": 10,
-          "high": 18
-        },
-        "materials": [
-          "Aluminum 6061",
-          "Delrin (POM)",
-          "HDPE"
-        ],
-        "pros": [
-          "Six idle mills locally, fast quotes",
-          "Aluminum version is essentially unbreakable at 76 g",
-          "Good for a premium or OEM-branded SKU"
-        ],
-        "cons": [
-          "12% box fill means ~88% of the billet is chips",
-          "Needs 2-3 setups plus a soft-jaw fixture",
-          "~$11,000 for 500 units, far over budget"
-        ],
-        "designTweaks": [
-          {
-            "change": "Machine from 50.8 mm 6061 plate with a flat back face, so the part runs in two setups on standard soft jaws.",
-            "why": "A flat datum face lets one vise hold the base while the upright and gussets are cut.",
-            "impact": "Removes a third setup, roughly 20% of unit cost."
-          },
-          {
-            "change": "Open all internal corners to 6 mm radius and replace the two gussets with a single 12 mm fillet.",
-            "why": "A 12 mm endmill can then rough the whole pocket at full depth without small-tool passes.",
-            "impact": "Cycle time down ~25%, about $5/part at 500."
-          },
-          {
-            "change": "Pocket the base underside to a 5 mm floor with 8 mm ribs instead of leaving it solid.",
-            "why": "Less billet mass and lighter stock reduces both material and cycle cost.",
-            "impact": "~15% material saving and a lighter shipping weight."
-          }
-        ],
-        "unitCostAtVolume": [
-          {
-            "quantity": 10,
-            "low": 55,
-            "high": 110
-          },
-          {
-            "quantity": 100,
-            "low": 25,
-            "high": 45
-          },
-          {
-            "quantity": 1000,
-            "low": 14,
-            "high": 24
-          },
-          {
-            "quantity": 10000,
-            "low": 11,
-            "high": 20
-          }
-        ]
+        "change": "Re-model as one 2 mm Aluminum 5052 flat blank ~140 × 60 mm with a single 90° bend and 4 mm bend-relief notches.",
+        "why": "One bend on a brake replaces a mold cavity entirely and runs on idle local laser plus brake capacity.",
+        "impact": "Drops unit cost from ~$18 (SLS) to ~$6 and removes all tooling spend."
       }
-    ],
-    "topRecommendation": "Redraw this as a bent 2 mm aluminum 5052 L-bracket and run 500 on idle local laser and brake capacity for roughly $3,000 delivered, inside budget with no tooling. Keep the molded glass-filled nylon design on the shelf and cut steel when your committed order reaches about 2,000-2,500 units, where the $3,000-7,000 tool pays back.",
-    "risks": [
-      "At 500 units the injection-mold path costs $4,000-9,000 in tooling alone, before a single part, which breaks the stated budget.",
-      "No photos or charger dimensions were supplied, so the 60 mm-wide pocket and the two charger screw holes may not match the real brick.",
-      "Glass-filled nylon is notch-sensitive: the sharp gusset-to-upright roots are the likely crack site under a 600 g cantilevered load plus cable tug.",
-      "Two screws into drywall will pull out under 600 g plus cable load; the product needs specified anchors or a stud-spacing hole pattern.",
-      "A 3 mm wall meeting 3 mm gussets in 30% GF nylon will sink and warp unless the gussets are thinned before the tool is cut."
-    ],
-    "storyboard": [
-      {
-        "shot": 1,
-        "visual": "Garage floor: charger brick in a puddle, cable coiled in dirt, bike tire rolling past.",
-        "voiceover": "Every e-bike ships with a charger. Nobody ships a place to put it.",
-        "seconds": 5
-      },
-      {
-        "shot": 2,
-        "visual": "Hands snap the bracket onto two wall screws; charger slides into place with a click.",
-        "voiceover": "This bracket mounts in ninety seconds with two screws.",
-        "seconds": 5
-      },
-      {
-        "shot": 3,
-        "visual": "Close-up rotating on the bent aluminum bracket, powder-coated, loaded with the charger.",
-        "voiceover": "Bent aluminum. Holds six hundred grams. No tooling to cut.",
-        "seconds": 5
-      },
-      {
-        "shot": 4,
-        "visual": "Flat blanks stacking off a laser table, then a brake folding one in a single hit.",
-        "voiceover": "Five hundred units off idle L.A. machines, delivered in under two weeks.",
-        "seconds": 5
-      },
-      {
-        "shot": 5,
-        "visual": "Split screen: cost chart showing $6 at five hundred, under $2 molded at ten thousand.",
-        "voiceover": "Six dollars today. Under two when volume justifies a mold.",
-        "seconds": 5
-      },
-      {
-        "shot": 6,
-        "visual": "Bracket on a clean garage wall beside the bike; logo and part number on the base.",
-        "voiceover": "Your charger, off the floor. Let's put it in every box.",
-        "seconds": 5
-      }
-    ]
-  }
+    }
+  ]
 }

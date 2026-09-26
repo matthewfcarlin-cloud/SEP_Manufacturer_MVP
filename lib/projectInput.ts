@@ -34,8 +34,7 @@ const optionalPositiveNumber = z
   .transform((s) => (s === "" ? undefined : Number(s)))
   .pipe(z.number("Budget must be a number.").positive("Budget must be more than $0.").max(100_000_000).optional());
 
-const fieldsSchema = z.object({
-  name: z.string().trim().min(1, "Give the project a name.").max(120, "Keep the name under 120 characters."),
+const briefSchema = z.object({
   notes: z.string().trim().max(4000, "Notes must be 4000 characters or fewer."),
   targetQuantity: z
     .string()
@@ -60,24 +59,48 @@ const fieldsSchema = z.object({
     .pipe(z.array(z.string().max(40)).max(MAX_MATERIAL_HINTS, "Up to 10 material ideas.")),
 });
 
+const fieldsSchema = briefSchema.extend({
+  name: z.string().trim().min(1, "Give the project a name.").max(120, "Keep the name under 120 characters."),
+});
+
+export const MAX_CHANGE_NOTE = 1000;
+
+const versionFieldsSchema = briefSchema.extend({
+  changeNote: z
+    .string()
+    .trim()
+    .min(1, "Say what changed in this version.")
+    .max(MAX_CHANGE_NOTE, `Keep the change note under ${MAX_CHANGE_NOTE} characters.`),
+});
+
 export type ProjectFields = z.infer<typeof fieldsSchema>;
+export type VersionFields = z.infer<typeof versionFieldsSchema>;
 
 export type ParseResult<T> =
   | { success: true; data: T }
   | { success: false; error: string; field: string };
 
-/** Validates the text fields of the new-project form. Reports the first failing field. */
-export function parseProjectFields(raw: Record<string, string>): ParseResult<ProjectFields> {
-  const result = fieldsSchema.safeParse({
-    name: raw.name ?? "",
-    notes: raw.notes ?? "",
-    targetQuantity: raw.targetQuantity ?? "",
-    budgetUsd: raw.budgetUsd ?? "",
-    materialHints: raw.materialHints ?? "",
-  });
+function firstIssue<T>(result: z.ZodSafeParseResult<T>): ParseResult<T> {
   if (result.success) return { success: true, data: result.data };
   const issue = result.error.issues[0];
   return { success: false, error: issue.message, field: issue.path.join(".") };
+}
+
+const briefInput = (raw: Record<string, string>) => ({
+  notes: raw.notes ?? "",
+  targetQuantity: raw.targetQuantity ?? "",
+  budgetUsd: raw.budgetUsd ?? "",
+  materialHints: raw.materialHints ?? "",
+});
+
+/** Validates the text fields of the new-project form. Reports the first failing field. */
+export function parseProjectFields(raw: Record<string, string>): ParseResult<ProjectFields> {
+  return firstIssue(fieldsSchema.safeParse({ ...briefInput(raw), name: raw.name ?? "" }));
+}
+
+/** Validates the text fields of the new-version form. Reports the first failing field. */
+export function parseVersionFields(raw: Record<string, string>): ParseResult<VersionFields> {
+  return firstIssue(versionFieldsSchema.safeParse({ ...briefInput(raw), changeNote: raw.changeNote ?? "" }));
 }
 
 const startsWith = (bytes: Uint8Array, sig: number[], offset = 0) =>

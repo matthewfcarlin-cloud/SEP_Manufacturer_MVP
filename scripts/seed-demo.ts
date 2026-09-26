@@ -10,6 +10,6 @@ for (const demo of DEMO_PROJECTS) {
   const dir = path.join(process.env.IDLEFIT_DATA_DIR ?? ".data", "projects", demo.id);
   mkdirSync(dir, { recursive: true });
   copyFileSync(demo.json, path.join(dir, "project.json"));
-  copyFileSync(demo.stl, path.join(dir, "model.stl"));
+  for (const [name, source] of Object.entries(demo.files)) copyFileSync(source, path.join(dir, name));
   console.log(`seeded /project/${demo.id}`);
 }

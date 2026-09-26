@@ -2,378 +2,384 @@
   "id": "yAeM9-RDOE",
   "name": "Fuzz pedal enclosure",
   "createdAt": "2026-09-26T05:50:52.420Z",
-  "notes": "Enclosure for a boutique guitar fuzz pedal, 125B-size. Top face: one 3PDT footswitch (12 mm hole) and two pots (7.5 mm holes). 1/4\" input and output jacks on the long sides, 9 V DC jack on the top end. Four corner bosses take M3 screws for a flat bottom plate. It gets stomped on stage, so it must be tough, and the finish matters because boutique pedals sell on looks. Retail target around $180.",
-  "targetQuantity": 250,
-  "budgetUsd": 4000,
-  "materialHints": [
-    "aluminum",
-    "zinc die-cast"
-  ],
-  "cadFileUrl": "/api/files/yAeM9-RDOE/model.stl",
-  "imageUrls": [],
-  "geometry": {
-    "boundingBoxMm": {
-      "x": 122,
-      "y": 66,
-      "z": 39.5
-    },
-    "volumeCm3": 56.483,
-    "surfaceAreaCm2": 463.6,
-    "triangleCount": 3578,
-    "isWatertight": true,
-    "thinWallWarning": false,
-    "typicalWallMm": 2.5
-  },
-  "analysis": {
-    "productSummary": "A 125B-format boutique fuzz pedal shell: 122 x 66 x 39.5 mm open-bottom box, 2.5 mm walls, pre-punched for a 3PDT, two pots and three jacks. Sold to pedal players at ~$180, so it must survive stomping and look premium; at 250 units metal wins and tooling is unjustifiable.",
-    "detectedFeatures": [
-      "Open-bottom shell, ~36 mm deep cavity",
-      "2.5 mm nominal walls, 18% box fill",
-      "12 mm footswitch hole, top face",
-      "Two 7.5 mm pot holes, top face",
-      "Two 1/4 inch jack holes on long sides",
-      "9 V DC jack hole on top end wall",
-      "Four corner bosses tapped for M3",
-      "Watertight mesh, no sub-1 mm walls"
-    ],
-    "paths": [
-      {
-        "process": "cnc_milling",
-        "fitScore": 82,
-        "unitCostUsd": {
-          "low": 28,
-          "high": 48
+  "versions": [
+    {
+      "number": 1,
+      "createdAt": "2026-09-26T05:50:52.420Z",
+      "notes": "Enclosure for a boutique guitar fuzz pedal, 125B-size. Top face: one 3PDT footswitch (12 mm hole) and two pots (7.5 mm holes). 1/4\" input and output jacks on the long sides, 9 V DC jack on the top end. Four corner bosses take M3 screws for a flat bottom plate. It gets stomped on stage, so it must be tough, and the finish matters because boutique pedals sell on looks. Retail target around $180.",
+      "targetQuantity": 250,
+      "budgetUsd": 4000,
+      "materialHints": [
+        "aluminum",
+        "zinc die-cast"
+      ],
+      "cadFileUrl": "/api/files/yAeM9-RDOE/model.stl",
+      "imageUrls": [],
+      "geometry": {
+        "boundingBoxMm": {
+          "x": 122,
+          "y": 66,
+          "z": 39.5
         },
-        "toolingCostUsd": {
-          "low": 300,
-          "high": 900
-        },
-        "leadTimeDays": {
-          "low": 10,
-          "high": 18
-        },
-        "materials": [
-          "Aluminum 6061 (anodized)",
-          "Aluminum 7075",
-          "Brass 360",
-          "Stainless 304"
-        ],
-        "pros": [
-          "Billet 6061 shell is the boutique-standard look and feel",
-          "Anodize or powder coat gives the premium finish buyers pay for",
-          "Six idle local mills; no tooling wait",
-          "Metal body shields pickups from hum"
-        ],
-        "cons": [
-          "Hogging out 36 mm of pocket is most of the cycle time",
-          "250 x ~$35 blows the stated $4,000 budget",
-          "Side jack holes force a second and third fixture setup",
-          "Anodize color varies lot to lot"
-        ],
-        "designTweaks": [
-          {
-            "change": "Match the interior profile to a stock 125B die-cast shell and CNC only the 12 mm, 7.5 mm and jack holes in a fixture.",
-            "why": "Stock shells cost $5-8 and skip 20 minutes of pocket milling per part.",
-            "impact": "Drops landed cost from ~$35 to ~$14/unit, bringing 250 units inside the $4,000 budget."
-          },
-          {
-            "change": "Move both 1/4 inch jacks and the DC jack to the top face alongside the footswitch, as most modern boutique pedals do.",
-            "why": "All machined features then live on one face, so the part runs in one op on a vise or fixture plate.",
-            "impact": "Removes two setups; roughly 20-25% lower unit cost and better pedalboard packing."
-          },
-          {
-            "change": "Give the 36 mm-deep cavity 6 mm corner radii and a flat floor, and tap M3 directly into solid 6 mm corner columns.",
-            "why": "A 1/2 inch roughing endmill can then clear the pocket in few passes with no small-tool corner work.",
-            "impact": "Cuts cycle time 25-35% and eliminates fragile cast-style bosses."
-          }
-        ],
-        "unitCostAtVolume": [
-          {
-            "quantity": 10,
-            "low": 110,
-            "high": 180
-          },
-          {
-            "quantity": 100,
-            "low": 45,
-            "high": 75
-          },
-          {
-            "quantity": 1000,
-            "low": 26,
-            "high": 42
-          },
-          {
-            "quantity": 10000,
-            "low": 20,
-            "high": 33
-          }
-        ]
+        "volumeCm3": 56.483,
+        "surfaceAreaCm2": 463.6,
+        "triangleCount": 3578,
+        "isWatertight": true,
+        "thinWallWarning": false,
+        "typicalWallMm": 2.5
       },
-      {
-        "process": "sheet_metal",
-        "fitScore": 72,
-        "unitCostUsd": {
-          "low": 18,
-          "high": 32
-        },
-        "toolingCostUsd": {
-          "low": 400,
-          "high": 1200
-        },
-        "leadTimeDays": {
-          "low": 12,
-          "high": 21
-        },
-        "materials": [
-          "Aluminum 5052",
-          "Mild steel (CRS)",
-          "Stainless 304",
-          "Brass sheet"
+      "analysis": {
+        "productSummary": "A 125B-format boutique fuzz pedal shell: 122 x 66 x 39.5 mm open-bottom box, 2.5 mm walls, pre-punched for a 3PDT, two pots and three jacks. Sold to pedal players at ~$180, so it must survive stomping and look premium; at 250 units metal wins and tooling is unjustifiable.",
+        "detectedFeatures": [
+          "Open-bottom shell, ~36 mm deep cavity",
+          "2.5 mm nominal walls, 18% box fill",
+          "12 mm footswitch hole, top face",
+          "Two 7.5 mm pot holes, top face",
+          "Two 1/4 inch jack holes on long sides",
+          "9 V DC jack hole on top end wall",
+          "Four corner bosses tapped for M3",
+          "Watertight mesh, no sub-1 mm walls"
         ],
-        "pros": [
-          "Cheapest metal route that fits the $4,000 budget at 250",
-          "All holes cut in the flat blank by laser, no drilling",
-          "Five idle laser and three idle brake stations locally",
-          "Powder coat and screen print look genuinely boutique"
-        ],
-        "cons": [
-          "Folded 1.5 mm box is less rigid underfoot than billet",
-          "Corner welds need grinding before finish",
-          "Bosses must become PEM standoffs, extra hardware step",
-          "Hole positions shift slightly with bend tolerance"
-        ],
-        "designTweaks": [
+        "paths": [
           {
-            "change": "Redraw as one 1.5 mm 5052 blank with four bends and two welded end corners; replace the four M3 bosses with pressed-in standoffs.",
-            "why": "A bend-and-weld box needs no pocket machining and uses the idle laser plus brake capacity.",
-            "impact": "Unit cost roughly halves versus billet CNC, around $22 at 250 units."
+            "process": "cnc_milling",
+            "fitScore": 82,
+            "unitCostUsd": {
+              "low": 28,
+              "high": 48
+            },
+            "toolingCostUsd": {
+              "low": 300,
+              "high": 900
+            },
+            "leadTimeDays": {
+              "low": 10,
+              "high": 18
+            },
+            "materials": [
+              "Aluminum 6061 (anodized)",
+              "Aluminum 7075",
+              "Brass 360",
+              "Stainless 304"
+            ],
+            "pros": [
+              "Billet 6061 shell is the boutique-standard look and feel",
+              "Anodize or powder coat gives the premium finish buyers pay for",
+              "Six idle local mills; no tooling wait",
+              "Metal body shields pickups from hum"
+            ],
+            "cons": [
+              "Hogging out 36 mm of pocket is most of the cycle time",
+              "250 x ~$35 blows the stated $4,000 budget",
+              "Side jack holes force a second and third fixture setup",
+              "Anodize color varies lot to lot"
+            ],
+            "designTweaks": [
+              {
+                "change": "Match the interior profile to a stock 125B die-cast shell and CNC only the 12 mm, 7.5 mm and jack holes in a fixture.",
+                "why": "Stock shells cost $5-8 and skip 20 minutes of pocket milling per part.",
+                "impact": "Drops landed cost from ~$35 to ~$14/unit, bringing 250 units inside the $4,000 budget."
+              },
+              {
+                "change": "Move both 1/4 inch jacks and the DC jack to the top face alongside the footswitch, as most modern boutique pedals do.",
+                "why": "All machined features then live on one face, so the part runs in one op on a vise or fixture plate.",
+                "impact": "Removes two setups; roughly 20-25% lower unit cost and better pedalboard packing."
+              },
+              {
+                "change": "Give the 36 mm-deep cavity 6 mm corner radii and a flat floor, and tap M3 directly into solid 6 mm corner columns.",
+                "why": "A 1/2 inch roughing endmill can then clear the pocket in few passes with no small-tool corner work.",
+                "impact": "Cuts cycle time 25-35% and eliminates fragile cast-style bosses."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 110,
+                "high": 180
+              },
+              {
+                "quantity": 100,
+                "low": 45,
+                "high": 75
+              },
+              {
+                "quantity": 1000,
+                "low": 26,
+                "high": 42
+              },
+              {
+                "quantity": 10000,
+                "low": 20,
+                "high": 33
+              }
+            ]
           },
           {
-            "change": "Laser all five holes (12 mm, 2 x 7.5 mm, jacks) in the flat blank, keeping every hole at least 4 mm from any bend line.",
-            "why": "Holes near a bend deform, and the 12 mm footswitch hole must stay round for the nut to seat.",
-            "impact": "Eliminates a secondary drill op and scrap from distorted holes."
+            "process": "sheet_metal",
+            "fitScore": 72,
+            "unitCostUsd": {
+              "low": 18,
+              "high": 32
+            },
+            "toolingCostUsd": {
+              "low": 400,
+              "high": 1200
+            },
+            "leadTimeDays": {
+              "low": 12,
+              "high": 21
+            },
+            "materials": [
+              "Aluminum 5052",
+              "Mild steel (CRS)",
+              "Stainless 304",
+              "Brass sheet"
+            ],
+            "pros": [
+              "Cheapest metal route that fits the $4,000 budget at 250",
+              "All holes cut in the flat blank by laser, no drilling",
+              "Five idle laser and three idle brake stations locally",
+              "Powder coat and screen print look genuinely boutique"
+            ],
+            "cons": [
+              "Folded 1.5 mm box is less rigid underfoot than billet",
+              "Corner welds need grinding before finish",
+              "Bosses must become PEM standoffs, extra hardware step",
+              "Hole positions shift slightly with bend tolerance"
+            ],
+            "designTweaks": [
+              {
+                "change": "Redraw as one 1.5 mm 5052 blank with four bends and two welded end corners; replace the four M3 bosses with pressed-in standoffs.",
+                "why": "A bend-and-weld box needs no pocket machining and uses the idle laser plus brake capacity.",
+                "impact": "Unit cost roughly halves versus billet CNC, around $22 at 250 units."
+              },
+              {
+                "change": "Laser all five holes (12 mm, 2 x 7.5 mm, jacks) in the flat blank, keeping every hole at least 4 mm from any bend line.",
+                "why": "Holes near a bend deform, and the 12 mm footswitch hole must stay round for the nut to seat.",
+                "impact": "Eliminates a secondary drill op and scrap from distorted holes."
+              },
+              {
+                "change": "Add 3 mm corner relief notches and specify a 1.5 mm inside bend radius on all four walls.",
+                "why": "Prevents tearing at the corners and makes the welded seams tight enough to grind flush.",
+                "impact": "Cuts weld rework and lifts first-pass yield above 95%."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 60,
+                "high": 110
+              },
+              {
+                "quantity": 100,
+                "low": 25,
+                "high": 45
+              },
+              {
+                "quantity": 1000,
+                "low": 14,
+                "high": 24
+              },
+              {
+                "quantity": 10000,
+                "low": 10,
+                "high": 17
+              }
+            ]
           },
           {
-            "change": "Add 3 mm corner relief notches and specify a 1.5 mm inside bend radius on all four walls.",
-            "why": "Prevents tearing at the corners and makes the welded seams tight enough to grind flush.",
-            "impact": "Cuts weld rework and lifts first-pass yield above 95%."
+            "process": "sls_print",
+            "fitScore": 50,
+            "unitCostUsd": {
+              "low": 30,
+              "high": 48
+            },
+            "toolingCostUsd": {
+              "low": 0,
+              "high": 0
+            },
+            "leadTimeDays": {
+              "low": 7,
+              "high": 12
+            },
+            "materials": [
+              "Glass-filled PA12",
+              "Nylon PA12",
+              "Nylon PA11"
+            ],
+            "pros": [
+              "No tooling and no fixtures; design changes are free",
+              "PA12 is genuinely tough and won't crack when stomped",
+              "122 mm part nests well in the 165 x 165 x 300 build",
+              "Can print PCB standoffs and cable guides for free"
+            ],
+            "cons": [
+              "Only two idle SLS machines locally; 250 units queues up",
+              "Grainy surface needs dye plus sealing for a boutique finish",
+              "Plastic body requires conductive shielding paint for hum",
+              "Cost never drops much below $25 at any volume"
+            ],
+            "designTweaks": [
+              {
+                "change": "Thicken the top face to 4 mm within 15 mm of the 12 mm footswitch hole, blending back to 2.5 mm.",
+                "why": "The stomp load concentrates at that hole and sintered nylon splits along layer lines there.",
+                "impact": "Roughly doubles stomp life for about 3 g of extra powder."
+              },
+              {
+                "change": "Reduce the sidewalls from 2.5 mm to 2.0 mm and hollow the corner bosses to 3 mm wall around the M3 thread.",
+                "why": "SLS is priced by volume and packed build height, and PA12 is stiff enough at 2 mm.",
+                "impact": "~15% less powder per part, about $4-6 off the unit price."
+              },
+              {
+                "change": "Print integral PCB standoffs and a DC-jack pocket into the cavity floor instead of using loose hardware.",
+                "why": "Free geometry in SLS that would be expensive in any molded or machined version.",
+                "impact": "Removes 4 fasteners and about 3 minutes of assembly per pedal."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 55,
+                "high": 90
+              },
+              {
+                "quantity": 100,
+                "low": 35,
+                "high": 55
+              },
+              {
+                "quantity": 1000,
+                "low": 26,
+                "high": 42
+              },
+              {
+                "quantity": 10000,
+                "low": 22,
+                "high": 35
+              }
+            ]
+          },
+          {
+            "process": "injection_molding",
+            "fitScore": 32,
+            "unitCostUsd": {
+              "low": 4,
+              "high": 9
+            },
+            "toolingCostUsd": {
+              "low": 9000,
+              "high": 20000
+            },
+            "leadTimeDays": {
+              "low": 35,
+              "high": 60
+            },
+            "materials": [
+              "PC/ABS",
+              "Polycarbonate",
+              "Nylon PA66",
+              "ABS"
+            ],
+            "pros": [
+              "Cheapest part cost once past a few thousand units",
+              "PC/ABS survives stomping and takes texture well",
+              "Part fits comfortably in the 400 x 350 x 180 idle presses",
+              "Molded-in logo and texture cost nothing per shot"
+            ],
+            "cons": [
+              "Tooling is 3-5x the entire $4,000 budget at 250 units",
+              "Side jack holes need two slide actions, adding tool cost",
+              "Plastic needs shielding paint, adding $2-4 and a process step",
+              "Current model has no draft; requires CAD rework before quoting"
+            ],
+            "designTweaks": [
+              {
+                "change": "Add 1.5 degrees of draft to all four interior walls of the 36 mm cavity and core the corner bosses to 2.5 mm wall.",
+                "why": "Straight walls will drag and the solid bosses will sink-mark on a 2.5 mm nominal part.",
+                "impact": "Enables a straight-pull core and removes visible sink on the show face."
+              },
+              {
+                "change": "Relocate both 1/4 inch jacks and the DC jack to the top face so no hole pierces a side wall.",
+                "why": "Side holes each need a slide or hydraulic core in the tool.",
+                "impact": "Cuts tooling from roughly $18k to $10k and shortens cycle time."
+              },
+              {
+                "change": "Support the footswitch hole with four 1.5 mm ribs underneath rather than thickening the top face.",
+                "why": "Ribs add stiffness without the sink and long cooling time of a thick section.",
+                "impact": "Keeps cycle near 35 s and avoids a cosmetic defect on the top face."
+              }
+            ],
+            "unitCostAtVolume": [
+              {
+                "quantity": 10,
+                "low": 45,
+                "high": 90
+              },
+              {
+                "quantity": 100,
+                "low": 7,
+                "high": 15
+              },
+              {
+                "quantity": 1000,
+                "low": 2.5,
+                "high": 5
+              },
+              {
+                "quantity": 10000,
+                "low": 1.6,
+                "high": 3
+              }
+            ]
           }
         ],
-        "unitCostAtVolume": [
-          {
-            "quantity": 10,
-            "low": 60,
-            "high": 110
-          },
-          {
-            "quantity": 100,
-            "low": 25,
-            "high": 45
-          },
-          {
-            "quantity": 1000,
-            "low": 14,
-            "high": 24
-          },
-          {
-            "quantity": 10000,
-            "low": 10,
-            "high": 17
-          }
-        ]
-      },
-      {
-        "process": "sls_print",
-        "fitScore": 50,
-        "unitCostUsd": {
-          "low": 30,
-          "high": 48
-        },
-        "toolingCostUsd": {
-          "low": 0,
-          "high": 0
-        },
-        "leadTimeDays": {
-          "low": 7,
-          "high": 12
-        },
-        "materials": [
-          "Glass-filled PA12",
-          "Nylon PA12",
-          "Nylon PA11"
+        "topRecommendation": "For 250 units, buy stock 125B die-cast shells and have a local mill run only the hole pattern in a fixture, then powder coat: about $14-18 landed, inside your $4,000. If you want a full billet 6061 look, budget $8-12k instead. Injection molding only makes sense past roughly 3,000-4,000 units.",
+        "risks": [
+          "Your $4,000 budget is $16/unit, which only the stock-shell-plus-machining route meets; full billet CNC runs 2-3x that.",
+          "The 36 mm interior depth is tight for a 3PDT plus wiring and a PCB, so mock up clearance before committing to 250 shells.",
+          "Two 7.5 mm pot holes in a 2.5 mm wall leave little thread engagement; check that standard 16 mm pot bushings and nuts seat.",
+          "Plastic paths (SLS or molded) need conductive shielding paint, adding cost and a hum risk boutique buyers will notice.",
+          "No photos or CAD with draft were supplied, so any injection-molding quote will require a model rebuild before it is valid."
         ],
-        "pros": [
-          "No tooling and no fixtures; design changes are free",
-          "PA12 is genuinely tough and won't crack when stomped",
-          "122 mm part nests well in the 165 x 165 x 300 build",
-          "Can print PCB standoffs and cable guides for free"
-        ],
-        "cons": [
-          "Only two idle SLS machines locally; 250 units queues up",
-          "Grainy surface needs dye plus sealing for a boutique finish",
-          "Plastic body requires conductive shielding paint for hum",
-          "Cost never drops much below $25 at any volume"
-        ],
-        "designTweaks": [
+        "storyboard": [
           {
-            "change": "Thicken the top face to 4 mm within 15 mm of the 12 mm footswitch hole, blending back to 2.5 mm.",
-            "why": "The stomp load concentrates at that hole and sintered nylon splits along layer lines there.",
-            "impact": "Roughly doubles stomp life for about 3 g of extra powder."
+            "shot": 1,
+            "visual": "Dark stage, boot slams down on a black anodized pedal; amp roars.",
+            "voiceover": "Boutique fuzz. It has to sound huge and survive the show.",
+            "seconds": 5
           },
           {
-            "change": "Reduce the sidewalls from 2.5 mm to 2.0 mm and hollow the corner bosses to 3 mm wall around the M3 thread.",
-            "why": "SLS is priced by volume and packed build height, and PA12 is stiff enough at 2 mm.",
-            "impact": "~15% less powder per part, about $4-6 off the unit price."
+            "shot": 2,
+            "visual": "Overhead spin of the 122 x 66 mm shell, holes glinting under studio light.",
+            "voiceover": "One 125B shell. Three jacks, two pots, one stomp switch.",
+            "seconds": 5
           },
           {
-            "change": "Print integral PCB standoffs and a DC-jack pocket into the cavity floor instead of using loose hardware.",
-            "why": "Free geometry in SLS that would be expensive in any molded or machined version.",
-            "impact": "Removes 4 fasteners and about 3 minutes of assembly per pedal."
-          }
-        ],
-        "unitCostAtVolume": [
-          {
-            "quantity": 10,
-            "low": 55,
-            "high": 90
+            "shot": 3,
+            "visual": "CNC spindle drops into a fixtured die-cast shell, chips flying.",
+            "voiceover": "Stock shells, machined locally. Fourteen dollars a unit, two weeks out.",
+            "seconds": 5
           },
           {
-            "quantity": 100,
-            "low": 35,
-            "high": 55
+            "shot": 4,
+            "visual": "Split screen: powder coat booth, then screen-printed graphics on finished shells.",
+            "voiceover": "Anodize or powder coat. The finish is what sells the pedal.",
+            "seconds": 5
           },
           {
-            "quantity": 1000,
-            "low": 26,
-            "high": 42
+            "shot": 5,
+            "visual": "Animated chart: unit cost falling from 250 units to 10,000.",
+            "voiceover": "Two fifty now. Past four thousand, we tool and go molded.",
+            "seconds": 5
           },
           {
-            "quantity": 10000,
-            "low": 22,
-            "high": 35
-          }
-        ]
-      },
-      {
-        "process": "injection_molding",
-        "fitScore": 32,
-        "unitCostUsd": {
-          "low": 4,
-          "high": 9
-        },
-        "toolingCostUsd": {
-          "low": 9000,
-          "high": 20000
-        },
-        "leadTimeDays": {
-          "low": 35,
-          "high": 60
-        },
-        "materials": [
-          "PC/ABS",
-          "Polycarbonate",
-          "Nylon PA66",
-          "ABS"
-        ],
-        "pros": [
-          "Cheapest part cost once past a few thousand units",
-          "PC/ABS survives stomping and takes texture well",
-          "Part fits comfortably in the 400 x 350 x 180 idle presses",
-          "Molded-in logo and texture cost nothing per shot"
-        ],
-        "cons": [
-          "Tooling is 3-5x the entire $4,000 budget at 250 units",
-          "Side jack holes need two slide actions, adding tool cost",
-          "Plastic needs shielding paint, adding $2-4 and a process step",
-          "Current model has no draft; requires CAD rework before quoting"
-        ],
-        "designTweaks": [
-          {
-            "change": "Add 1.5 degrees of draft to all four interior walls of the 36 mm cavity and core the corner bosses to 2.5 mm wall.",
-            "why": "Straight walls will drag and the solid bosses will sink-mark on a 2.5 mm nominal part.",
-            "impact": "Enables a straight-pull core and removes visible sink on the show face."
-          },
-          {
-            "change": "Relocate both 1/4 inch jacks and the DC jack to the top face so no hole pierces a side wall.",
-            "why": "Side holes each need a slide or hydraulic core in the tool.",
-            "impact": "Cuts tooling from roughly $18k to $10k and shortens cycle time."
-          },
-          {
-            "change": "Support the footswitch hole with four 1.5 mm ribs underneath rather than thickening the top face.",
-            "why": "Ribs add stiffness without the sink and long cooling time of a thick section.",
-            "impact": "Keeps cycle near 35 s and avoids a cosmetic defect on the top face."
-          }
-        ],
-        "unitCostAtVolume": [
-          {
-            "quantity": 10,
-            "low": 45,
-            "high": 90
-          },
-          {
-            "quantity": 100,
-            "low": 7,
-            "high": 15
-          },
-          {
-            "quantity": 1000,
-            "low": 2.5,
-            "high": 5
-          },
-          {
-            "quantity": 10000,
-            "low": 1.6,
-            "high": 3
+            "shot": 6,
+            "visual": "Row of finished pedals on a retail wall, price tag reads $180.",
+            "voiceover": "One eighty retail. Ready to build. Let's make the first run.",
+            "seconds": 5
           }
         ]
       }
-    ],
-    "topRecommendation": "For 250 units, buy stock 125B die-cast shells and have a local mill run only the hole pattern in a fixture, then powder coat: about $14-18 landed, inside your $4,000. If you want a full billet 6061 look, budget $8-12k instead. Injection molding only makes sense past roughly 3,000-4,000 units.",
-    "risks": [
-      "Your $4,000 budget is $16/unit, which only the stock-shell-plus-machining route meets; full billet CNC runs 2-3x that.",
-      "The 36 mm interior depth is tight for a 3PDT plus wiring and a PCB, so mock up clearance before committing to 250 shells.",
-      "Two 7.5 mm pot holes in a 2.5 mm wall leave little thread engagement; check that standard 16 mm pot bushings and nuts seat.",
-      "Plastic paths (SLS or molded) need conductive shielding paint, adding cost and a hum risk boutique buyers will notice.",
-      "No photos or CAD with draft were supplied, so any injection-molding quote will require a model rebuild before it is valid."
-    ],
-    "storyboard": [
-      {
-        "shot": 1,
-        "visual": "Dark stage, boot slams down on a black anodized pedal; amp roars.",
-        "voiceover": "Boutique fuzz. It has to sound huge and survive the show.",
-        "seconds": 5
-      },
-      {
-        "shot": 2,
-        "visual": "Overhead spin of the 122 x 66 mm shell, holes glinting under studio light.",
-        "voiceover": "One 125B shell. Three jacks, two pots, one stomp switch.",
-        "seconds": 5
-      },
-      {
-        "shot": 3,
-        "visual": "CNC spindle drops into a fixtured die-cast shell, chips flying.",
-        "voiceover": "Stock shells, machined locally. Fourteen dollars a unit, two weeks out.",
-        "seconds": 5
-      },
-      {
-        "shot": 4,
-        "visual": "Split screen: powder coat booth, then screen-printed graphics on finished shells.",
-        "voiceover": "Anodize or powder coat. The finish is what sells the pedal.",
-        "seconds": 5
-      },
-      {
-        "shot": 5,
-        "visual": "Animated chart: unit cost falling from 250 units to 10,000.",
-        "voiceover": "Two fifty now. Past four thousand, we tool and go molded.",
-        "seconds": 5
-      },
-      {
-        "shot": 6,
-        "visual": "Row of finished pedals on a retail wall, price tag reads $180.",
-        "voiceover": "One eighty retail. Ready to build. Let's make the first run.",
-        "seconds": 5
-      }
-    ]
-  }
+    }
+  ]
 }

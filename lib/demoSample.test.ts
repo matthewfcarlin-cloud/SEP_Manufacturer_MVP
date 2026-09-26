@@ -11,11 +11,13 @@ describe.each(DEMO_PROJECTS)("demo project $json", (demo) => {
   test("is a valid Project with a real analysis", () => {
     const parsed = projectSchema.safeParse(raw);
     expect(parsed.success, parsed.success ? "" : parsed.error.message).toBe(true);
-    expect(raw.analysis.paths.length).toBeGreaterThanOrEqual(2);
+    expect(raw.versions[0].analysis.paths.length).toBeGreaterThanOrEqual(2);
   });
 
-  test("matches its manifest entry and points at its own model file", () => {
+  test("matches its manifest entry and ships every version's model file", () => {
     expect(raw.id).toBe(demo.id);
-    expect(raw.cadFileUrl).toBe(`/api/files/${demo.id}/model.stl`);
+    const shipped = Object.keys(demo.files).map((name) => `/api/files/${demo.id}/${name}`);
+    const referenced = raw.versions.map((v: { cadFileUrl: string }) => v.cadFileUrl);
+    expect(referenced.sort()).toEqual(shipped.sort());
   });
 });

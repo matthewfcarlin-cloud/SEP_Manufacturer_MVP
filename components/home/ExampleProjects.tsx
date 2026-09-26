@@ -4,6 +4,7 @@ import { DEMO_PROJECTS } from "@/lib/demoProjects";
 import { formatUnitCostRange } from "@/lib/format";
 import { PROCESS_LABELS } from "@/lib/processes";
 import { getProject } from "@/lib/projectStore";
+import { latestVersion } from "@/lib/versions";
 import { Reveal } from "./Reveal";
 
 /** Links to the pre-analyzed demo projects that are installed (npm run demo:seed). */
@@ -13,7 +14,7 @@ export async function ExampleProjects() {
   const loaded = await Promise.all(
     DEMO_PROJECTS.map(async (demo) => ({ demo, project: await getProject(demo.id) })),
   );
-  const examples = loaded.filter((e) => e.project?.analysis);
+  const examples = loaded.filter((e) => e.project && latestVersion(e.project).analysis);
   if (examples.length === 0) return null;
 
   return (
@@ -28,7 +29,8 @@ export async function ExampleProjects() {
         <ul className="grid gap-4 md:grid-cols-2">
           {examples.map(({ demo, project }, i) => {
             const p = project!;
-            const top = p.analysis!.paths[0];
+            const version = latestVersion(p);
+            const top = version.analysis!.paths[0];
             return (
               <li key={demo.id}>
                 <Reveal delay={i * 0.08} className="h-full">
@@ -42,7 +44,7 @@ export async function ExampleProjects() {
                       {[
                         ["Best fit", PROCESS_LABELS[top.process]],
                         ["Per part, est.", formatUnitCostRange(top.unitCostUsd)],
-                        ["Quantity", p.targetQuantity.toLocaleString("en-US")],
+                        ["Quantity", version.targetQuantity.toLocaleString("en-US")],
                       ].map(([k, v]) => (
                         <div key={k} className="bg-surface p-3">
                           <dt className="eyebrow text-muted">{k}</dt>

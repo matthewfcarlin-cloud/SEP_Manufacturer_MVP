@@ -7,9 +7,12 @@ import { GeometryPanel } from "@/components/GeometryPanel";
 import { PageHeader } from "@/components/PageHeader";
 import { ProjectViewer } from "@/components/viewer/ProjectViewer";
 import { formatNumber, formatUsd } from "@/lib/format";
-import { matchProject } from "@/lib/match";
+import { matchVersion } from "@/lib/match";
 import { getProject } from "@/lib/projectStore";
 import { ShopMatches } from "@/components/ShopMatches";
+import { VersionTimeline } from "@/components/versions/VersionTimeline";
+import type { ProjectVersion } from "@/lib/types";
+import { getVersion, latestVersion, parseVersionParam } from "@/lib/versions";
 
 export async function generateMetadata(props: PageProps<"/project/[id]">): Promise<Metadata> {
   const { id } = await props.params;
@@ -26,13 +29,35 @@ function Brief({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function RevisionNote({ version }: { version: ProjectVersion }) {
+  if (!version.changeNote && !version.appliedTweak) return null;
+  // The form pre-fills the note from the tweak; don't print the same text twice.
+  const repeatsTweak = Boolean(version.appliedTweak && version.changeNote?.includes(version.appliedTweak.change));
+  return (
+    <section className="rounded-xl border border-line bg-surface p-5 text-sm">
+      <p className="eyebrow text-muted">What changed from v{version.basedOn}</p>
+      {version.changeNote && !repeatsTweak && <p className="mt-2 whitespace-pre-line">{version.changeNote}</p>}
+      {version.appliedTweak && (
+        <p className="mt-2 border-l-2 border-accent pl-3 text-muted">
+          <span className="font-medium text-ink">Applied AI tweak: </span>
+          {version.appliedTweak.change}
+        </p>
+      )}
+    </section>
+  );
+}
+
 export default async function ProjectPage(props: PageProps<"/project/[id]">) {
   const { id } = await props.params;
   const project = await getProject(id);
   if (!project) notFound();
-  const shopMatches = matchProject(project);
+  const { v } = await props.searchParams;
+  const requested = parseVersionParam(v);
+  const version = requested === null ? latestVersion(project) : getVersion(project, requested);
+  if (!version) notFound();
+  const shopMatches = matchVersion(version);
 
-  const created = new Date(project.createdAt).toLocaleDateString("en-US", {
+  const created = new Date(version.createdAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -45,19 +70,23 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
           <>
             <Link href="/projects" className="hover:text-ink">Projects</Link>
             <span aria-hidden>/</span>
-            <span>Created {created}</span>
+            <span>v{version.number} · {created}</span>
             <span aria-hidden>·</span>
-            <span>{project.targetQuantity.toLocaleString("en-US")} units</span>
+            <span>{version.targetQuantity.toLocaleString("en-US")} units</span>
           </>
         }
         title={project.name}
       />
 
+      <VersionTimeline project={project} selected={version.number} />
+      <RevisionNote version={version} />
+
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] [&>*]:min-w-0">
-        {project.cadFileUrl ? (
+        {version.cadFileUrl ? (
           <ProjectViewer
-            url={project.cadFileUrl}
-            hasThinWalls={Boolean(project.geometry?.thinWallWarning)}
+            key={version.cadFileUrl}
+            url={version.cadFileUrl}
+            hasThinWalls={Boolean(version.geometry?.thinWallWarning)}
             className="aspect-[4/3] w-full"
           />
         ) : (
@@ -66,23 +95,23 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
           </div>
         )}
         <div className="flex flex-col gap-6">
-          {project.geometry && <GeometryPanel geometry={project.geometry} />}
+          {version.geometry && <GeometryPanel geometry={version.geometry} />}
           <section className="rounded-xl border border-line bg-surface p-5">
             <h2 className="mb-4 font-semibold">Brief</h2>
             <dl className="grid grid-cols-2 gap-4">
-              <Brief label="Target quantity">{formatNumber(project.targetQuantity, 0)} units</Brief>
+              <Brief label="Target quantity">{formatNumber(version.targetQuantity, 0)} units</Brief>
               <Brief label="Budget">
-                {project.budgetUsd !== undefined ? formatUsd(project.budgetUsd) : "Not set"}
+                {version.budgetUsd !== undefined ? formatUsd(version.budgetUsd) : "Not set"}
               </Brief>
               <div className="col-span-2">
                 <Brief label="Material ideas">
-                  {project.materialHints?.length ? project.materialHints.join(", ") : "None given"}
+                  {version.materialHints?.length ? version.materialHints.join(", ") : "None given"}
                 </Brief>
               </div>
-              {project.notes && (
+              {version.notes && (
                 <div className="col-span-2">
                   <Brief label="Notes">
-                    <span className="whitespace-pre-line">{project.notes}</span>
+                    <span className="whitespace-pre-line">{version.notes}</span>
                   </Brief>
                 </div>
               )}
@@ -91,16 +120,16 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
         </div>
       </div>
 
-      {project.imageUrls.length > 0 && (
+      {version.imageUrls.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="font-semibold">Photos and sketches</h2>
           <div className="flex flex-wrap gap-3">
-            {project.imageUrls.map((url, i) => (
+            {version.imageUrls.map((url, i) => (
               // eslint-disable-next-line @next/next/no-img-element -- served from our own API route
               <img
                 key={url}
                 src={url}
-                alt={`${project.name}, reference photo ${i + 1}`}
+                alt={`${project.name} v${version.number}, reference photo ${i + 1}`}
                 className="h-40 w-40 rounded-lg border border-line object-cover"
               />
             ))}
@@ -114,12 +143,17 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
             How it could be made
           </h2>
           <div className="flex flex-wrap items-center gap-2">
-            {project.analysis && <Link href={`/project/${project.id}/pitch`} className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90">Open pitch kit</Link>}
-            {project.analysis && <RunAnalysisButton projectId={project.id} variant="secondary" />}
+            {version.analysis && <Link href={`/project/${project.id}/pitch`} className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90">Open pitch kit</Link>}
+            {version.analysis && <RunAnalysisButton projectId={project.id} version={version.number} variant="secondary" />}
           </div>
         </div>
-        {project.analysis ? (
-          <AnalysisResults analysis={project.analysis} quantity={project.targetQuantity} topMatch={shopMatches[0]} />
+        {version.analysis ? (
+          <AnalysisResults
+            analysis={version.analysis}
+            quantity={version.targetQuantity}
+            topMatch={shopMatches[0]}
+            tweakLink={{ projectId: project.id, version: version.number }}
+          />
         ) : (
           <div className="flex flex-col gap-4 rounded-xl border border-dashed border-line p-6">
             <p className="max-w-2xl text-muted">
@@ -132,11 +166,11 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
               Your project details, geometry, notes, and photos are sent to this app&apos;s configured
               AI provider when you run analysis. The demo shops do not receive your files.
             </p>
-            <RunAnalysisButton projectId={project.id} />
+            <RunAnalysisButton projectId={project.id} version={version.number} />
           </div>
         )}
       </section>
-      {project.analysis && <ShopMatches matches={shopMatches} />}
+      {version.analysis && <ShopMatches matches={shopMatches} />}
     </div>
   );
 }

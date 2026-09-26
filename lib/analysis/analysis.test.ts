@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
 import { getShops } from "../shops";
-import type { Project } from "../types";
+import type { Project, ProjectVersion } from "../types";
 import { summarizeCapacity } from "./capacity";
 import { sampleAnalysis } from "./fixtures";
 import { buildProjectBrief, buildSystemPrompt } from "./prompt";
@@ -123,9 +123,8 @@ describe("runAnalysis", () => {
 });
 
 describe("prompts", () => {
-  const project: Project = {
-    id: "abcdefghij",
-    name: "Fuzz pedal enclosure",
+  const v1: ProjectVersion = {
+    number: 1,
     createdAt: new Date().toISOString(),
     notes: "Stompbox enclosure",
     targetQuantity: 250,
@@ -142,9 +141,10 @@ describe("prompts", () => {
       typicalWallMm: 2.5,
     },
   };
+  const project: Project = { id: "abcdefghij", name: "Fuzz pedal enclosure", createdAt: v1.createdAt, versions: [v1] };
 
   test("the brief carries this part's numbers and a mass anchor", () => {
-    const brief = buildProjectBrief(project, 2);
+    const brief = buildProjectBrief(project, v1, 2);
     expect(brief).toContain("122 × 66 × 39.5 mm");
     expect(brief).toContain("250 units");
     expect(brief).toContain("$4,000");
@@ -153,16 +153,39 @@ describe("prompts", () => {
   });
 
   test("the brief gives measured wall thickness and fill, not mesh resolution", () => {
-    const brief = buildProjectBrief(project, 0);
+    const brief = buildProjectBrief(project, v1, 0);
     expect(brief).toContain("Typical wall thickness (area-weighted median, measured): 2.5 mm");
     expect(brief).toContain("Material fills 17% of the bounding box"); // 53.985 / 318.054
     expect(brief).not.toContain("triangles");
   });
 
   test("the brief says so when there is no budget or geometry", () => {
-    const brief = buildProjectBrief({ ...project, budgetUsd: undefined, geometry: undefined }, 0);
+    const brief = buildProjectBrief(project, { ...v1, budgetUsd: undefined, geometry: undefined }, 0);
     expect(brief).toContain("Budget: not given");
     expect(brief).toContain("No CAD geometry");
+  });
+
+  test("a first version's brief has no revision block", () => {
+    expect(buildProjectBrief(project, v1, 0)).not.toContain("Revision:");
+  });
+
+  test("a revised version's brief says what changed and how the base version did", () => {
+    const analysis = sampleAnalysis();
+    const best = analysis.paths[0];
+    const analyzedV1 = { ...v1, analysis };
+    const v2: ProjectVersion = {
+      ...v1,
+      number: 2,
+      basedOn: 1,
+      changeNote: "Bent from one sheet",
+      appliedTweak: { fromVersion: 1, process: best.process, change: best.designTweaks[0].change, why: "", impact: "cheaper" },
+    };
+    const brief = buildProjectBrief({ ...project, versions: [analyzedV1, v2] }, v2, 0);
+    expect(brief).toContain("Revision: this is version 2, revised from version 1.");
+    expect(brief).toContain("What the inventor changed: Bent from one sheet");
+    expect(brief).toContain(best.designTweaks[0].change);
+    expect(brief).toContain(`Version 1's best path was`);
+    expect(brief.indexOf("Revision:")).toBeLessThan(brief.indexOf("Analyze this part."));
   });
 
   test("the system prompt lists every process with idle counts from the seed data", () => {

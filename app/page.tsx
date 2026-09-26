@@ -9,20 +9,21 @@ import { ScrollStatement } from "@/components/home/ScrollStatement";
 import { Showcase } from "@/components/home/Showcase";
 import sampleProject from "@/demo/sample-project.json";
 import { formatDimensions, formatUnitCostRange } from "@/lib/format";
-import { matchProject } from "@/lib/match";
+import { matchVersion } from "@/lib/match";
 import { PROCESS_LABELS } from "@/lib/processes";
 import { getProject } from "@/lib/projectStore";
 import { projectSchema } from "@/lib/schemas";
 import { getShopById, getShops, summarizeShops } from "@/lib/shops";
-import type { Project } from "@/lib/types";
+import type { ProjectVersion } from "@/lib/types";
+import { latestVersion } from "@/lib/versions";
 
 const DEMO_STL_KB = 174;
 
 /** Real numbers from the saved demo analysis, for the pinned process story. */
-function storyData(project: Project): StoryData {
-  const g = project.geometry;
-  const paths = project.analysis?.paths ?? [];
-  const matches = matchProject(project).slice(0, 3);
+function storyData(version: ProjectVersion): StoryData {
+  const g = version.geometry;
+  const paths = version.analysis?.paths ?? [];
+  const matches = matchVersion(version).slice(0, 3);
   return {
     fileName: "pedal-enclosure.stl",
     fileKb: DEMO_STL_KB,
@@ -35,7 +36,7 @@ function storyData(project: Project): StoryData {
       const shop = getShopById(m.shopId);
       return { name: shop?.name ?? m.shopId, neighborhood: shop?.neighborhood ?? "", machine: m.matchedMachine.model, idle: m.idleBoost };
     }),
-    frames: (project.analysis?.storyboard ?? []).map((f) => ({ seconds: f.seconds, voiceover: f.voiceover })),
+    frames: (version.analysis?.storyboard ?? []).map((f) => ({ seconds: f.seconds, voiceover: f.voiceover })),
   };
 }
 
@@ -51,9 +52,9 @@ export default async function Home() {
     <>
       <Hero shops={stats.shops} machines={stats.machines} idle={stats.idleMachines} exampleHref={exampleHref} />
       <IdleTicker shops={shops} />
-      <ProcessStory data={storyData(demo)} />
+      <ProcessStory data={storyData(latestVersion(demo))} />
       <ProcessTiles shops={shops} />
-      <Showcase project={demo} href={exampleHref} />
+      <Showcase name={demo.name} version={latestVersion(demo)} href={exampleHref} />
       <ScrollStatement
         text="Good design doesn't close the deal. Manufacturability does."
         accentWords={["Manufacturability", "does."]}

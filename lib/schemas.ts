@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { PROCESSES } from "./processes";
-import type { Analysis, GeometryStats, Machine, Project, Shop } from "./types";
+import type { AppliedTweak, Analysis, GeometryStats, Machine, Project, ProjectVersion, Shop } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -58,9 +58,16 @@ export const geometryStatsSchema = z.object({
 
 export const PROJECT_ID_PATTERN = /^[A-Za-z0-9_-]{10}$/;
 
-export const projectSchema = z.object({
-  id: z.string().regex(PROJECT_ID_PATTERN),
-  name: z.string().min(1),
+export const appliedTweakSchema = z.object({
+  fromVersion: z.number().int().positive(),
+  process: processSchema,
+  change: z.string().min(1),
+  why: z.string(),
+  impact: z.string(),
+}) satisfies z.ZodType<AppliedTweak>;
+
+export const projectVersionSchema = z.object({
+  number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
   notes: z.string(),
   targetQuantity: z.number().int().positive(),
@@ -71,6 +78,21 @@ export const projectSchema = z.object({
   geometry: geometryStatsSchema.optional(),
   analysis: z.lazy(() => analysisSchema).optional(),
   renders: z.array(z.string()).optional(),
+  basedOn: z.number().int().positive().optional(),
+  changeNote: z.string().max(1000).optional(),
+  appliedTweak: appliedTweakSchema.optional(),
+}) satisfies z.ZodType<ProjectVersion>;
+
+export const projectSchema = z.object({
+  id: z.string().regex(PROJECT_ID_PATTERN),
+  name: z.string().min(1),
+  createdAt: z.iso.datetime(),
+  versions: z
+    .array(projectVersionSchema)
+    .min(1, "a project needs at least one version")
+    .refine((vs) => vs.every((v, i) => i === 0 || v.number > vs[i - 1].number), {
+      message: "versions must be in ascending order with unique numbers",
+    }),
 }) satisfies z.ZodType<Project>;
 
 // ---------------------------------------------------------------------------

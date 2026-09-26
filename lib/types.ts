@@ -5,6 +5,15 @@ export type Project = {
   id: string;
   name: string;
   createdAt: string;
+  /** Ascending by number and never empty (added in Phase 6). */
+  versions: ProjectVersion[];
+};
+
+/** One iteration of a product idea: its own file, photos, brief, and analysis. */
+export type ProjectVersion = {
+  /** 1, 2, 3… Never reused, even after a version is deleted. */
+  number: number;
+  createdAt: string;
   notes: string;
   targetQuantity: number;
   budgetUsd?: number;
@@ -14,6 +23,20 @@ export type Project = {
   geometry?: GeometryStats;
   analysis?: Analysis;
   renders?: string[];
+  /** The version this one was revised from. */
+  basedOn?: number;
+  /** "What changed", written by the user on the new-version form. */
+  changeNote?: string;
+  /** Set when the user picked one of the AI's design tweaks as the reason. */
+  appliedTweak?: AppliedTweak;
+};
+
+export type AppliedTweak = {
+  fromVersion: number;
+  process: Process;
+  change: string;
+  why: string;
+  impact: string;
 };
 
 export type GeometryStats = {
