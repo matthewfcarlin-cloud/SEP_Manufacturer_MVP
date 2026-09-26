@@ -31,7 +31,26 @@ export type ProjectVersion = {
   appliedTweak?: AppliedTweak;
   /** Inputs for this version's business case (added in Phase 7). Outputs are computed, never stored. */
   businessCase?: BusinessCaseInputs;
+  /** Licensing-pitch text for a company decision-maker (added in Phase 8). */
+  pitch?: PitchContent;
+  /** Slot for a generated pitch video; nothing generates one yet. */
+  pitchVideo?: PitchVideo;
 };
+
+export type PitchContent = {
+  oneLiner: string;
+  /** Who has the problem and what it costs them. */
+  problem: string;
+  /** What the product is and why it's better. */
+  product: string;
+  /** Who buys it, and which kind of company would license or stock it. */
+  audience: string;
+  /** What the inventor wants from the company. */
+  ask: string;
+  editedByUser: boolean;
+};
+
+export type PitchVideo = { status: "none" } | { status: "ready"; url: string; provider: string };
 
 export type BusinessCaseInputs = {
   retailPriceUsd: number;

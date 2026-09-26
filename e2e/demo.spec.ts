@@ -1,4 +1,4 @@
-import { rm } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { DEMO_PROJECTS } from "../lib/demoProjects";
@@ -40,13 +40,9 @@ test("landing page opens a pre-analyzed example with paths and shop matches", as
   for (const card of await cards.all()) await expect(card).toContainText("Demo data");
 });
 
-test("pitch kit captures four non-blank studio renders", async ({ page }) => {
-  await page.goto(`/project/${PEDAL.id}/pitch`);
-  const renders = page.locator("figure img");
-  await expect(renders).toHaveCount(4, { timeout: 30_000 });
-
-  // Each render must actually show the part, not just the backdrop.
-  const partPixelShare = await renders.evaluateAll(async (imgs) => {
+/** Share of each <img> that shows the part rather than the light studio backdrop. */
+async function partPixelShares(page: Page): Promise<number[]> {
+  return page.locator("article figure img").evaluateAll(async (imgs) => {
     const canvas = document.createElement("canvas");
     canvas.width = 200;
     canvas.height = 100;
@@ -63,11 +59,71 @@ test("pitch kit captures four non-blank studio renders", async ({ page }) => {
       }),
     );
   });
-  for (const share of partPixelShare) expect(share).toBeGreaterThan(0.03);
+}
 
-  await expect(page.getByRole("region", { name: "The story in six frames" }).locator("li")).toHaveCount(6);
-  await expect(page.getByRole("region", { name: "The cost picture" })).toContainText("Estimate for 250 units");
+test("the pitch shows saved studio stills and every section", async ({ page }) => {
+  await page.goto(`/project/${PEDAL.id}/pitch`);
+  await expect(page.locator("article figure img")).toHaveCount(4);
+  await expect(page.locator("canvas")).toHaveCount(0); // stills, not a live viewer
+  for (const share of await partPixelShares(page)) expect(share).toBeGreaterThan(0.03);
+
+  for (const name of ["Why this needs to exist", "What we're offering", "Can it make money?", "How we'd sell it", "What we're looking for"]) {
+    await expect(page.getByRole("heading", { name })).toBeVisible();
+  }
+  await expect(page.getByText("Pitch video · not generated yet")).toBeVisible();
+  await expect(page.getByRole("region", { name: "How we'd sell it" }).locator("ol > li")).toHaveCount(6);
   await page.screenshot({ path: "test-results/pitch-kit.png", fullPage: true });
+});
+
+test("a pitch without renders captures them once and saves them", async ({ page }) => {
+  // A render-less copy of the pedal, so the seeded demo is never touched.
+  const id = "E2Erender1";
+  const dir = path.join(".data", "projects", id);
+  const demo = JSON.parse(await readFile(PEDAL.json, "utf8"));
+  const versions = demo.versions.map((v: Record<string, unknown>) => ({ ...v, renders: undefined, cadFileUrl: `/api/files/${id}/model.stl` }));
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, "project.json"), JSON.stringify({ ...demo, id, versions }));
+  await copyFile(PEDAL.files["model.stl"], path.join(dir, "model.stl"));
+  try {
+    await page.goto(`/project/${id}/pitch`);
+    await expect(page.locator("article figure img")).toHaveCount(4, { timeout: 30_000 });
+    for (const share of await partPixelShares(page)) expect(share).toBeGreaterThan(0.03);
+    const saved = JSON.parse(await readFile(path.join(dir, "project.json"), "utf8"));
+    expect(saved.versions[0].renders).toHaveLength(4);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("the pitch prints to a landscape PDF, one section per page", async ({ page }) => {
+  await page.goto(`/project/${PEDAL.id}/pitch`);
+  await expect(page.locator("article figure img")).toHaveCount(4);
+  const pdf = await page.pdf({ path: "test-results/pitch.pdf", preferCSSPageSize: true, printBackground: true });
+  const text = pdf.toString("latin1");
+  const pages = text.match(/\/Type\s*\/Page[^s]/g) ?? [];
+  // Cover, problem, product, how it's made, economics, spot, ask (no iteration: one version).
+  expect(pages.length).toBe(7);
+  expect(text).toMatch(/\/MediaBox\s*\[\s*0 0 792 612\s*\]/); // Letter, landscape
+});
+
+test("editing the pitch text persists", async ({ page }) => {
+  await page.goto(`/project/${PEDAL.id}/pitch`);
+  const problem = page.getByRole("region", { name: "Why this needs to exist" });
+  const original = await problem.locator("p.text-2xl").innerText();
+
+  await page.getByRole("button", { name: "Edit text" }).click();
+  await page.getByLabel("The problem").fill("Builders lose an hour per pedal drilling blank shells.");
+  await page.getByRole("button", { name: "Save pitch text" }).click();
+  await expect(problem).toContainText("Builders lose an hour per pedal drilling blank shells.");
+  await page.reload();
+  await expect(problem).toContainText("Builders lose an hour per pedal drilling blank shells.");
+  await expect(page.getByText("Text edited by you")).toBeVisible();
+
+  // Leave the seeded demo as it was.
+  await page.getByRole("button", { name: "Edit text" }).click();
+  await page.getByLabel("The problem").fill(original);
+  await page.getByRole("button", { name: "Save pitch text" }).click();
+  await expect(problem).toContainText(original.slice(0, 40));
 });
 
 test("uploading an STL creates a measured project", async ({ page }) => {

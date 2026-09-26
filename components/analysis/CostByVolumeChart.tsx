@@ -130,7 +130,14 @@ export function CostByVolumeChart({ curves, targetQuantity, title = "Cost per pa
       </ul>
 
       <div ref={ref} className="relative w-full">
-        <svg width={width} height={HEIGHT} role="img" aria-label={summary ?? "Cost per part by quantity"} className="block">
+        <svg
+          width={width}
+          height={HEIGHT}
+          viewBox={`0 0 ${width} ${HEIGHT}`}
+          role="img"
+          aria-label={summary ?? "Cost per part by quantity"}
+          className="block max-w-full print:h-auto"
+        >
           {geo.yTicks.map((t) => (
             <g key={t}>
               <line x1={PAD.left} x2={PAD.left + geo.plotW} y1={geo.y(t)} y2={geo.y(t)} stroke="var(--line)" strokeWidth={1} />
@@ -226,7 +233,7 @@ export function CostByVolumeChart({ curves, targetQuantity, title = "Cost per pa
         )}
       </div>
 
-      <details className="text-sm">
+      <details className="text-sm print:hidden">
         <summary className="cursor-pointer text-muted">Show as table</summary>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-xs">

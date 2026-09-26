@@ -37,6 +37,8 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `POST /api/match` `{ projectId, version? }` – returns ranked `ShopMatch[]`
 - `POST /api/business-case/suggest-price` `{ projectId, version }` – AI retail price; starts a business case if there is none, otherwise only replaces the suggestion
 - `PUT /api/business-case` `{ projectId, version, inputs }` – saves the user's inputs (keeps the suggestion)
+- `POST /api/pitch` `{ projectId, version }` – AI writes the licensing-pitch text (replaces it); `PUT /api/pitch` `{ projectId, version, pitch }` – saves user edits
+- `POST /api/projects/[id]/versions/[n]/renders` – multipart, exactly 4 PNGs captured in the browser; stored as `render-N.png` / `vN-render-N.png`
 
 ## Data models
 ```ts
@@ -63,6 +65,10 @@ type BusinessCaseInputs = {
 };
 
 type PriceSuggestion = { low: number; high: number; suggested: number; comparables: string[]; reasoning: string };
+
+// Phase 8, on ProjectVersion: pitch?: PitchContent; pitchVideo?: PitchVideo
+type PitchContent = { oneLiner: string; problem: string; product: string; audience: string; ask: string; editedByUser: boolean };
+type PitchVideo = { status: "none" } | { status: "ready"; url: string; provider: string }; // nothing generates one yet
 
 type AppliedTweak = { fromVersion: number; process: Process; change: string; why: string; impact: string };
 
@@ -150,7 +156,7 @@ Each phase ends with a working, demoable app.
 | 5 | Polish, loading states, demo parts, STEP support if time | Both | Full demo runs in <3 min without errors |
 | 6 | Iteration tracking (versions, compare, timeline) | Claude Code | Built; see Phases 6–9 below |
 | 7 | Business case per version | Claude Code | Built; see Phases 6–9 below |
-| 8 | Pitch to company (licensing pitch, PDF, video slot) | Claude Code | See Phases 6–9 below |
+| 8 | Pitch to company (licensing pitch, PDF, video slot) | Claude Code | Built; see Phases 6–9 below |
 | 9 | Privacy by default (ownership, share links, delete) | Claude Code | See Phases 6–9 below |
 
 ## Phases 6–9
@@ -369,7 +375,7 @@ aiInputs: { includePhotos: boolean; includeNotes: boolean };   // default both t
 - 3D viewer: import `ModelViewer` from `@/components/viewer` (client-only, loaded with `ssr: false`). Don't use drei `<Html>` as a Suspense fallback inside the Canvas; it crashes under React 19.
 - API routes return the `ApiResponse<T>` envelope from `lib/api.ts` (`ok()` / `fail()`).
 - Demo parts: `npm run demo:stl` regenerates `demo/*.stl` (script: `scripts/make-demo-stl.ts`). `charger-bracket-sheet.stl` is the bracket after its sheet-metal tweak (demo v2). `lib/demoProjects.ts` maps each demo's stored file names to their sources.
-- Sample project: `demo/sample-project.json` is a real saved Claude analysis of the pedal enclosure (250 units). Run `npm run demo:seed` to install it, then open `/project/yAeM9-RDOE`. Build the matching and pitch features against it; no API key needed. A test keeps it valid against `projectSchema`.
+- Sample project: `demo/sample-project.json` is a real saved Claude analysis of the pedal enclosure (250 units), with a saved price suggestion, pitch text and renders (`demo/renders/`). Run `npm run demo:seed` to install it, then open `/project/yAeM9-RDOE`. Build the matching and pitch features against it; no API key needed. A test keeps it valid against `projectSchema`.
 - AI analysis: `lib/analysis/` (`prompt.ts` builds the prompts, `run.ts` validates and retries once, `claude.ts` is the only file that calls the SDK). The model sees `analysisOutputSchema` (structural only); `analysisSchema` in `lib/schemas.ts` adds the business rules. Model and effort come from `IDLEFIT_MODEL` / `IDLEFIT_EFFORT` (default `claude-opus-5` / `high`). The local-capacity summary in the system prompt comes from `data/shops.json`, so editing shops changes the prompt.
 
 <!-- BEGIN:nextjs-agent-rules -->
@@ -381,6 +387,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+- Pitch (Phase 8): `/project/[id]/pitch` pitches the newest analyzed version. `components/pitch/PitchDocument.tsx` is the read-only document (server component, `isOwnerView` toggles gap hints) that Phase 9's share page will reuse; owner controls live only in `PitchToolbar` (hidden in print). Renders are captured once from the 3D model and saved; the pitch then shows stills, no WebGL. Stored render URLs carry `?v=<timestamp>` because `/api/files` caches for a year. PDF = the browser's print: each `.pitch-page` section starts a new landscape Letter page (`app/globals.css`); sections are laid out to fit one page each (checked in E2E by page count). The iteration story comes from `buildIterationStory()` (analyzed versions only). The video slot is `PitchVideoSlot`; wiring a video API means setting `version.pitchVideo` to `{ status: "ready", url, provider }`.
+- Small AI calls (price, pitch) share `runStructured()` (`lib/analysis/structured.ts`, one retry naming the failures) and `makeTextCaller()` in `claude.ts`. Word limits gate AI answers; user edits get character limits.
 - Business case (Phase 7): all math and the verdict live in `lib/businessCase.ts` (pure, client-safe, tested); the panel recomputes it on every keystroke and auto-saves inputs. Only inputs are stored. Costs between the AI's priced volumes are interpolated log-log; outside 10–10k they're clamped and flagged. The low-volume diagnosis ("tooling makes this unprofitable…") is made on the process that becomes profitable, and an alternative process is only suggested if it covers its own cost at the smallest run.
 - AI calls: `lib/analysis/claude.ts` has `callClaude` (analysis) and `callClaudePrice` (retail price, text-only, low effort). Both go through `tolerateUnparseableOutput`, so a cut-off structured answer gets the normal one retry instead of a 500. Route error mapping is shared: `aiFailure()` in `lib/analysis/errors.ts`. Price briefs (`lib/analysis/price.ts`) deliberately omit costs and the analysis summary, so the price comes from the market, not cost-plus.
 - Stored data vs. AI rules: stored `priceSuggestion` is validated structurally only; the business rules (`priceSuggestionSchema`) gate new AI answers. Tightening a rule must never make saved projects unreadable.

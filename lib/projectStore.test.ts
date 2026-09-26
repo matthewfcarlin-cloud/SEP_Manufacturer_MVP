@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { addVersion, createProject, getProject, listProjects, readProjectFile, updateVersion } from "./projectStore";
+import { addVersion, createProject, getProject, listProjects, readProjectFile, RenderError, saveVersionRenders, updateVersion } from "./projectStore";
 import type { GeometryStats } from "./types";
 
 const geometry: GeometryStats = {
@@ -148,6 +148,27 @@ describe("projectStore", () => {
       images: [],
     });
     expect(await updateVersion(created.id, 7, (v) => v)).toBeNull();
+  });
+
+  test("saves four PNG renders per version with cache-busting URLs", async () => {
+    const created = await createProject({ fields: { name: "R", notes: "", targetQuantity: 1, materialHints: [] }, stl: new Uint8Array([1]), geometry, images: [] });
+    const png = (n: number) => new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, n]);
+    const version = await saveVersionRenders(created.id, 1, [png(0), png(1), png(2), png(3)]);
+
+    expect(version?.renders).toHaveLength(4);
+    expect(version?.renders?.[2]).toMatch(new RegExp(`^/api/files/${created.id}/render-2\\.png\\?v=\\d+$`));
+    expect(Array.from((await readProjectFile(created.id, "render-3.png"))!.bytes)).toEqual(Array.from(png(3)));
+    expect((await readProjectFile(created.id, "render-3.png"))!.contentType).toBe("image/png");
+    expect((await getProject(created.id))?.versions[0].renders).toEqual(version?.renders);
+  });
+
+  test("refuses renders that aren't four PNGs, and unknown versions", async () => {
+    const created = await createProject({ fields: { name: "R", notes: "", targetQuantity: 1, materialHints: [] }, stl: new Uint8Array([1]), geometry, images: [] });
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    await expect(saveVersionRenders(created.id, 1, [png])).rejects.toThrow(RenderError);
+    await expect(saveVersionRenders(created.id, 1, [png, png, png, new Uint8Array([0xff, 0xd8, 0xff])])).rejects.toThrow(/PNG/);
+    expect(await saveVersionRenders(created.id, 9, [png, png, png, png])).toBeNull();
+    expect(await readProjectFile(created.id, "v9-render-0.png")).toBeNull();
   });
 
   test("lists projects newest first and skips corrupt folders", async () => {

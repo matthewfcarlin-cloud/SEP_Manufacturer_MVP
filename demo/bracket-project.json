@@ -373,7 +373,7 @@
       },
       "businessCase": {
         "retailPriceUsd": 19,
-        "priceSource": "ai",
+        "priceSource": "user",
         "quantityTiers": [
           100,
           1000,
@@ -760,6 +760,12 @@
           }
         ]
       },
+      "renders": [
+        "/api/files/Dr9z34I2mA/v2-render-0.png?v=1790459907250",
+        "/api/files/Dr9z34I2mA/v2-render-1.png?v=1790459907250",
+        "/api/files/Dr9z34I2mA/v2-render-2.png?v=1790459907250",
+        "/api/files/Dr9z34I2mA/v2-render-3.png?v=1790459907250"
+      ],
       "basedOn": 1,
       "changeNote": "Applied the sheet metal tweak: Re-model as one 2 mm Aluminum 5052 flat blank ~140 × 60 mm with a single 90° bend and 4 mm bend-relief notches.",
       "appliedTweak": {
@@ -790,6 +796,14 @@
           ],
           "reasoning": "It's a simple single-bend bracket, so it competes with commodity wall brackets, but selling it as a branded e-bike charger accessory supports a modest premium around $19."
         }
+      },
+      "pitch": {
+        "oneLiner": "A bent aluminum wall bracket that keeps a 600 g e-bike charger off the garage floor.",
+        "problem": "E-bike owners charge in garages, where the charger brick sits on concrete among damp, dust and car tyres, or dangles by its cord from an outlet. Owners improvise with shelves, zip ties and hooks. The result is a hot, unsupported brick with strained cable joints in a place people park cars.",
+        "product": "A 2 mm aluminum 5052 bracket: one flat blank about 140 x 60 mm, a single 90 degree bend with 4 mm bend-relief notches, four holes. Two screws hold it to the wall, two hold the charger to the upright. No gussets, no ribs, no hard tooling, so it is a laser-and-brake part rather than a moulding.",
+        "audience": "E-bike owners and retrofit riders buying accessories alongside the bike. A natural fit for e-bike and charger brands, garage-storage lines, and cycling accessory buyers stocking a $19 impulse add-on.",
+        "ask": "I am looking for a licence or a stocking order. The first run is 500 units at an estimated $4.50 to $7.50 each, roughly $3,000 with no tooling; at $19 retail the maker receives about $9.50 per unit.",
+        "editedByUser": false
       }
     }
   ]

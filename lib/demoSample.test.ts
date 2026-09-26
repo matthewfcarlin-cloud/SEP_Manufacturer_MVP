@@ -17,7 +17,10 @@ describe.each(DEMO_PROJECTS)("demo project $json", (demo) => {
   test("matches its manifest entry and ships every version's model file", () => {
     expect(raw.id).toBe(demo.id);
     const shipped = Object.keys(demo.files).map((name) => `/api/files/${demo.id}/${name}`);
-    const referenced = raw.versions.map((v: { cadFileUrl: string }) => v.cadFileUrl);
+    const referenced = raw.versions.flatMap((v: { cadFileUrl: string; renders?: string[] }) => [
+      v.cadFileUrl,
+      ...(v.renders ?? []).map((url) => url.split("?")[0]),
+    ]);
     expect(referenced.sort()).toEqual(shipped.sort());
   });
 });

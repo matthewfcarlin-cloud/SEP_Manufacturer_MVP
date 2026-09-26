@@ -122,6 +122,30 @@ body {
   body {
     background: #fff;
   }
+
+  /* Pitch PDF: landscape Letter, one section per page, colors kept. */
+  @page {
+    size: letter landscape;
+    margin: 0.45in;
+  }
+
+  .pitch-page {
+    break-before: page;
+    border-top: 0;
+    padding-top: 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .pitch-page:first-child {
+    break-before: auto;
+  }
+
+  .pitch-page figure,
+  .pitch-page li,
+  .pitch-page table {
+    break-inside: avoid;
+  }
 }
 
 /* Infinite horizontal ticker: content is rendered twice, so -50% loops seamlessly. */

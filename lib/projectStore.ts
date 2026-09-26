@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { copyFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { IMAGE_CONTENT_TYPES, type ImageType, type ProjectFields, type VersionFields } from "./projectInput";
+import { detectImageType, IMAGE_CONTENT_TYPES, type ImageType, type ProjectFields, type VersionFields } from "./projectInput";
 import { migrateProject } from "./projectMigration";
 import { PROJECT_ID_PATTERN, projectSchema } from "./schemas";
 import type { AppliedTweak, GeometryStats, Project, ProjectVersion } from "./types";
@@ -14,7 +14,9 @@ import { appendVersion, getVersion, nextVersionNumber, replaceVersion, versionFi
 
 const STL_FILE = "model.stl";
 // Version 1 uses the bare names; version n > 1 prefixes them with "vn-".
-const FILE_NAME_PATTERN = /^(v[1-9]\d{0,3}-)?(model\.stl|image-[0-4]\.(jpg|png|webp))$/;
+const FILE_NAME_PATTERN = /^(v[1-9]\d{0,3}-)?(model\.stl|image-[0-4]\.(jpg|png|webp)|render-[0-3]\.png)$/;
+export const RENDER_COUNT = 4;
+export const MAX_RENDER_BYTES = 4 * 1024 * 1024;
 
 function dataRoot(): string {
   return process.env.IDLEFIT_DATA_DIR ?? path.join(process.cwd(), ".data");
@@ -200,6 +202,31 @@ export async function getProject(id: string): Promise<Project | null> {
     throw new Error(`Project ${id} has a corrupt project.json: ${parsed.error.message}`);
   }
   return parsed.data;
+}
+
+export class RenderError extends Error {}
+
+/**
+ * Saves a version's four studio renders (PNGs captured in the browser) and
+ * points version.renders at them. The URLs carry a timestamp because files
+ * are served with a year-long cache and a re-render overwrites them.
+ */
+export async function saveVersionRenders(id: string, number: number, pngs: Uint8Array[]): Promise<ProjectVersion | null> {
+  if (pngs.length !== RENDER_COUNT) throw new RenderError(`Send exactly ${RENDER_COUNT} renders.`);
+  for (const png of pngs) {
+    if (png.byteLength > MAX_RENDER_BYTES) throw new RenderError("A render is too large.");
+    if (detectImageType(png) !== "png") throw new RenderError("Renders must be PNG images.");
+  }
+  if (!isValidProjectId(id)) return null;
+  const stamp = Date.now();
+  const saved = await updateVersion(id, number, (version) => ({
+    ...version,
+    renders: pngs.map((_, i) => `${fileUrl(id, versionFileName(number, `render-${i}.png`))}?v=${stamp}`),
+  }));
+  if (!saved) return null;
+  // Written after the version is known to exist, so a bad id can't leave files behind.
+  await Promise.all(pngs.map((png, i) => writeAtomic(path.join(projectDir(id), versionFileName(number, `render-${i}.png`)), png)));
+  return getVersion(saved, number) ?? null;
 }
 
 export type StoredFile = { bytes: Uint8Array; contentType: string };

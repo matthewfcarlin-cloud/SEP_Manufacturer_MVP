@@ -380,9 +380,15 @@
           }
         ]
       },
+      "renders": [
+        "/api/files/yAeM9-RDOE/render-0.png?v=1790459855327",
+        "/api/files/yAeM9-RDOE/render-1.png?v=1790459855327",
+        "/api/files/yAeM9-RDOE/render-2.png?v=1790459855327",
+        "/api/files/yAeM9-RDOE/render-3.png?v=1790459855327"
+      ],
       "businessCase": {
         "retailPriceUsd": 32,
-        "priceSource": "ai",
+        "priceSource": "user",
         "quantityTiers": [
           100,
           1000,
@@ -401,6 +407,14 @@
           ],
           "reasoning": "The $180 target is the price of a complete pedal; this is only the shell, so it competes with drilled, finished 125B enclosures that sell for roughly $20-40, with a premium finish pushing toward the top."
         }
+      },
+      "pitch": {
+        "oneLiner": "A machined 125B pedal shell, pre-punched for a 3PDT, two pots and three jacks.",
+        "problem": "Boutique pedal builders and small brands buy blank 125B enclosures, then drill and finish them by hand. Holes wander, finishes chip, and a scratched shell on a $180 pedal is a return. Small runs also can't justify injection tooling, so builders absorb the labour instead.",
+        "product": "A 122 x 66 x 39.5 mm open-bottom shell with 2.5 mm walls, a ~36 mm cavity, and four corner bosses tapped for M3 for a flat bottom plate. The hole pattern is already there: 12 mm footswitch and two 7.5 mm pots on top, two 1/4\" jacks on the long sides, 9 V DC on the top end. Powder coated or anodized, so it survives stomping and looks the part.",
+        "audience": "Pedal parts distributors, enclosure suppliers and contract shops serving boutique builders, plus brands running their own small-batch pedal lines.",
+        "ask": "I'm looking for a licensing or supply arrangement. Estimates: at 250 units, stock die-cast shells drilled in a fixture and powder coated land near $14-18; full billet 6061 runs roughly $8-12k in setup. Injection molding only pays past about 3,000-4,000 units.",
+        "editedByUser": false
       }
     }
   ]

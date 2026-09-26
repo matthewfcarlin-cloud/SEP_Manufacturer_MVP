@@ -1,10 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { analysisOutputSchema, priceSuggestionOutputSchema } from "../schemas";
+import { analysisOutputSchema, pitchOutputSchema, priceSuggestionOutputSchema } from "../schemas";
 import { getShops } from "../shops";
 import { summarizeCapacity } from "./capacity";
-import type { CallPriceModel } from "./price";
+import type { CallTextModel } from "./structured";
 import { tolerateUnparseableOutput } from "./structuredOutput";
+import { PITCH_SYSTEM_PROMPT } from "./pitch";
 import { PRICE_SYSTEM_PROMPT } from "./price";
 import { buildSystemPrompt } from "./prompt";
 import type { CallModel } from "./run";
@@ -72,26 +73,51 @@ export const callClaude: CallModel = ({ images, text }) => tolerateUnparseableOu
   return { stopReason: response.stop_reason, output: response.parsed_output };
 });
 
-// The price suggestion is a small, text-only question: low effort keeps it to
-// a few seconds.
-const PRICE_EFFORT = "low" as const;
-const PRICE_MAX_TOKENS = 8_000;
+type TextCallerOptions = {
+  system: string;
+  schema: Parameters<typeof betaZodOutputFormat>[0];
+  effort: typeof EFFORT;
+  maxTokens: number;
+  logTag: string;
+};
 
-export const callClaudePrice: CallPriceModel = (text) => tolerateUnparseableOutput(async () => {
-  const response = await getClient().beta.messages.parse({
-    model: MODEL,
-    max_tokens: PRICE_MAX_TOKENS,
-    betas: [FALLBACK_BETA],
-    fallbacks: "default",
-    output_config: { effort: PRICE_EFFORT, format: betaZodOutputFormat(priceSuggestionOutputSchema) },
-    system: PRICE_SYSTEM_PROMPT,
-    messages: [{ role: "user", content: text }],
-  });
-  console.info("[price] claude call", {
-    model: response.model,
-    stop: response.stop_reason,
-    input: response.usage.input_tokens,
-    output: response.usage.output_tokens,
-  });
-  return { stopReason: response.stop_reason, output: response.parsed_output };
+/** A text-only structured call (price, pitch): no images, no prompt caching needed. */
+function makeTextCaller({ system, schema, effort, maxTokens, logTag }: TextCallerOptions): CallTextModel {
+  return (text) =>
+    tolerateUnparseableOutput(async () => {
+      const response = await getClient().beta.messages.parse({
+        model: MODEL,
+        max_tokens: maxTokens,
+        betas: [FALLBACK_BETA],
+        fallbacks: "default",
+        output_config: { effort, format: betaZodOutputFormat(schema) },
+        system,
+        messages: [{ role: "user", content: text }],
+      });
+      console.info(`[${logTag}] claude call`, {
+        model: response.model,
+        stop: response.stop_reason,
+        input: response.usage.input_tokens,
+        output: response.usage.output_tokens,
+      });
+      return { stopReason: response.stop_reason, output: response.parsed_output };
+    });
+}
+
+// Small, text-only question: low effort keeps it to a few seconds.
+export const callClaudePrice = makeTextCaller({
+  system: PRICE_SYSTEM_PROMPT,
+  schema: priceSuggestionOutputSchema,
+  effort: "low",
+  maxTokens: 8_000,
+  logTag: "price",
+});
+
+// A few short paragraphs of writing: medium effort.
+export const callClaudePitch = makeTextCaller({
+  system: PITCH_SYSTEM_PROMPT,
+  schema: pitchOutputSchema,
+  effort: "medium",
+  maxTokens: 10_000,
+  logTag: "pitch",
 });

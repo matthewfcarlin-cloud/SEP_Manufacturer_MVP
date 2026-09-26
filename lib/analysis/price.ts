@@ -1,10 +1,9 @@
 import { formatDimensions } from "../format";
 import { priceSuggestionSchema } from "../schemas";
 import type { PriceSuggestion, Project, ProjectVersion } from "../types";
-import { AnalysisError, type ModelTurn } from "./run";
+import { runStructured, type CallTextModel } from "./structured";
 
-/** Sends one text-only user turn and returns the model's structured answer. */
-export type CallPriceModel = (text: string) => Promise<ModelTurn>;
+export type CallPriceModel = CallTextModel;
 
 export const PRICE_SYSTEM_PROMPT = `You are a retail pricing analyst for consumer and hobbyist hardware. An independent inventor wants a starting retail price for their product, to test whether it can make money.
 
@@ -31,25 +30,13 @@ export function buildPriceBrief(project: Project, version: ProjectVersion): stri
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-function check(turn: ModelTurn): { ok: true; suggestion: PriceSuggestion } | { ok: false; problems: string[] } {
-  if (turn.stopReason === "refusal") throw new AnalysisError("The AI declined to price this product.");
-  if (turn.output == null) return { ok: false, problems: ["No structured answer was returned."] };
-  const result = priceSuggestionSchema.safeParse(turn.output);
-  if (!result.success) {
-    return { ok: false, problems: result.error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`) };
-  }
-  const p = result.data;
-  return { ok: true, suggestion: { ...p, low: round2(p.low), high: round2(p.high), suggested: round2(p.suggested) } };
-}
-
 /** Asks for a retail price, with one retry that names what failed validation. */
-export async function runPriceSuggestion(callModel: CallPriceModel, brief: string): Promise<PriceSuggestion> {
-  const first = check(await callModel(brief));
-  if (first.ok) return first.suggestion;
-  console.warn("[price] first attempt failed validation, retrying", first.problems);
-  const retry = `${brief}\n\nA previous answer was rejected for these reasons:\n${first.problems.map((p) => `- ${p}`).join("\n")}\nAnswer again, fixing these.`;
-  const second = check(await callModel(retry));
-  if (second.ok) return second.suggestion;
-  console.error("[price] retry also failed validation", second.problems);
-  throw new AnalysisError("The AI's price suggestion didn't pass our checks. Please try again or enter a price yourself.");
+export function runPriceSuggestion(callModel: CallPriceModel, brief: string): Promise<PriceSuggestion> {
+  return runStructured(callModel, brief, {
+    schema: priceSuggestionSchema,
+    logTag: "price",
+    refusalMessage: "The AI declined to price this product.",
+    failMessage: "The AI's price suggestion didn't pass our checks. Please try again or enter a price yourself.",
+    normalize: (p) => ({ ...p, low: round2(p.low), high: round2(p.high), suggested: round2(p.suggested) }),
+  });
 }

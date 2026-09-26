@@ -8,25 +8,25 @@ export function TierTable({ tiers }: { tiers: TierResult[] }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="overflow-x-auto rounded-xl border border-line bg-surface">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full min-w-[640px] text-sm print:min-w-0 print:text-xs">
           <thead>
             <tr className="border-b border-line text-left">
               {["Run size", "Cheapest process", "Cost per part, all-in", "Your margin", "Profit on the run"].map((h) => (
-                <th key={h} scope="col" className="eyebrow p-4 font-normal text-muted">{h}</th>
+                <th key={h} scope="col" className="eyebrow p-4 font-normal text-muted print:p-2">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {tiers.map((t) => (
               <tr key={t.quantity} className="border-b border-line last:border-0">
-                <th scope="row" className="p-4 text-left font-mono font-medium">
+                <th scope="row" className="p-4 text-left font-mono font-medium print:p-2">
                   {t.quantity.toLocaleString("en-US")}
                   {t.basis !== "curve" && <span className="text-muted">*</span>}
                 </th>
-                <td className="p-4">{PROCESS_LABELS[t.process]}</td>
-                <td className="p-4 font-mono">{formatUnitCostRange(t.allIn)}</td>
-                <td className={`p-4 font-mono font-semibold ${t.margin.mid < 0 ? "text-accent" : ""}`}>{formatMarginRange(t.margin)}</td>
-                <td className="p-4 font-mono">
+                <td className="p-4 print:p-2">{PROCESS_LABELS[t.process]}</td>
+                <td className="p-4 font-mono print:p-2">{formatUnitCostRange(t.allIn)}</td>
+                <td className={`p-4 font-mono font-semibold print:p-2 ${t.margin.mid < 0 ? "text-accent" : ""}`}>{formatMarginRange(t.margin)}</td>
+                <td className="p-4 font-mono print:p-2">
                   {formatCompactUsd(t.profit.low)} to {formatCompactUsd(t.profit.high)}
                 </td>
               </tr>

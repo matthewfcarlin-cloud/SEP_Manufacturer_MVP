@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AppliedTweak, Analysis, BusinessCaseInputs, GeometryStats, Machine, PriceSuggestion, Project, ProjectVersion, Shop } from "./types";
+import type { AppliedTweak, Analysis, BusinessCaseInputs, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -115,6 +115,52 @@ export const businessCaseInputsSchema = z.object({
   priceSuggestion: priceSuggestionOutputSchema.optional(),
 }) satisfies z.ZodType<BusinessCaseInputs>;
 
+// ---------------------------------------------------------------------------
+// Pitch (Phase 8). Structural schema for the model and for storage; word
+// limits gate new AI answers only, and user edits get character limits.
+// ---------------------------------------------------------------------------
+
+export const PITCH_WORD_LIMITS = { oneLiner: 16, problem: 70, product: 70, audience: 45, ask: 50 } as const;
+export const MAX_PITCH_FIELD_CHARS = 700;
+const MIN_PITCH_FIELD_WORDS = 4;
+
+export const pitchOutputSchema = z.object({
+  oneLiner: z.string().describe(`One sentence under ${PITCH_WORD_LIMITS.oneLiner} words: what it is and why it matters. No hype words.`),
+  problem: z.string().describe(`2-3 sentences under ${PITCH_WORD_LIMITS.problem} words: who has the problem, how they cope today, what that costs them.`),
+  product: z.string().describe(`2-3 sentences under ${PITCH_WORD_LIMITS.product} words: what the product is and why it beats the workaround.`),
+  audience: z.string().describe(`1-2 sentences under ${PITCH_WORD_LIMITS.audience} words: who buys it and which kind of company would license, make or stock it.`),
+  ask: z.string().describe(`1-2 sentences under ${PITCH_WORD_LIMITS.ask} words: what the inventor is asking this company for (e.g. a licensing deal, a pilot run, shelf space).`),
+});
+
+const wordCount = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
+
+export const pitchAnswerSchema = pitchOutputSchema.superRefine((p, ctx) => {
+  for (const [field, limit] of Object.entries(PITCH_WORD_LIMITS) as [keyof typeof PITCH_WORD_LIMITS, number][]) {
+    const words = wordCount(p[field]);
+    if (words < MIN_PITCH_FIELD_WORDS) ctx.addIssue({ code: "custom", path: [field], message: "write a real sentence" });
+    // A little slack: a 72-word problem statement isn't worth a retry.
+    if (words > limit * 1.25) ctx.addIssue({ code: "custom", path: [field], message: `keep it under ${limit} words (got ${words})` });
+  }
+});
+
+const pitchFieldEdit = z.string().trim().min(1, "Pitch fields can't be empty.").max(MAX_PITCH_FIELD_CHARS, `Keep each pitch field under ${MAX_PITCH_FIELD_CHARS} characters.`);
+
+/** What a user may save when editing the pitch text. */
+export const pitchEditSchema = z.object({
+  oneLiner: pitchFieldEdit,
+  problem: pitchFieldEdit,
+  product: pitchFieldEdit,
+  audience: pitchFieldEdit,
+  ask: pitchFieldEdit,
+});
+
+export const pitchContentSchema = pitchOutputSchema.extend({ editedByUser: z.boolean() }) satisfies z.ZodType<PitchContent>;
+
+export const pitchVideoSchema = z.discriminatedUnion("status", [
+  z.object({ status: z.literal("none") }),
+  z.object({ status: z.literal("ready"), url: z.string().min(1), provider: z.string().min(1) }),
+]) satisfies z.ZodType<PitchVideo>;
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -131,6 +177,8 @@ export const projectVersionSchema = z.object({
   changeNote: z.string().max(1000).optional(),
   appliedTweak: appliedTweakSchema.optional(),
   businessCase: businessCaseInputsSchema.optional(),
+  pitch: pitchContentSchema.optional(),
+  pitchVideo: pitchVideoSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({
