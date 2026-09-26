@@ -144,3 +144,8 @@ Each phase ends with a working, demoable app.
 - Process names and display labels: `lib/processes.ts` (`PROCESSES`, `PROCESS_LABELS`).
 - Colors are theme tokens in `app/globals.css` (`bg`, `surface`, `ink`, `muted`, `line`, `accent`, `idle`, `demo`) with light and dark values. Use them instead of raw Tailwind colors.
 - Badges: `DemoBadge` and `IdleBadge` in `components/Badges.tsx`. Any UI showing a shop must show `DemoBadge`.
+- Projects: read and write only through `lib/projectStore.ts` (`getProject`, `saveProject`, `createProject`). Storage is `.data/projects/<id>/` (gitignored); uploads are served by `GET /api/files/[id]/[file]` with an allowlist of file names.
+- Geometry: `analyzeStl()` in `lib/geometry.ts` runs server-side at upload and stores `GeometryStats` on the project. STL is assumed to be in mm.
+- 3D viewer: import `ModelViewer` from `@/components/viewer` (client-only, loaded with `ssr: false`). Don't use drei `<Html>` as a Suspense fallback inside the Canvas; it crashes under React 19.
+- API routes return the `ApiResponse<T>` envelope from `lib/api.ts` (`ok()` / `fail()`).
+- Demo parts: `npm run demo:stl` regenerates `demo/*.stl` from `lib/meshes.ts`.

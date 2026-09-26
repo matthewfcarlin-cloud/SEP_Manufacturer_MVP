@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { PROCESSES } from "./processes";
-import type { Machine, Shop } from "./types";
+import type { GeometryStats, Machine, Project, Shop } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -40,3 +40,35 @@ export const shopsSchema = z.array(shopSchema).refine(
   (shops) => new Set(shops.map((s) => s.id)).size === shops.length,
   { message: "shop ids must be unique" },
 );
+
+export const geometryStatsSchema = z.object({
+  // Nonnegative, not positive: a zero-thickness surface mesh is still readable.
+  boundingBoxMm: z.object({
+    x: z.number().nonnegative(),
+    y: z.number().nonnegative(),
+    z: z.number().nonnegative(),
+  }),
+  volumeCm3: z.number().nonnegative(),
+  surfaceAreaCm2: z.number().nonnegative(),
+  triangleCount: z.number().int().positive(),
+  isWatertight: z.boolean(),
+  thinWallWarning: z.boolean().optional(),
+}) satisfies z.ZodType<GeometryStats>;
+
+export const PROJECT_ID_PATTERN = /^[A-Za-z0-9_-]{10}$/;
+
+export const projectSchema = z.object({
+  id: z.string().regex(PROJECT_ID_PATTERN),
+  name: z.string().min(1),
+  createdAt: z.iso.datetime(),
+  notes: z.string(),
+  targetQuantity: z.number().int().positive(),
+  budgetUsd: z.number().positive().optional(),
+  materialHints: z.array(z.string()).optional(),
+  cadFileUrl: z.string().optional(),
+  imageUrls: z.array(z.string()),
+  geometry: geometryStatsSchema.optional(),
+  // Phase 2 replaces this with a full analysisSchema.
+  analysis: z.custom<NonNullable<Project["analysis"]>>().optional(),
+  renders: z.array(z.string()).optional(),
+}) satisfies z.ZodType<Project>;
