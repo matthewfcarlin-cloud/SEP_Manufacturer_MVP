@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { RunAnalysisButton } from "@/components/analysis/RunAnalysisButton";
+import { ExpandableNotes } from "@/components/ExpandableNotes";
 import { GeometryPanel } from "@/components/GeometryPanel";
 import { PageHeader } from "@/components/PageHeader";
 import { ProjectViewer } from "@/components/viewer/ProjectViewer";
@@ -97,18 +98,37 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
       <RevisionNote version={version} />
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr] [&>*]:min-w-0">
-        {version.cadFileUrl ? (
-          <ProjectViewer
-            key={version.cadFileUrl}
-            url={version.cadFileUrl}
-            hasThinWalls={Boolean(version.geometry?.thinWallWarning)}
-            className="aspect-[4/3] w-full"
-          />
-        ) : (
-          <div className="grid aspect-[4/3] place-items-center rounded-xl border border-line text-sm text-muted">
-            No CAD file uploaded.
-          </div>
-        )}
+        {/* Photos sit under the viewer, so a long brief on the right doesn't leave a gap here. */}
+        <div className="flex flex-col gap-6">
+          {version.cadFileUrl ? (
+            <ProjectViewer
+              key={version.cadFileUrl}
+              url={version.cadFileUrl}
+              hasThinWalls={Boolean(version.geometry?.thinWallWarning)}
+              className="aspect-[4/3] w-full"
+            />
+          ) : (
+            <div className="grid aspect-[4/3] place-items-center rounded-xl border border-line text-sm text-muted">
+              No CAD file uploaded.
+            </div>
+          )}
+          {version.imageUrls.length > 0 && (
+            <section className="flex flex-col gap-3">
+              <h2 className="font-semibold">Photos and sketches</h2>
+              <div className="grid grid-cols-3 gap-3">
+                {version.imageUrls.map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element -- served from our own API route
+                  <img
+                    key={url}
+                    src={url}
+                    alt={`${project.name} v${version.number}, reference photo ${i + 1}`}
+                    className="aspect-square w-full rounded-lg border border-line object-cover"
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
         <div className="flex flex-col gap-6">
           {version.geometry && <GeometryPanel geometry={version.geometry} />}
           <section className="rounded-xl border border-line bg-surface p-5">
@@ -126,7 +146,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
               {version.notes && (
                 <div className="col-span-2">
                   <Brief label="Notes">
-                    <span className="whitespace-pre-line">{version.notes}</span>
+                    <ExpandableNotes text={version.notes} />
                   </Brief>
                 </div>
               )}
@@ -135,22 +155,6 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
         </div>
       </div>
 
-      {version.imageUrls.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="font-semibold">Photos and sketches</h2>
-          <div className="flex flex-wrap gap-3">
-            {version.imageUrls.map((url, i) => (
-              // eslint-disable-next-line @next/next/no-img-element -- served from our own API route
-              <img
-                key={url}
-                src={url}
-                alt={`${project.name} v${version.number}, reference photo ${i + 1}`}
-                className="h-40 w-40 rounded-lg border border-line object-cover"
-              />
-            ))}
-          </div>
-        </section>
-      )}
 
       <AiInputsPanel
         projectId={project.id}
