@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
+import Image, { type StaticImageData } from "next/image";
 import { useRef, useState, type ReactNode } from "react";
 
 // Mobius-style pinned story: the section is several screens tall, the
@@ -15,8 +16,23 @@ export type StoryData = {
   watertight: boolean;
   paths: { label: string; fit: number; cost: string }[];
   shops: { name: string; neighborhood: string; machine: string; idle: boolean }[];
-  frames: { seconds: number; voiceover: string }[];
+  frames: { seconds: number; visual: string; voiceover: string }[];
+  /** The part's saved studio renders (front ¾, side, rear ¾, top), used as storyboard stills. */
+  renders: StaticImageData[];
 };
+
+/**
+ * One "camera move" per storyboard frame: which studio render, how far in,
+ * and where to aim. Six frames from four renders read as six shots, not repeats.
+ */
+const SHOTS: { render: number; zoom: number; focus: string }[] = [
+  { render: 0, zoom: 1.05, focus: "50% 55%" }, // wide establishing
+  { render: 3, zoom: 1.45, focus: "50% 45%" }, // overhead, top face
+  { render: 1, zoom: 1.3, focus: "50% 55%" }, // side profile
+  { render: 2, zoom: 1.15, focus: "50% 50%" }, // rear three-quarter
+  { render: 0, zoom: 2.1, focus: "45% 40%" }, // detail: finish close-up
+  { render: 0, zoom: 1, focus: "50% 50%" }, // hero end card, bookending frame 1
+];
 
 const STEPS = [
   { title: "Upload", body: "Drop in an STL or STEP file, a few photos, and what you know: quantity, budget, materials." },
@@ -117,20 +133,46 @@ function Visual({ step, data }: { step: number; data: StoryData }) {
       return (
         <div className="grid w-full max-w-lg grid-cols-3 gap-2">
           {data.frames.map((f, i) => (
-            <motion.div
-              key={i}
-              className="flex aspect-[4/5] flex-col justify-between rounded-md border border-night-line bg-night-surface p-3"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.08 }}
-            >
-              <span className="eyebrow text-night-accent">{String(i + 1).padStart(2, "0")} · {f.seconds}s</span>
-              <span className="line-clamp-4 text-xs italic leading-snug text-night-muted">“{f.voiceover}”</span>
-            </motion.div>
+            <StoryboardFrame key={i} index={i} frame={f} render={data.renders[SHOTS[i % SHOTS.length].render]} />
           ))}
         </div>
       );
   }
+}
+
+function StoryboardFrame({ index, frame, render }: { index: number; frame: StoryData["frames"][number]; render?: StaticImageData }) {
+  const shot = SHOTS[index % SHOTS.length];
+  return (
+    <motion.figure
+      className="flex aspect-[4/5] flex-col overflow-hidden rounded-md border border-night-line bg-night-surface"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.08 }}
+    >
+      <div className="relative h-[52%] shrink-0 overflow-hidden">
+        {render && (
+          <Image
+            src={render}
+            alt=""
+            fill
+            // Frames zoom in up to ~2x, so request enough pixels to stay sharp.
+            sizes="(min-width: 1024px) 400px, 60vw"
+            className="object-cover brightness-[0.82] contrast-[1.08] grayscale-[0.25]"
+            style={{ transform: `scale(${shot.zoom})`, transformOrigin: shot.focus, objectPosition: shot.focus }}
+          />
+        )}
+        {/* Fade the light studio backdrop into the dark card. */}
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-b from-night/10 via-transparent to-night-surface" />
+        <span className="eyebrow absolute left-2 top-2 rounded-sm bg-night/80 px-1.5 py-0.5 text-night-accent">
+          {String(index + 1).padStart(2, "0")} · {frame.seconds}s
+        </span>
+      </div>
+      <figcaption className="flex flex-1 flex-col justify-between gap-1 p-2.5 pt-1">
+        <span className="line-clamp-2 text-[10px] uppercase leading-snug tracking-wide text-night-muted/80">{frame.visual}</span>
+        <span className="line-clamp-3 text-xs italic leading-snug text-night-ink/90">“{frame.voiceover}”</span>
+      </figcaption>
+    </motion.figure>
+  );
 }
 
 export function ProcessStory({ data }: { data: StoryData }) {

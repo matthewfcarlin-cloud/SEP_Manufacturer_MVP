@@ -428,3 +428,38 @@ test("examples can't be deleted or shared, even by the browser that opens them",
   expect((await page.request.delete(`/api/projects/${PEDAL.id}`)).status()).toBe(403);
   expect((await page.request.put(`/api/projects/${PEDAL.id}/share`, { data: { enabled: true } })).status()).toBe(403);
 });
+
+test("the landing storyboard shows six studio-render stills with shot and voiceover", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    const s = [...document.querySelectorAll("section")].find((el) => /from file to factory/i.test(el.innerText))!;
+    const r = s.getBoundingClientRect();
+    window.scrollTo(0, window.scrollY + r.top + r.height - window.innerHeight - 20);
+  });
+  const frames = page.locator("figure:has(figcaption)").filter({ hasText: "“" });
+  await expect(frames).toHaveCount(6);
+  const widths = await frames.locator("img").evaluateAll(async (imgs) =>
+    Promise.all((imgs as HTMLImageElement[]).map(async (img) => (await img.decode().catch(() => undefined), img.naturalWidth))),
+  );
+  expect(widths).toHaveLength(6);
+  for (const w of widths) expect(w).toBeGreaterThan(0);
+});
+
+test("an over-budget browser is refused before any AI call", async ({ page }) => {
+  await page.goto("/shops");
+  const cookie = (await page.context().cookies()).find((c) => c.name === "idlefit_owner")!;
+  const { createHash } = await import("node:crypto");
+  const hash = createHash("sha256").update(cookie.value).digest("hex");
+  const ledger = path.join(".data", "usage", "browsers", `${hash}.json`);
+  await mkdir(path.dirname(ledger), { recursive: true });
+  await writeFile(ledger, JSON.stringify({ spentUsd: 99 }));
+  try {
+    const res = await page.request.post("/api/analyze", { data: { projectId: PEDAL.id } });
+    expect(res.status()).toBe(429);
+    expect((await res.json()).error).toMatch(/AI budget/);
+    await page.goto(`/project/${PEDAL.id}`);
+    await expect(page.getByText(/Demo AI budget for this browser: \$0\.00 of/)).toBeVisible();
+  } finally {
+    await rm(ledger, { force: true });
+  }
+});

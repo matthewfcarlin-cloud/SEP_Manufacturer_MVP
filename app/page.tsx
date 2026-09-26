@@ -7,6 +7,10 @@ import { ProcessStory, type StoryData } from "@/components/home/ProcessStory";
 import { ProcessTiles } from "@/components/home/ProcessTiles";
 import { ScrollStatement } from "@/components/home/ScrollStatement";
 import { Showcase } from "@/components/home/Showcase";
+import render0 from "@/demo/renders/pedal-render-0.png";
+import render1 from "@/demo/renders/pedal-render-1.png";
+import render2 from "@/demo/renders/pedal-render-2.png";
+import render3 from "@/demo/renders/pedal-render-3.png";
 import sampleProject from "@/demo/sample-project.json";
 import { formatDimensions, formatUnitCostRange } from "@/lib/format";
 import { matchVersion } from "@/lib/match";
@@ -18,6 +22,8 @@ import type { ProjectVersion } from "@/lib/types";
 import { latestVersion } from "@/lib/versions";
 
 const DEMO_STL_KB = 174;
+/** The pedal's saved studio renders (Phase 8), used as storyboard stills on the landing page. */
+const PEDAL_RENDERS = [render0, render1, render2, render3];
 
 /** Real numbers from the saved demo analysis, for the pinned process story. */
 function storyData(version: ProjectVersion): StoryData {
@@ -36,7 +42,8 @@ function storyData(version: ProjectVersion): StoryData {
       const shop = getShopById(m.shopId);
       return { name: shop?.name ?? m.shopId, neighborhood: shop?.neighborhood ?? "", machine: m.matchedMachine.model, idle: m.idleBoost };
     }),
-    frames: (version.analysis?.storyboard ?? []).map((f) => ({ seconds: f.seconds, voiceover: f.voiceover })),
+    frames: (version.analysis?.storyboard ?? []).map((f) => ({ seconds: f.seconds, visual: f.visual, voiceover: f.voiceover })),
+    renders: PEDAL_RENDERS,
   };
 }
 

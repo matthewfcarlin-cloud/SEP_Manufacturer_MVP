@@ -171,6 +171,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
             {version.analysis && <RunAnalysisButton projectId={project.id} version={version.number} variant="secondary" />}
           </div>
         </div>
+        <AiBudgetNote />
         {version.analysis ? (
           <AnalysisResults
             analysis={version.analysis}
@@ -186,7 +187,6 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
               that are idle at local shops this month.
             </p>
             <RunAnalysisButton projectId={project.id} version={version.number} />
-            <AiBudgetNote />
           </div>
         )}
       </section>
