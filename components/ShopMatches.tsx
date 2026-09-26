@@ -1,13 +1,42 @@
 import { DemoBadge, IdleBadge } from "@/components/Badges";
 import { PROCESS_LABELS } from "@/lib/processes";
 import { getShopById } from "@/lib/shops";
-import type { ShopMatch } from "@/lib/types";
+import { specSummaryFor, type SpecSummary } from "@/lib/specSummary";
+import type { ProjectVersion, ShopMatch } from "@/lib/types";
 
 // Labels by position: lib/match.ts emits reasons in this order, and
 // lib/match.test.ts fails if that order changes.
 const REASON_LABELS = ["Process", "Part size", "Material", "Order size", "Capacity"];
 
-export function ShopMatches({ matches }: { matches: ShopMatch[] }) {
+function SpecShared({ spec }: { spec: SpecSummary }) {
+  const rows: [string, string][] = [
+    ["Size", spec.size],
+    ["Material", spec.material],
+    ["Quantity", spec.quantity],
+    ["Process", spec.process],
+  ];
+  return (
+    <details className="rounded-xl border border-line bg-bg/60 p-4 text-sm">
+      <summary className="cursor-pointer font-semibold">
+        What this shop would see <span className="font-normal text-muted">· spec summary only</span>
+      </summary>
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <dt className="eyebrow text-muted">{k}</dt>
+            <dd className="font-mono text-xs">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 text-xs text-muted">
+        A quote request would carry only these four facts, not your file, photos or notes, until you choose to share more. This shop is
+        fictional demo data, so nothing is sent.
+      </p>
+    </details>
+  );
+}
+
+export function ShopMatches({ matches, version }: { matches: ShopMatch[]; version: ProjectVersion }) {
   return (
     <section aria-labelledby="shop-matches-heading" className="flex flex-col gap-4 border-t border-line pt-8">
       <div>
@@ -54,6 +83,7 @@ export function ShopMatches({ matches }: { matches: ShopMatch[] }) {
                     ))}
                   </ul>
                 </div>
+                <SpecShared spec={specSummaryFor(version, match.matchedMachine.type)} />
                 {match.requiredTweaks.length > 0 && (
                   <div>
                     <h4 className="mb-1 text-sm font-semibold">Suggested changes for this shop</h4>

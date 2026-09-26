@@ -104,6 +104,10 @@ export function Hero({ shops, machines, idle, exampleHref }: Props) {
                 </Link>
               )}
             </div>
+            <Link href="/privacy" className="eyebrow flex items-center gap-2 text-night-muted hover:text-night-ink">
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-night-idle" />
+              Private by default · your CAD file is never sent to the AI
+            </Link>
           </motion.div>
         </div>
 

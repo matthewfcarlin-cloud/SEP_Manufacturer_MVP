@@ -4,6 +4,7 @@ const LINKS = [
   { href: "/new", label: "Start a project" },
   { href: "/projects", label: "Projects" },
   { href: "/shops", label: "Shops" },
+  { href: "/privacy", label: "Privacy" },
 ];
 
 export function SiteFooter() {
@@ -27,7 +28,7 @@ export function SiteFooter() {
           Idlefit
         </p>
         <p className="eyebrow text-night-muted">
-          Club MVP · Costs are AI estimates · Every shop listed is fictional demo data
+          Club MVP · Private by default · Costs are AI estimates · Every shop listed is fictional demo data
         </p>
       </div>
     </footer>

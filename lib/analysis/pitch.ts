@@ -1,3 +1,4 @@
+import { notesForAi, resolveAiInputs } from "../aiInputs";
 import { buildBusinessCase } from "../businessCase";
 import { formatToolingRange, formatUnitCostRange } from "../format";
 import { buildIterationStory } from "../iterationStory";
@@ -23,7 +24,7 @@ function economicsLine(version: ProjectVersion): string {
 
 /** Everything the pitch writer needs, for the version being pitched. */
 export function buildPitchBrief(project: Project, version: ProjectVersion): string {
-  const lines = [`Product: ${project.name}`, "", "What the inventor says it is:", version.notes.trim() || "(no notes given)"];
+  const lines = [`Product: ${project.name}`, "", "What the inventor says it is:", notesForAi(version)];
   const analysis = version.analysis;
   if (analysis) {
     const best = analysis.paths[0];
@@ -39,7 +40,13 @@ export function buildPitchBrief(project: Project, version: ProjectVersion): stri
 
   const story = buildIterationStory(project).filter((s) => s.to <= version.number);
   if (story.length) {
-    lines.push("", "Design history:", ...story.map((s) => `- v${s.from} → v${s.to}: ${s.change ?? "revised"}. Result: ${s.summary}`));
+    // A change note is the inventor's own words; an applied tweak is the AI's.
+    const describe = (step: (typeof story)[number]) => {
+      const to = project.versions.find((v) => v.number === step.to);
+      if (to?.appliedTweak) return to.appliedTweak.change;
+      return to && resolveAiInputs(to).includeNotes ? (step.change ?? "revised") : "revised";
+    };
+    lines.push("", "Design history:", ...story.map((s) => `- v${s.from} → v${s.to}: ${describe(s)}. Result: ${s.summary}`));
   }
   lines.push("", "Write the pitch.");
   return lines.join("\n");

@@ -5,6 +5,7 @@ import { formatToolingRange, formatUnitCostRange } from "../format";
 import { PROCESS_LABELS } from "../processes";
 import type { GeometryStats, Project, ProjectVersion } from "../types";
 import { getVersion } from "../versions";
+import { changeNoteForAi, notesForAi } from "../aiInputs";
 
 export function buildSystemPrompt(capacitySummary: string): string {
   return `You are a veteran manufacturing engineer and product developer. You have spent thirty years taking products from sketch to production in Los Angeles job shops: CNC, 3D printing, urethane casting, injection molding, sheet metal, and laser cutting. You are advising an independent inventor or small hardware team who has uploaded a part.
@@ -56,7 +57,8 @@ function revisionBlock(project: Project, version: ProjectVersion): string {
   const base = getVersion(project, version.basedOn);
   const best = base?.analysis?.paths[0];
   const lines = [`Revision: this is version ${version.number}, revised from version ${version.basedOn}.`];
-  if (version.changeNote) lines.push(`What the inventor changed: ${version.changeNote}`);
+  const changeNote = changeNoteForAi(version);
+  if (changeNote) lines.push(`What the inventor changed: ${changeNote}`);
   if (version.appliedTweak) {
     const t = version.appliedTweak;
     lines.push(`It applies your earlier suggested tweak for ${PROCESS_LABELS[t.process]}: "${t.change}" (expected impact: ${t.impact})`);
@@ -90,7 +92,7 @@ export function buildProjectBrief(project: Project, version: ProjectVersion, ima
   return `Project: ${project.name}
 
 What the inventor says it is:
-${version.notes.trim() || "(no notes given)"}
+${notesForAi(version)}
 
 Target quantity: ${version.targetQuantity.toLocaleString("en-US")} units
 Budget: ${version.budgetUsd !== undefined ? `$${version.budgetUsd.toLocaleString("en-US")}` : "not given"}

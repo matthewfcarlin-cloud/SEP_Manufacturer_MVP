@@ -5,6 +5,8 @@ import { connection } from "next/server";
 import { DEMO_PROJECTS } from "@/lib/demoProjects";
 import { formatUnitCostRange } from "@/lib/format";
 import { PROCESS_LABELS } from "@/lib/processes";
+import { currentOwnerKey } from "@/lib/access";
+import { accessFor } from "@/lib/ownerKey";
 import { listProjects } from "@/lib/projectStore";
 import { latestVersion } from "@/lib/versions";
 
@@ -15,7 +17,9 @@ const EXAMPLE_IDS = new Set<string>(DEMO_PROJECTS.map((d) => d.id));
 export default async function ProjectsPage() {
   // Read the project folder per request, so new uploads show up at once.
   await connection();
-  const projects = await listProjects();
+  // Only this browser's projects, plus the shared examples.
+  const ownerKey = await currentOwnerKey();
+  const projects = (await listProjects()).filter((p) => accessFor(p, ownerKey) !== "none");
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">

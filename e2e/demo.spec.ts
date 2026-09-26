@@ -1,6 +1,6 @@
-import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
 import { DEMO_PROJECTS } from "../lib/demoProjects";
 
 // The demo, end to end, against seeded projects (see global-setup.ts).
@@ -291,4 +291,140 @@ test("thin-wall toggle paints thin areas on the model", async ({ page }) => {
   const after = await redShare();
   expect(before).toBeLessThan(0.01);
   expect(after).toBeGreaterThan(0.05);
+});
+
+// ---------------------------------------------------------------------------
+// Privacy (Phase 9). Separate browser contexts are separate browsers: each
+// gets its own owner cookie.
+// ---------------------------------------------------------------------------
+
+async function createProjectIn(page: Page, name: string): Promise<string> {
+  await page.goto("/new");
+  await page.getByLabel("CAD file (STL or STEP)").setInputFiles("demo/charger-bracket.stl");
+  await page.getByLabel("Project name").fill(name);
+  await page.getByRole("button", { name: "Create project" }).click();
+  await expect(page).toHaveURL(/\/project\/[A-Za-z0-9_-]{10}$/);
+  return new URL(page.url()).pathname.split("/")[2];
+}
+
+async function otherBrowser(browser: Browser): Promise<Page> {
+  const context = await browser.newContext({ baseURL: test.info().project.use.baseURL });
+  return context.newPage();
+}
+
+test("a project is private to the browser that created it", async ({ page, browser }) => {
+  const id = await createProjectIn(page, "E2E private");
+  const stranger = await otherBrowser(browser);
+
+  expect((await stranger.goto(`/project/${id}`))!.status()).toBe(404);
+  expect((await stranger.goto(`/project/${id}/pitch`))!.status()).toBe(404);
+  expect((await stranger.request.get(`/api/files/${id}/model.stl`)).status()).toBe(404);
+  await stranger.goto("/projects");
+  await expect(stranger.getByText("E2E private")).toHaveCount(0);
+  // Examples stay open to everyone.
+  expect((await stranger.goto(`/project/${PEDAL.id}`))!.status()).toBe(200);
+
+  // The owner still sees everything.
+  expect((await page.request.get(`/api/files/${id}/model.stl`)).status()).toBe(200);
+  await stranger.context().close();
+});
+
+test("a share link works for anyone until it's turned off or revoked", async ({ page, browser }) => {
+  // Seeded bracket is an example (not shareable), so share a private copy of its analyzed pitch.
+  const id = "E2Eshare01";
+  const dir = path.join(".data", "projects", id);
+  await page.goto("/"); // get this browser's owner cookie
+  const cookie = (await page.context().cookies()).find((c) => c.name === "idlefit_owner")!;
+  const { createHash } = await import("node:crypto");
+  const demo = JSON.parse(await readFile(BRACKET.json, "utf8"));
+  const fix = (u: string) => u.replace(`/api/files/${BRACKET.id}/`, `/api/files/${id}/`);
+  const versions = demo.versions.map((v: { cadFileUrl: string; renders?: string[] }) => ({ ...v, cadFileUrl: fix(v.cadFileUrl), renders: v.renders?.map(fix) }));
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    path.join(dir, "project.json"),
+    JSON.stringify({ ...demo, id, isExample: undefined, owner: { keyHash: createHash("sha256").update(cookie.value).digest("hex") }, versions }),
+  );
+  for (const [name, source] of Object.entries(BRACKET.files)) await copyFile(source, path.join(dir, name));
+
+  const stranger = await otherBrowser(browser);
+  try {
+    await page.goto(`/project/${id}/pitch`);
+    await expect(page.getByText("Public link off")).toBeVisible();
+    await page.getByRole("button", { name: "Create share link" }).click();
+    const link = page.getByRole("textbox", { name: "Share link" });
+    await expect(link).toHaveValue(/\/p\/[A-Za-z0-9_-]{22}$/);
+    const first = new URL(await link.inputValue()).pathname;
+
+    await stranger.goto(first);
+    await expect(stranger.getByRole("heading", { name: "What we're looking for" })).toBeVisible();
+    await expect(stranger.locator("article figure img")).toHaveCount(4);
+    for (const src of await stranger.locator("article figure img").evaluateAll((imgs) => imgs.map((i) => (i as HTMLImageElement).src))) {
+      expect(src).toContain("/api/share/");
+    }
+    await expect(stranger.getByRole("button", { name: "Edit text" })).toHaveCount(0);
+    expect((await stranger.request.get(`/api/share/${first.split("/")[2]}/v2-model.stl`)).status()).toBe(404);
+    expect((await stranger.goto(`/project/${id}`))!.status()).toBe(404);
+
+    // Revoke: old link dies, new one works.
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Revoke and make a new link" }).click();
+    await expect(link).not.toHaveValue(new RegExp(`${first}$`));
+    const second = new URL(await link.inputValue()).pathname;
+    expect((await stranger.goto(first))!.status()).toBe(404);
+    expect((await stranger.goto(second))!.status()).toBe(200);
+
+    // Off: the link stops working.
+    await page.getByRole("button", { name: "Turn off link" }).click();
+    await expect(page.getByText("Public link off")).toBeVisible();
+    expect((await stranger.goto(second))!.status()).toBe(404);
+  } finally {
+    await stranger.context().close();
+    // The real delete also removes the share index; rm is the fallback if the test died early.
+    await page.request.delete(`/api/projects/${id}`);
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("what the AI sees shows the brief and can hold back notes", async ({ page }) => {
+  await createProjectIn(page, "E2E ai inputs");
+  const panel = page.locator("details", { hasText: "What the AI sees" });
+  await expect(panel.locator("pre")).toContainText("Geometry measured from the STL");
+  await expect(panel).toContainText("Your CAD file itself is never sent");
+  await panel.getByLabel("Send my notes").uncheck();
+  await expect(panel.locator("pre")).toContainText("(withheld by the inventor)");
+  await page.reload();
+  await expect(panel.getByLabel("Send my notes")).not.toBeChecked();
+});
+
+test("deleting a version and then the project removes their files", async ({ page }) => {
+  const id = await createProjectIn(page, "E2E delete me");
+  await page.getByRole("link", { name: "New version" }).click();
+  await page.getByLabel("CAD file (STL or STEP)").setInputFiles("demo/charger-bracket-sheet.stl");
+  await page.getByLabel("What changed?").fill("Bent sheet");
+  await page.getByRole("button", { name: "Create version" }).click();
+  await expect(page).toHaveURL(/\?v=2$/);
+  const dir = path.join(".data", "projects", id);
+
+  await page.getByText("Delete", { exact: true }).click();
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: "Delete v2" }).click();
+  await expect(page).toHaveURL(new RegExp(`/project/${id}$`));
+  await expect(page.getByRole("region", { name: /Versions/ })).toContainText("Versions · 1");
+  expect((await readdir(dir)).sort()).toEqual(["model.stl", "project.json"]);
+
+  const nameInput = page.getByLabel("Type the project name to delete everything");
+  if (!(await nameInput.isVisible())) await page.getByText("Delete", { exact: true }).click();
+  await nameInput.fill("E2E delete me");
+  await page.getByRole("button", { name: "Delete project" }).click();
+  await expect(page).toHaveURL(/\/projects$/);
+  await expect(readdir(dir)).rejects.toThrow();
+  expect((await page.goto(`/project/${id}`))!.status()).toBe(404);
+});
+
+test("examples can't be deleted or shared, even by the browser that opens them", async ({ page }) => {
+  await page.goto(`/project/${PEDAL.id}`);
+  await expect(page.getByText("Shared example.")).toBeVisible();
+  await expect(page.getByText("Type the project name to delete everything")).toHaveCount(0);
+  expect((await page.request.delete(`/api/projects/${PEDAL.id}`)).status()).toBe(403);
+  expect((await page.request.put(`/api/projects/${PEDAL.id}/share`, { data: { enabled: true } })).status()).toBe(403);
 });

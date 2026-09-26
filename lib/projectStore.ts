@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { copyFile, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { detectImageType, IMAGE_CONTENT_TYPES, type ImageType, type ProjectFields, type VersionFields } from "./projectInput";
 import { migrateProject } from "./projectMigration";
@@ -18,7 +18,7 @@ const FILE_NAME_PATTERN = /^(v[1-9]\d{0,3}-)?(model\.stl|image-[0-4]\.(jpg|png|w
 export const RENDER_COUNT = 4;
 export const MAX_RENDER_BYTES = 4 * 1024 * 1024;
 
-function dataRoot(): string {
+export function dataRoot(): string {
   return process.env.IDLEFIT_DATA_DIR ?? path.join(process.cwd(), ".data");
 }
 
@@ -52,7 +52,7 @@ type UploadedFiles = {
   images: { type: ImageType; bytes: Uint8Array }[];
 };
 
-export type NewProjectInput = UploadedFiles & { fields: ProjectFields };
+export type NewProjectInput = UploadedFiles & { fields: ProjectFields; ownerKeyHash: string };
 
 export type NewVersionInput = UploadedFiles & {
   fields: VersionFields;
@@ -96,6 +96,7 @@ export async function createProject(input: NewProjectInput): Promise<Project> {
     id,
     name: input.fields.name,
     createdAt,
+    owner: { keyHash: input.ownerKeyHash },
     versions: [
       {
         number: 1,
@@ -202,6 +203,49 @@ export async function getProject(id: string): Promise<Project | null> {
     throw new Error(`Project ${id} has a corrupt project.json: ${parsed.error.message}`);
   }
   return parsed.data;
+}
+
+/** File names in the project folder that belong to one version (from its own URLs). */
+function versionFileNames(version: ProjectVersion): string[] {
+  const urls = [version.cadFileUrl, ...version.imageUrls, ...(version.renders ?? [])].filter((u): u is string => Boolean(u));
+  return urls.map((url) => url.split("?")[0].split("/").pop() ?? "").filter((name) => FILE_NAME_PATTERN.test(name));
+}
+
+export type DeleteVersionResult = "deleted" | "only-version" | "not-found";
+
+/** Removes one version's entry and its files. The last version can't be deleted; delete the project instead. */
+export async function deleteVersion(id: string, number: number): Promise<DeleteVersionResult> {
+  if (!isValidProjectId(id)) return "not-found";
+  let result = "not-found" as DeleteVersionResult; // assigned inside the update callback
+  let removed: ProjectVersion | undefined;
+  await updateProject(id, (project) => {
+    removed = getVersion(project, number);
+    if (!removed) return project;
+    if (project.versions.length === 1) {
+      result = "only-version";
+      return project;
+    }
+    result = "deleted";
+    return { ...project, versions: project.versions.filter((v) => v.number !== number) };
+  });
+  if (result === "deleted" && removed) {
+    await Promise.all(versionFileNames(removed).map((name) => rm(path.join(projectDir(id), name), { force: true })));
+  }
+  return result;
+}
+
+/** Removes the project folder: project.json and every uploaded or generated file. False if it didn't exist. */
+export async function deleteProject(id: string): Promise<boolean> {
+  if (!isValidProjectId(id)) return false;
+  const dir = projectDir(id);
+  try {
+    await readdir(dir);
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return false;
+    throw err;
+  }
+  await rm(dir, { recursive: true, force: true });
+  return true;
 }
 
 export class RenderError extends Error {}

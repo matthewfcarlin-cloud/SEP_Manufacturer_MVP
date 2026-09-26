@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FormError, inputClass, PhotoPicker, StlPicker, useUploadFiles } from "@/components/upload/UploadPickers";
@@ -87,13 +88,18 @@ export function NewProjectForm() {
         </div>
 
         <details className="rounded-xl border border-line bg-surface px-4 py-3 text-sm">
-          <summary className="cursor-pointer font-medium">How your project data is used</summary>
-          <p className="mt-3 leading-relaxed text-muted">
-            Your files are stored with this project. When you ask for AI analysis, the project details,
-            geometry, notes, and selected photos are sent to this app&apos;s configured AI provider.
-            The demo shop directory does not receive your files. This MVP does not include NDA or
-            manufacturer file-sharing workflows.
-          </p>
+          <summary className="cursor-pointer font-medium">Private by default: what happens to your files</summary>
+          <ul className="mt-3 flex list-disc flex-col gap-1.5 pl-5 leading-relaxed text-muted">
+            <li>The project is private to this browser. Nobody else can open it unless you share a pitch link.</li>
+            <li>
+              When you ask for analysis, the AI (Anthropic&apos;s API) receives the name, notes, quantity, budget, material ideas,
+              photos and your part&apos;s measurements, never the CAD file itself.
+            </li>
+            <li>On the next page you can see exactly what gets sent, hold back photos or notes, and delete everything.</li>
+          </ul>
+          <Link href="/privacy" className="mt-3 inline-block underline">
+            How your data is handled
+          </Link>
         </details>
 
         <FormError message={error} />

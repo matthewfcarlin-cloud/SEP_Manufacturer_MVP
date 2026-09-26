@@ -1,3 +1,4 @@
+import { currentOwnerHash } from "@/lib/access";
 import { fail, ok } from "@/lib/api";
 import { parseProjectFields } from "@/lib/projectInput";
 import { createProject } from "@/lib/projectStore";
@@ -20,8 +21,12 @@ export async function POST(request: Request): Promise<Response> {
   const parts = await readUploadedParts(form, "api/projects");
   if (!parts.ok) return fail(parts.error, parts.status);
 
+  // proxy.ts gives every browser an owner key; without one the project would belong to no one.
+  const ownerKeyHash = await currentOwnerHash();
+  if (!ownerKeyHash) return fail("Enable cookies for this site: projects are private to the browser that creates them.", 400);
+
   try {
-    const project = await createProject({ fields: fields.data, ...parts.data });
+    const project = await createProject({ fields: fields.data, ...parts.data, ownerKeyHash });
     return ok({ id: project.id }, 201);
   } catch (err) {
     console.error("[api/projects] failed to save project", err);

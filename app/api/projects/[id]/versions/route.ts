@@ -1,6 +1,7 @@
 import { fail, ok } from "@/lib/api";
 import { parseVersionFields } from "@/lib/projectInput";
-import { addVersion, getProject } from "@/lib/projectStore";
+import { getAccessibleProject } from "@/lib/access";
+import { addVersion } from "@/lib/projectStore";
 import { resolveTweak } from "@/lib/tweaks";
 import { readTextFields, readUploadedParts } from "@/lib/uploadForm";
 import { getVersion, parseVersionParam } from "@/lib/versions";
@@ -21,7 +22,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
     return fail("Expected a multipart form upload.", 400);
   }
 
-  const project = await getProject(id);
+  const project = (await getAccessibleProject(id))?.project;
   if (!project) return fail("Project not found.", 404);
 
   const basedOnRaw = form.get("basedOn");

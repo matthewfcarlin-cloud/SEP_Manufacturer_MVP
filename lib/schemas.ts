@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AppliedTweak, Analysis, BusinessCaseInputs, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop } from "./types";
+import type { AiInputs, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -161,6 +161,16 @@ export const pitchVideoSchema = z.discriminatedUnion("status", [
   z.object({ status: z.literal("ready"), url: z.string().min(1), provider: z.string().min(1) }),
 ]) satisfies z.ZodType<PitchVideo>;
 
+export const aiInputsSchema = z.object({ includePhotos: z.boolean(), includeNotes: z.boolean() }) satisfies z.ZodType<AiInputs>;
+
+export const SHARE_TOKEN_PATTERN = /^[A-Za-z0-9_-]{22}$/;
+
+export const shareLinkSchema = z.object({
+  token: z.string().regex(SHARE_TOKEN_PATTERN),
+  enabled: z.boolean(),
+  createdAt: z.iso.datetime(),
+}) satisfies z.ZodType<ShareLink>;
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -179,6 +189,7 @@ export const projectVersionSchema = z.object({
   businessCase: businessCaseInputsSchema.optional(),
   pitch: pitchContentSchema.optional(),
   pitchVideo: pitchVideoSchema.optional(),
+  aiInputs: aiInputsSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({
@@ -191,6 +202,9 @@ export const projectSchema = z.object({
     .refine((vs) => vs.every((v, i) => i === 0 || v.number > vs[i - 1].number), {
       message: "versions must be in ascending order with unique numbers",
     }),
+  owner: z.object({ keyHash: z.string().regex(/^[0-9a-f]{64}$/) }).optional(),
+  isExample: z.literal(true).optional(),
+  share: shareLinkSchema.optional(),
 }) satisfies z.ZodType<Project>;
 
 // ---------------------------------------------------------------------------

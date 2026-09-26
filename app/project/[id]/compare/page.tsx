@@ -5,14 +5,14 @@ import { PageHeader } from "@/components/PageHeader";
 import { ModelViewer } from "@/components/viewer";
 import { compareVersions, summarizeVersion, type DeltaRow, type Direction } from "@/lib/compare";
 import { matchVersion } from "@/lib/match";
-import { getProject } from "@/lib/projectStore";
+import { getAccessibleProject } from "@/lib/access";
 import { getShopById } from "@/lib/shops";
 import type { Project, ProjectVersion } from "@/lib/types";
 import { getVersion, parseVersionParam } from "@/lib/versions";
 
 export async function generateMetadata(props: PageProps<"/project/[id]/compare">): Promise<Metadata> {
   const { id } = await props.params;
-  const project = await getProject(id);
+  const project = (await getAccessibleProject(id))?.project;
   return { title: project ? `Compare versions · ${project.name}` : "Project not found" };
 }
 
@@ -97,7 +97,7 @@ function VersionPane({ projectId, version }: { projectId: string; version: Proje
 
 export default async function ComparePage(props: PageProps<"/project/[id]/compare">) {
   const { id } = await props.params;
-  const project = await getProject(id);
+  const project = (await getAccessibleProject(id))?.project;
   if (!project) notFound();
 
   const header = (

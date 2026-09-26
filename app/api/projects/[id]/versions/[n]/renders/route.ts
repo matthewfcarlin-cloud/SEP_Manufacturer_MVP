@@ -1,3 +1,4 @@
+import { getAccessibleProject } from "@/lib/access";
 import { fail, ok } from "@/lib/api";
 import { RENDER_COUNT, RenderError, saveVersionRenders } from "@/lib/projectStore";
 import { parseVersionParam } from "@/lib/versions";
@@ -7,6 +8,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
   const { id, n } = await ctx.params;
   const version = parseVersionParam(n);
   if (version === null) return fail("Version not found.", 404);
+  if (!(await getAccessibleProject(id))) return fail("Project not found.", 404);
 
   let form: FormData;
   try {

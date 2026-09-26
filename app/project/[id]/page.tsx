@@ -8,16 +8,20 @@ import { PageHeader } from "@/components/PageHeader";
 import { ProjectViewer } from "@/components/viewer/ProjectViewer";
 import { formatNumber, formatUsd } from "@/lib/format";
 import { matchVersion } from "@/lib/match";
-import { getProject } from "@/lib/projectStore";
+import { getAccessibleProject } from "@/lib/access";
 import { ShopMatches } from "@/components/ShopMatches";
 import { BusinessCasePanel } from "@/components/businessCase/BusinessCasePanel";
 import { VersionTimeline } from "@/components/versions/VersionTimeline";
+import { AiInputsPanel } from "@/components/privacy/AiInputsPanel";
+import { DangerZone } from "@/components/privacy/DangerZone";
+import { resolveAiInputs } from "@/lib/aiInputs";
+import { buildProjectBrief } from "@/lib/analysis/prompt";
 import type { ProjectVersion } from "@/lib/types";
 import { getVersion, latestVersion, parseVersionParam } from "@/lib/versions";
 
 export async function generateMetadata(props: PageProps<"/project/[id]">): Promise<Metadata> {
   const { id } = await props.params;
-  const project = await getProject(id);
+  const project = (await getAccessibleProject(id))?.project;
   return { title: project?.name ?? "Project not found" };
 }
 
@@ -50,13 +54,15 @@ function RevisionNote({ version }: { version: ProjectVersion }) {
 
 export default async function ProjectPage(props: PageProps<"/project/[id]">) {
   const { id } = await props.params;
-  const project = await getProject(id);
-  if (!project) notFound();
+  const found = await getAccessibleProject(id);
+  if (!found) notFound();
+  const { project, access } = found;
   const { v } = await props.searchParams;
   const requested = parseVersionParam(v);
   const version = requested === null ? latestVersion(project) : getVersion(project, requested);
   if (!version) notFound();
   const shopMatches = matchVersion(version);
+  const aiInputs = resolveAiInputs(version);
 
   const created = new Date(version.createdAt).toLocaleDateString("en-US", {
     month: "short",
@@ -78,6 +84,13 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
         }
         title={project.name}
       />
+
+      {access === "example" && (
+        <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-muted">
+          <span className="font-semibold text-ink">Shared example.</span> Anyone can open and try this demo project, and changes are
+          visible to everyone. Your own projects are private to your browser.
+        </p>
+      )}
 
       <VersionTimeline project={project} selected={version.number} />
       <RevisionNote version={version} />
@@ -138,6 +151,15 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
         </section>
       )}
 
+      <AiInputsPanel
+        projectId={project.id}
+        version={version.number}
+        inputs={aiInputs}
+        briefText={buildProjectBrief(project, version, aiInputs.includePhotos ? version.imageUrls.length : 0)}
+        photoUrls={version.imageUrls}
+        isOpen={!version.analysis}
+      />
+
       <section aria-labelledby="analysis-heading" className="flex flex-col gap-4 border-t border-line pt-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 id="analysis-heading" className="display-type text-[clamp(2rem,4vw,3.25rem)]">
@@ -162,11 +184,6 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
               ways to make it with estimated costs, lead times, and design tweaks, favoring machines
               that are idle at local shops this month.
             </p>
-            <p className="max-w-2xl rounded-lg bg-surface p-4 text-sm text-muted">
-              <span className="font-semibold text-ink">Privacy before analysis. </span>
-              Your project details, geometry, notes, and photos are sent to this app&apos;s configured
-              AI provider when you run analysis. The demo shops do not receive your files.
-            </p>
             <RunAnalysisButton projectId={project.id} version={version.number} />
           </div>
         )}
@@ -181,7 +198,10 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
           initial={version.businessCase}
         />
       )}
-      {version.analysis && <ShopMatches matches={shopMatches} />}
+      {version.analysis && <ShopMatches matches={shopMatches} version={version} />}
+      {access === "owner" && (
+        <DangerZone projectId={project.id} projectName={project.name} version={version.number} versionCount={project.versions.length} />
+      )}
     </div>
   );
 }

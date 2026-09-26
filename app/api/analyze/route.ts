@@ -2,6 +2,7 @@ import { z } from "zod";
 import { fail, ok } from "@/lib/api";
 import { callClaude, isClaudeConfigured } from "@/lib/analysis/claude";
 import { buildProjectBrief } from "@/lib/analysis/prompt";
+import { imagesToSend } from "@/lib/aiInputs";
 import { aiFailure } from "@/lib/analysis/errors";
 import { runAnalysis } from "@/lib/analysis/run";
 import { getVersionImages, updateVersion } from "@/lib/projectStore";
@@ -27,7 +28,7 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   try {
-    const images = await getVersionImages(project.id, version);
+    const images = await imagesToSend(version, () => getVersionImages(project.id, version));
     const analysis: Analysis = await runAnalysis(callClaude, {
       images,
       text: buildProjectBrief(project, version, images.length),

@@ -7,7 +7,18 @@ export type Project = {
   createdAt: string;
   /** Ascending by number and never empty (added in Phase 6). */
   versions: ProjectVersion[];
+  /** The browser that owns it: a SHA-256 hash of its owner cookie (Phase 9). Absent on examples. */
+  owner?: { keyHash: string };
+  /** A shared demo anyone can open and edit, but not delete. */
+  isExample?: true;
+  /** Public pitch link. Off by default; the owner can turn it off or rotate the token. */
+  share?: ShareLink;
 };
+
+export type ShareLink = { token: string; enabled: boolean; createdAt: string };
+
+/** What the owner lets the AI see for a version. Absent means everything. */
+export type AiInputs = { includePhotos: boolean; includeNotes: boolean };
 
 /** One iteration of a product idea: its own file, photos, brief, and analysis. */
 export type ProjectVersion = {
@@ -35,6 +46,8 @@ export type ProjectVersion = {
   pitch?: PitchContent;
   /** Slot for a generated pitch video; nothing generates one yet. */
   pitchVideo?: PitchVideo;
+  /** Photos and notes can be withheld from every AI call (Phase 9). */
+  aiInputs?: AiInputs;
 };
 
 export type PitchContent = {

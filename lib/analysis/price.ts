@@ -1,3 +1,4 @@
+import { notesForAi } from "../aiInputs";
 import { formatDimensions } from "../format";
 import { priceSuggestionSchema } from "../schemas";
 import type { PriceSuggestion, Project, ProjectVersion } from "../types";
@@ -18,7 +19,7 @@ Price it from the market, not from what it costs to make: what do similar produc
 
 /** The product description the pricing model sees. Manufacturing costs are left out on purpose. */
 export function buildPriceBrief(project: Project, version: ProjectVersion): string {
-  const lines = [`Product: ${project.name}`, "", "What the inventor says it is:", version.notes.trim() || "(no notes given)"];
+  const lines = [`Product: ${project.name}`, "", "What the inventor says it is:", notesForAi(version)];
   // Features only: the analysis summary is written to carry a manufacturing
   // takeaway (often a cost), which would anchor the price to cost-plus.
   if (version.analysis) lines.push("", `Features: ${version.analysis.detectedFeatures.join("; ")}`);

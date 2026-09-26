@@ -1,8 +1,8 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { addVersion, createProject, getProject, listProjects, readProjectFile, RenderError, saveVersionRenders, updateVersion } from "./projectStore";
+import { addVersion, createProject as createOwnedProject, deleteProject, deleteVersion, type NewProjectInput, getProject, listProjects, readProjectFile, RenderError, saveVersionRenders, updateVersion } from "./projectStore";
 import type { GeometryStats } from "./types";
 
 const geometry: GeometryStats = {
@@ -13,6 +13,9 @@ const geometry: GeometryStats = {
   isWatertight: true,
   thinWallWarning: false,
 };
+
+const OWNER_HASH = "a".repeat(64);
+const createProject = (input: Omit<NewProjectInput, "ownerKeyHash">) => createOwnedProject({ ...input, ownerKeyHash: OWNER_HASH });
 
 let dir: string;
 beforeAll(async () => {
@@ -37,6 +40,7 @@ describe("projectStore", () => {
 
     expect(created.id).toMatch(/^[A-Za-z0-9_-]{10}$/);
     expect(created.versions).toHaveLength(1);
+    expect(created.owner).toEqual({ keyHash: OWNER_HASH });
     const [v1] = created.versions;
     expect(v1.number).toBe(1);
     expect(v1.cadFileUrl).toBe(`/api/files/${created.id}/model.stl`);
@@ -169,6 +173,41 @@ describe("projectStore", () => {
     await expect(saveVersionRenders(created.id, 1, [png, png, png, new Uint8Array([0xff, 0xd8, 0xff])])).rejects.toThrow(/PNG/);
     expect(await saveVersionRenders(created.id, 9, [png, png, png, png])).toBeNull();
     expect(await readProjectFile(created.id, "v9-render-0.png")).toBeNull();
+  });
+
+  test("deleting a version removes its files and entry, and leaves the rest", async () => {
+    const jpg = new Uint8Array([0xff, 0xd8, 0xff, 1]);
+    const created = await createProject({ fields: { name: "D", notes: "", targetQuantity: 1, materialHints: [] }, stl: new Uint8Array([1]), geometry, images: [{ type: "jpg", bytes: jpg }] });
+    await addVersion(created.id, {
+      fields: { notes: "", targetQuantity: 1, materialHints: [], changeNote: "v2" },
+      stl: new Uint8Array([2]),
+      geometry,
+      images: [],
+      basedOn: 1,
+      keepPhotosFrom: created.versions[0],
+    });
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    await saveVersionRenders(created.id, 1, [png, png, png, png]);
+
+    expect(await deleteVersion(created.id, 1)).toBe("deleted");
+    const files = await readdir(path.join(dir, "projects", created.id));
+    expect(files.sort()).toEqual(["project.json", "v2-image-0.jpg", "v2-model.stl"]);
+    expect((await getProject(created.id))?.versions.map((v) => v.number)).toEqual([2]);
+  });
+
+  test("refuses to delete the only version", async () => {
+    const created = await createProject({ fields: { name: "D", notes: "", targetQuantity: 1, materialHints: [] }, stl: new Uint8Array([1]), geometry, images: [] });
+    expect(await deleteVersion(created.id, 1)).toBe("only-version");
+    expect(await deleteVersion(created.id, 5)).toBe("not-found");
+    expect(await readProjectFile(created.id, "model.stl")).not.toBeNull();
+  });
+
+  test("deleting a project removes its folder entirely", async () => {
+    const created = await createProject({ fields: { name: "D", notes: "", targetQuantity: 1, materialHints: [] }, stl: new Uint8Array([1]), geometry, images: [] });
+    expect(await deleteProject(created.id)).toBe(true);
+    await expect(access(path.join(dir, "projects", created.id))).rejects.toThrow();
+    expect(await getProject(created.id)).toBeNull();
+    expect(await deleteProject(created.id)).toBe(false);
   });
 
   test("lists projects newest first and skips corrupt folders", async () => {

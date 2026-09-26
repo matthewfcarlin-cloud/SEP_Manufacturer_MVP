@@ -2,6 +2,7 @@
   "id": "yAeM9-RDOE",
   "name": "Fuzz pedal enclosure",
   "createdAt": "2026-09-26T05:50:52.420Z",
+  "isExample": true,
   "versions": [
     {
       "number": 1,

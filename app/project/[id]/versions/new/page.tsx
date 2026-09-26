@@ -3,20 +3,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/PageHeader";
 import { PROCESS_LABELS } from "@/lib/processes";
-import { getProject } from "@/lib/projectStore";
+import { getAccessibleProject } from "@/lib/access";
 import { listTweaks } from "@/lib/tweaks";
 import { getVersion, latestVersion, nextVersionNumber, parseVersionParam } from "@/lib/versions";
 import { NewVersionForm, type TweakChoice } from "./NewVersionForm";
 
 export async function generateMetadata(props: PageProps<"/project/[id]/versions/new">): Promise<Metadata> {
   const { id } = await props.params;
-  const project = await getProject(id);
+  const project = (await getAccessibleProject(id))?.project;
   return { title: project ? `New version · ${project.name}` : "Project not found" };
 }
 
 export default async function NewVersionPage(props: PageProps<"/project/[id]/versions/new">) {
   const { id } = await props.params;
-  const project = await getProject(id);
+  const project = (await getAccessibleProject(id))?.project;
   if (!project) notFound();
   const { from, tweak } = await props.searchParams;
   const requested = parseVersionParam(from);
