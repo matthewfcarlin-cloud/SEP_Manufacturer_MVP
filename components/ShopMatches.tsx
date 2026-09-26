@@ -44,7 +44,7 @@ export function ShopMatches({ matches }: { matches: ShopMatch[] }) {
                 </div>
                 {match.requiredTweaks.length > 0 && (
                   <div>
-                    <h4 className="mb-1 text-sm font-semibold">Required tweaks</h4>
+                    <h4 className="mb-1 text-sm font-semibold">Suggested changes for this shop</h4>
                     <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-muted">
                       {match.requiredTweaks.map((tweak) => <li key={tweak}>{tweak}</li>)}
                     </ul>

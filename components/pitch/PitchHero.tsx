@@ -2,8 +2,9 @@
 
 import { useCallback, useState } from "react";
 import { ModelViewer } from "@/components/viewer";
+import { RENDER_ANGLES, STUDIO_BACKDROP } from "@/components/viewer/renderAngles";
 
-const CAPTIONS = ["Front", "Right", "Back", "Left"];
+const CAPTIONS = RENDER_ANGLES.map((a) => a.label);
 
 export function PitchHero({ projectName, cadFileUrl }: { projectName: string; cadFileUrl?: string }) {
   const [renders, setRenders] = useState<string[]>([]);
@@ -35,10 +36,10 @@ export function PitchHero({ projectName, cadFileUrl }: { projectName: string; ca
               className="h-[480px] w-full"
             />
           )}
-          {renders.length === 4 ? (
+          {renders.length === CAPTIONS.length ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
               {renders.map((render, index) => (
-                <figure key={CAPTIONS[index]} className="overflow-hidden rounded-xl border border-line bg-[#f6f4ef]">
+                <figure key={CAPTIONS[index]} className="overflow-hidden rounded-xl border border-line" style={{ background: STUDIO_BACKDROP }}>
                   {/* These images are captured locally from the project's own WebGL canvas. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={render} alt={`${projectName}, ${CAPTIONS[index].toLowerCase()} view`} className="aspect-[4/3] w-full object-cover" />
@@ -47,7 +48,7 @@ export function PitchHero({ projectName, cadFileUrl }: { projectName: string; ca
               ))}
             </div>
           ) : !renderFailed && (
-            <div className="grid min-h-64 place-items-center rounded-xl border border-line bg-[#f6f4ef] text-sm text-muted">
+            <div className="grid min-h-64 place-items-center rounded-xl border border-line bg-surface text-sm text-muted">
               Preparing studio renders…
             </div>
           )}

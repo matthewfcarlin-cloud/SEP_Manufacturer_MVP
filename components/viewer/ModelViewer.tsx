@@ -3,7 +3,10 @@
 import { Bounds, Center, ContactShadows, OrbitControls } from "@react-three/drei";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Box3, PerspectiveCamera, Sphere, Spherical, Vector3 } from "three";
+import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import { RENDER_ANGLES, STUDIO_BACKDROP } from "./renderAngles";
 
 export type ModelViewerProps = {
   url: string;
@@ -33,7 +36,7 @@ function Part({ url, onReady }: { url: string; onReady: () => void }) {
       <Bounds fit clip observe margin={1.4}>
         <Center top>
           {/* STL is Z-up; three.js is Y-up. */}
-          <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]}>
+          <mesh name={PART_NAME} geometry={geometry} rotation={[-Math.PI / 2, 0, 0]}>
             <meshStandardMaterial color="#b9bec6" metalness={0.25} roughness={0.42} />
           </mesh>
         </Center>
@@ -70,6 +73,71 @@ class ViewerErrorBoundary extends Component<
   }
 }
 
+const PART_NAME = "idlefit-part";
+/** Extra room around the part's bounding sphere in pitch renders. */
+const RENDER_MARGIN = 1.1;
+/** Lets a visible tab draw a few frames (contact shadow) before capture. */
+const CAPTURE_DELAY_MS = 400;
+
+/**
+ * Lives inside the Canvas (r3f hooks throw anywhere else). Once the part has
+ * loaded, frames the camera on the part's bounding sphere for each studio
+ * angle, renders synchronously, and hands back PNG data URLs. It does not
+ * depend on animation frames, so it also works in a background tab, where
+ * requestAnimationFrame is paused and <Bounds> never finishes fitting.
+ */
+function RenderCapture({
+  ready,
+  onRenders,
+  onError,
+}: {
+  ready: boolean;
+  onRenders: (renders: string[]) => void;
+  onError?: () => void;
+}) {
+  const { gl, scene, camera } = useThree();
+  const controls = useThree((state) => state.controls) as OrbitControlsImpl | null;
+  const done = useRef(false);
+
+  useEffect(() => {
+    if (!ready || done.current) return;
+    const timer = setTimeout(() => {
+      const part = scene.getObjectByName(PART_NAME);
+      if (!part || !(camera instanceof PerspectiveCamera)) return;
+      done.current = true;
+
+      const sphere = new Box3().setFromObject(part).getBoundingSphere(new Sphere());
+      const halfFov = (camera.fov * Math.PI) / 360;
+      const distance = (sphere.radius / Math.sin(halfFov)) * RENDER_MARGIN;
+      const home = { position: camera.position.clone(), target: controls?.target.clone() };
+
+      try {
+        const renders = RENDER_ANGLES.map(({ azimuth, polar }) => {
+          const offset = new Vector3().setFromSpherical(new Spherical(distance, polar, azimuth));
+          camera.position.copy(sphere.center).add(offset);
+          camera.lookAt(sphere.center);
+          camera.updateMatrixWorld();
+          gl.render(scene, camera);
+          return gl.domElement.toDataURL("image/png");
+        });
+        onRenders(renders);
+      } catch (error) {
+        console.error("[ModelViewer] couldn't capture pitch renders", error);
+        onError?.();
+      } finally {
+        camera.position.copy(home.position);
+        if (controls && home.target) {
+          controls.target.copy(home.target);
+          controls.update();
+        }
+      }
+    }, CAPTURE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [ready, gl, scene, camera, controls, onRenders, onError]);
+
+  return null;
+}
+
 // drei's <Html> can't be the Suspense fallback here: it mounts its own React
 // root, which React 19 refuses to unmount mid-render. A DOM overlay it is.
 function Scene({
@@ -87,36 +155,17 @@ function Scene({
 }) {
   const [ready, setReady] = useState(false);
   const markReady = useMemo(() => () => setReady(true), []);
-  const controls = useRef<React.ComponentRef<typeof OrbitControls>>(null);
-  const { gl, scene, camera } = useThree();
-
-  useEffect(() => {
-    if (!ready || !captureAngles || !onRenders || !controls.current) return;
-    const renders: string[] = [];
-    try {
-      for (const angle of [0, Math.PI / 2, Math.PI, (Math.PI * 3) / 2]) {
-        controls.current.setAzimuthalAngle(angle);
-        controls.current.update();
-        gl.render(scene, camera);
-        renders.push(gl.domElement.toDataURL("image/png"));
-      }
-    } catch (error) {
-      console.error("[ModelViewer] couldn't capture pitch render", error);
-      onRenderError?.();
-      return;
-    }
-    onRenders(renders);
-  }, [camera, captureAngles, gl, onRenderError, onRenders, ready, scene]);
 
   return (
     <>
       <Canvas
         dpr={[1, 2]}
+        // Needed so toDataURL() can read back what was drawn.
         gl={{ preserveDrawingBuffer: captureAngles }}
         camera={{ position: [160, 120, 200], fov: 35, near: 0.1, far: 20000 }}
         aria-label="3D view of the uploaded part. Drag to rotate, scroll to zoom."
       >
-        {captureAngles && <color attach="background" args={["#f6f4ef"]} />}
+        {captureAngles && <color attach="background" args={[STUDIO_BACKDROP]} />}
         <hemisphereLight args={["#ffffff", "#8d8a84", 1.2]} />
         <directionalLight position={[300, 500, 200]} intensity={2.4} />
         <directionalLight position={[-300, 200, -250]} intensity={0.8} />
@@ -124,7 +173,10 @@ function Scene({
         <Suspense fallback={null}>
           <Part url={url} onReady={markReady} />
         </Suspense>
-        <OrbitControls ref={controls} makeDefault autoRotate={autoRotate} autoRotateSpeed={1.4} />
+        <OrbitControls makeDefault autoRotate={autoRotate} autoRotateSpeed={1.4} />
+        {captureAngles && onRenders && (
+          <RenderCapture ready={ready} onRenders={onRenders} onError={onRenderError} />
+        )}
       </Canvas>
       {!ready && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-muted">

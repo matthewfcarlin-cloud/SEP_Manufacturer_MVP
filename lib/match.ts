@@ -3,6 +3,9 @@ import { PROCESS_LABELS } from "@/lib/processes";
 import type { Machine, Project, ShopMatch } from "@/lib/types";
 
 const SLIGHT_OVERAGE_RATIO = 0.15;
+const MAX_MATCHES = 5;
+
+type Dims = { x: number; y: number; z: number };
 
 /** Deterministically rank shop machines against a project's analyzed processes. */
 export function matchProject(project: Project): ShopMatch[] {
@@ -16,9 +19,7 @@ export function matchProject(project: Project): ShopMatch[] {
       for (const path of project.analysis.paths) {
         if (machine.type !== path.process) continue;
 
-        const dimensions = ["x", "y", "z"] as const;
-        const overages = dimensions.map((axis) => part[axis] / machine.envelopeMm[axis]);
-        const maxOverage = Math.max(...overages);
+        const maxOverage = envelopeOverage(part, machine.envelopeMm);
         if (maxOverage > 1 + SLIGHT_OVERAGE_RATIO) continue;
 
         const splitRequired = maxOverage > 1;
@@ -53,9 +54,11 @@ export function matchProject(project: Project): ShopMatch[] {
           score,
           matchedMachine: machine as Machine,
           reasons,
+          // The split is genuinely required to use this machine; the path's top
+          // design tweak is the one change we'd quote against ("fits with tweak X").
           requiredTweaks: [
             ...(splitRequired ? ["Split the part into sections that fit the machine envelope, then add alignment features for assembly."] : []),
-            ...path.designTweaks.map((tweak) => tweak.change),
+            ...path.designTweaks.slice(0, 1).map((tweak) => tweak.change),
           ],
           idleBoost: machine.idleThisMonth,
         });
@@ -63,7 +66,23 @@ export function matchProject(project: Project): ShopMatch[] {
     }
   }
 
-  return matches.sort((a, b) => b.score - a.score || a.shopId.localeCompare(b.shopId) || a.matchedMachine.model.localeCompare(b.matchedMachine.model)).slice(0, 5);
+  const ranked = [...matches].sort(
+    (a, b) => b.score - a.score || a.shopId.localeCompare(b.shopId) || a.matchedMachine.model.localeCompare(b.matchedMachine.model),
+  );
+  // One entry per shop (its best machine), so five matches means five shops.
+  const seen = new Set<string>();
+  return ranked.filter((m) => !seen.has(m.shopId) && seen.add(m.shopId)).slice(0, MAX_MATCHES);
+}
+
+/**
+ * Largest ratio of part size to envelope size, allowing the part to be
+ * rotated: both sets of dimensions are compared smallest-to-smallest.
+ * <= 1 means it fits.
+ */
+function envelopeOverage(part: Dims, envelope: Dims): number {
+  const p = [part.x, part.y, part.z].sort((a, b) => a - b);
+  const e = [envelope.x, envelope.y, envelope.z].sort((a, b) => a - b);
+  return Math.max(...p.map((dim, i) => dim / e[i]));
 }
 
 function normalize(value: string): string {
