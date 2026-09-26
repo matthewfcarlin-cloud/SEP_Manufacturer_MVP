@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "typecheck": "next typegen && tsc --noEmit",
-    "demo:stl": "node scripts/make-demo-stl.ts"
+    "demo:stl": "node scripts/make-demo-stl.ts",
+    "demo:seed": "node scripts/seed-demo.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
