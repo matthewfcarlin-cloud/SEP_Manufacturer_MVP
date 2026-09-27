@@ -1,5 +1,5 @@
 import { fail, ok } from "../api";
-import { getAccessibleProject } from "../access";
+import { getAccessibleProject, type AccessibleProject } from "../access";
 import { updateVersion } from "../projectStore";
 import type { Outreach, ProjectVersion } from "../types";
 import { getVersion, parseVersionParam } from "../versions";
@@ -7,13 +7,16 @@ import { PipelineError } from "./pipeline";
 
 /**
  * Applies a pure edit to a version's outreach under the project lock and
- * returns the saved outreach, or the error response (404 / 400).
+ * returns the saved outreach, or the error response (404 / 400). `after`
+ * adjusts the version in the same write (e.g. re-dating the plan); `onSaved`
+ * runs once it's saved (e.g. recording a learning event).
  */
 export async function editOutreach(
   id: string,
   n: string,
   edit: (outreach: Outreach) => Outreach,
   after: (version: ProjectVersion) => ProjectVersion = (v) => v,
+  onSaved?: (outreach: Outreach, ctx: { version: number; access: AccessibleProject["access"] }) => Promise<void>,
 ): Promise<Response> {
   const number = parseVersionParam(n);
   const found = number === null ? null : await getAccessibleProject(id);
@@ -22,7 +25,9 @@ export async function editOutreach(
   try {
     const saved = await updateVersion(id, number, (v) => (v.outreach ? after({ ...v, outreach: edit(v.outreach) }) : v));
     const outreach = saved && getVersion(saved, number)?.outreach;
-    return outreach ? ok(outreach) : fail("Version not found.", 404);
+    if (!outreach) return fail("Version not found.", 404);
+    await onSaved?.(outreach, { version: number, access: found.access });
+    return ok(outreach);
   } catch (err) {
     if (err instanceof PipelineError) return fail(err.message, 400);
     console.error("[outreach] update failed", err);

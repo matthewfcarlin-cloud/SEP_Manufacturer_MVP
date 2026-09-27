@@ -352,3 +352,42 @@ export type AiKeyInfo = { provider: "anthropic"; maskedKey: string; createdAt: s
 
 /** GET /api/usage: what pays for this browser's AI calls, for the header pill. */
 export type UsageSummary = { keySource: KeySource; maskedKey?: string; demoBudgetRemainingUsd: number };
+
+// Learning pipeline (BACKEND.md B1). Events log what creators do; outcomes
+// are ground truth (real quotes, costs, sales). Both hold structured fields
+// only: no free text, photos or files. `source` is decided by the server:
+// "real" only for the creator's own project and real data; examples and
+// anything built on simulated quotes are "demo", and learning never reads demo.
+export type LearningSource = "demo" | "real";
+
+export type ProductEventType =
+  | "analysis_run" | "tweak_applied" | "tweak_rated" | "quote_requested" | "quote_chosen"
+  | "plan_generated" | "listing_generated" | "listing_copied" | "agent_question" | "agent_rated";
+
+export type ProductEvent = {
+  id: string;
+  workspaceId: string; // owner-cookie hash of the browser that acted
+  projectId: string;
+  version?: number;
+  type: ProductEventType;
+  payload: Record<string, string | number | boolean>; // per-type schema in lib/learning/events.ts
+  source: LearningSource;
+  createdAt: string;
+};
+
+export type OutcomeKind = "real_quote" | "actual_unit_cost" | "units_sold" | "tweak_cost_delta";
+
+export type Outcome = {
+  id: string;
+  projectId: string;
+  version: number;
+  kind: OutcomeKind;
+  process?: Process;
+  material?: string; // one of the analysis path's materials, never free text
+  quantity?: number;
+  estimateUsd?: { low: number; high: number }; // the analysis's unit-cost range at `quantity`, computed server-side
+  actualUsd?: number; // per unit
+  value?: number; // units_sold: units
+  source: LearningSource;
+  createdAt: string;
+};

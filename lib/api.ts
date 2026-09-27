@@ -14,3 +14,12 @@ export function fail(error: string, status: number, code?: AiErrorCode): Respons
     status,
   });
 }
+
+/**
+ * True for a JSON body. Routes that change data on a cookie alone require it:
+ * a cross-site HTML form can't send JSON without a CORS preflight, which this
+ * app never grants.
+ */
+export function isJsonRequest(request: Request): boolean {
+  return request.headers.get("content-type")?.toLowerCase().startsWith("application/json") ?? false;
+}
