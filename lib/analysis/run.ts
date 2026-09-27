@@ -1,17 +1,9 @@
 import { analysisSchema, MAX_PATHS, storedAnalysisShape } from "../schemas";
 import type { Analysis } from "../types";
-import type { TurnUsage } from "../usage/pricing";
+import type { ModelTurn } from "../ai/types";
 
+export type { ModelTurn };
 export type ImageInput = { mediaType: "image/jpeg" | "image/png" | "image/webp"; base64: string };
-
-/** What one model call returns, stripped to what the retry loop needs. */
-export type ModelTurn = {
-  stopReason: string | null;
-  /** Parsed structured output, or null if the model produced none. */
-  output: unknown;
-  /** Token usage of the billed attempt, for the demo budget. Absent when unknown. */
-  usage?: TurnUsage;
-};
 
 /** Sends one user turn (images + text) and returns the model's structured answer. */
 export type CallModel = (input: { images: ImageInput[]; text: string }) => Promise<ModelTurn>;

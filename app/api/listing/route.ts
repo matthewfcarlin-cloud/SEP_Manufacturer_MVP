@@ -1,12 +1,11 @@
 import { z } from "zod";
 import { fail, ok } from "@/lib/api";
-import { callClaudeListing, isClaudeConfigured } from "@/lib/analysis/claude";
+import { isAiConfigured, textCaller } from "@/lib/analysis/callers";
 import { aiFailure } from "@/lib/analysis/errors";
 import { buildListingBrief, runListingDraft } from "@/lib/analysis/listing";
 import { updateVersion } from "@/lib/projectStore";
 import type { EtsyListing } from "@/lib/types";
 import { aiBudgetGate } from "@/lib/usage/gate";
-import { metered } from "@/lib/usage/metered";
 import { latestAnalyzedVersion } from "@/lib/versions";
 import { findVersion } from "@/lib/versionLookup";
 
@@ -23,12 +22,12 @@ export async function POST(request: Request): Promise<Response> {
   const { project, version } = found;
   if (!version.analysis) return fail("Analyze this version before writing its listing.", 422);
   if (!version.businessCase) return fail("Set a retail price in the business case first: the listing uses it.", 422);
-  if (!isClaudeConfigured()) return fail("AI writing isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
   const ownerHash = await aiBudgetGate("listing");
   if (ownerHash instanceof Response) return ownerHash;
+  if (!(await isAiConfigured(ownerHash))) return fail("AI writing isn't set up yet: add ANTHROPIC_API_KEY to .env.local, or your own key in Settings.", 503);
 
   try {
-    const draft = await runListingDraft(metered(callClaudeListing, ownerHash, "listing"), buildListingBrief(project, version));
+    const draft = await runListingDraft(textCaller("listing", ownerHash), buildListingBrief(project, version));
     const listing: EtsyListing = {
       ...draft,
       priceUsd: version.businessCase.retailPriceUsd,

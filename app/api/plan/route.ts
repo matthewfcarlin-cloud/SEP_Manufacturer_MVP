@@ -1,12 +1,11 @@
 import { z } from "zod";
 import { fail, ok } from "@/lib/api";
-import { callClaudePlan, isClaudeConfigured } from "@/lib/analysis/claude";
+import { isAiConfigured, textCaller } from "@/lib/analysis/callers";
 import { aiFailure } from "@/lib/analysis/errors";
 import { buildPlanBrief, runPlanDraft } from "@/lib/analysis/plan";
 import { buildPlan, productionFacts, todayIso } from "@/lib/plan/schedule";
 import { updateVersion } from "@/lib/projectStore";
 import { aiBudgetGate } from "@/lib/usage/gate";
-import { metered } from "@/lib/usage/metered";
 import { findVersion } from "@/lib/versionLookup";
 
 export const maxDuration = 120;
@@ -20,13 +19,13 @@ export async function POST(request: Request): Promise<Response> {
   const found = await findVersion(body.data.projectId, body.data.version);
   if (found instanceof Response) return found;
   if (!found.version.analysis) return fail("Analyze this version before planning its launch.", 422);
-  if (!isClaudeConfigured()) return fail("AI planning isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
   const ownerHash = await aiBudgetGate("plan");
   if (ownerHash instanceof Response) return ownerHash;
+  if (!(await isAiConfigured(ownerHash))) return fail("AI planning isn't set up yet: add ANTHROPIC_API_KEY to .env.local, or your own key in Settings.", 503);
 
   try {
     const facts = productionFacts(found.version);
-    const draft = await runPlanDraft(metered(callClaudePlan, ownerHash, "plan"), buildPlanBrief(found.project, found.version, facts));
+    const draft = await runPlanDraft(textCaller("plan", ownerHash), buildPlanBrief(found.project, found.version, facts));
     const plan = buildPlan(draft, found.version, new Date().toISOString(), todayIso());
     const saved = await updateVersion(found.project.id, found.version.number, (v) => ({ ...v, plan }));
     return saved ? ok(plan, 201) : fail("This version was removed while it was being planned.", 404);

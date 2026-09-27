@@ -307,3 +307,48 @@ export type AgentMessage = { role: "user" | "assistant"; content: string };
 
 /** The creator journey's six stages (Phase 10+). Derived from a product's data, never stored. */
 export type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell";
+
+/** What an AI call is for (BACKEND.md A1). The gateway routes model, effort and budget by task. */
+export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "plan" | "listing";
+
+/** Whose API key paid for a call: the creator's own (A2) or the house demo key. */
+export type KeySource = "user" | "house";
+
+/**
+ * One AI call, as metered by the gateway. Never holds prompt or response
+ * content. `workspaceId` is the browser's owner-cookie hash.
+ */
+export type UsageRecord = {
+  at: string;
+  workspaceId: string;
+  task: AiTask;
+  provider: "anthropic";
+  model: string; // the model that served the call (may be a fallback), or the routed model if it failed
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  estCostUsd: number;
+  keySource: KeySource;
+  latencyMs: number;
+  ok: boolean;
+  errorKind?: AiErrorKind;
+};
+
+/**
+ * Why an AI request failed, as the UI sees it (the `code` on an error response).
+ * - invalid_key: the provider rejected the key (the creator's, or the house key)
+ * - quota_exceeded: the key's account is rate-limited or out of credit
+ * - budget_exhausted: no key of their own and the demo budget is used up
+ * - provider_down: the provider is unreachable or returned an error
+ */
+export type AiErrorCode = "invalid_key" | "quota_exceeded" | "budget_exhausted" | "provider_down";
+
+/** Provider failures, normalized so nothing outside lib/ai/ needs the SDK's error classes. */
+export type AiErrorKind = Exclude<AiErrorCode, "budget_exhausted">;
+
+/** A workspace's saved AI key, as the API shows it: masked, never the key itself. */
+export type AiKeyInfo = { provider: "anthropic"; maskedKey: string; createdAt: string }; // maskedKey like "sk-ant-…7Q2f"
+
+/** GET /api/usage: what pays for this browser's AI calls, for the header pill. */
+export type UsageSummary = { keySource: KeySource; maskedKey?: string; demoBudgetRemainingUsd: number };

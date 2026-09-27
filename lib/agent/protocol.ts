@@ -1,7 +1,10 @@
 // The build agent streams newline-delimited JSON: text deltas, then "done"
 // or "error". Shared by the route and the chat panel.
 
-export type AgentEvent = { type: "text"; text: string } | { type: "done" } | { type: "error"; message: string };
+import type { AiErrorCode } from "../types";
+
+// `code` on an error is set for AI failures the UI handles specially (see AiErrorCode).
+export type AgentEvent = { type: "text"; text: string } | { type: "done" } | { type: "error"; message: string; code?: AiErrorCode };
 
 export function encodeAgentEvent(event: AgentEvent): string {
   return `${JSON.stringify(event)}\n`;
