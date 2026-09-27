@@ -14,7 +14,6 @@ const RIVALS: Rival[] = [
   { name: "AdamCAD · Zoo · Fusion", note: "design only", from: 0, to: 1 },
   { name: "Alibaba · Thomasnet", note: "directories: you find, vet and write", from: 2, to: 2 },
   { name: "Xometry · Craftcloud", note: "needs finished CAD", from: 2, to: 2 },
-  { name: "Printify", note: "catalog products only", from: 2, to: 5 },
   { name: "Shopify · Etsy · Kickstarter", note: "selling only", from: 4, to: 5 },
 ];
 
