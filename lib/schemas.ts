@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AiInputs, DemoQuote, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
+import type { AiInputs, Bom, DemoQuote, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -268,6 +268,44 @@ export const outreachSchema = z.object({
   chosenQuoteId: z.string().optional(),
 }) satisfies z.ZodType<Outreach>;
 
+// ---------------------------------------------------------------------------
+// Bill of materials. Stored shape only; the AI output schema and the edit
+// schema live in lib/bom/schemas.ts.
+// ---------------------------------------------------------------------------
+
+export const BOM_CATEGORIES = ["custom_part", "hardware", "electronics", "material", "finish", "packaging"] as const;
+export const BOM_UNITS = ["pc", "set", "g", "m", "ml"] as const;
+export const MAX_BOM_ITEMS = 40;
+export const BOM_ITEM_ID = /^[A-Za-z0-9_-]{8,16}$/;
+
+export const costRangeSchema = z
+  .object({ low: z.number().min(0).max(100_000), high: z.number().min(0).max(100_000) })
+  .refine((r) => r.low <= r.high, { message: "The low cost can't be above the high cost." });
+
+export const bomSchema = z.object({
+  process: processSchema,
+  generatedAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime().optional(),
+  items: z
+    .array(
+      z.object({
+        id: z.string().regex(BOM_ITEM_ID),
+        category: z.enum(BOM_CATEGORIES),
+        name: z.string().min(1),
+        spec: z.string(),
+        quantityPerProduct: z.number().positive(),
+        unit: z.enum(BOM_UNITS),
+        process: processSchema.optional(),
+        costPerProductUsd: costRangeSchema.optional(),
+        notes: z.string().optional(),
+        source: z.enum(["ai", "user"]),
+      }),
+    )
+    .max(MAX_BOM_ITEMS),
+  assumptions: z.array(z.string()),
+  editedByUser: z.boolean(),
+}) satisfies z.ZodType<Bom>;
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -289,6 +327,7 @@ export const projectVersionSchema = z.object({
   aiInputs: aiInputsSchema.optional(),
   sourcing: sourcingSchema.optional(),
   outreach: outreachSchema.optional(),
+  bom: bomSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({

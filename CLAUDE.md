@@ -49,6 +49,7 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `POST /api/sourcing/plan` `{ projectId, version, process? }` – AI plans the Alibaba search (search terms, supplier checks, RFQ email with subject); replaces the plan
 - `POST /api/sourcing/draft` `{ projectId, version, supplierId }` – AI drafts the next email (subject + body) to one supplier, saved as its unsent draft
 - `PUT /api/sourcing` `{ projectId, version, op }` – shortlist edits: add/update/remove supplier, paste a reply, save/discard a draft, mark a draft sent
+- `POST /api/bom` `{ projectId, version, process? }` – AI drafts the bill of materials (replaces it); `PUT /api/bom` `{ projectId, version, items }` – saves the user's edited lines (also starts one by hand)
 - `POST /api/agent` – build agent, streams NDJSON answer events (Phase 10)
 - `GET/POST/DELETE /api/settings/ai-key`, `POST /api/settings/ai-key/test`, `GET /api/usage` – bring your own key (see "Backend API contract")
 - `POST /api/events`, `POST/GET /api/outcomes` – feedback events and real-world outcomes for learning (see "Backend API contract")
@@ -92,6 +93,11 @@ type SourcingPlan = { process: Process; createdAt: string; searchTerms: string[]
 type Supplier = { id: string; name: string; email?: string; listingUrl?: string; status: "shortlisted" | "contacted" | "negotiating" | "agreed" | "dropped";
   quote?: { unitUsd?: number; moq?: number; toolingUsd?: number; leadDays?: number }; notes?: string; createdAt: string;
   messages: { id: string; from: "me" | "supplier"; subject?: string; text: string; state: "draft" | "sent"; at: string; aiDrafted?: boolean }[] }; // at most one draft, always last
+// BOM, on ProjectVersion: bom?: Bom (AI first draft, user-edited; feeds sourcing via lib/bom/sourcing.ts)
+type BomCategory = "custom_part" | "hardware" | "electronics" | "material" | "finish" | "packaging";
+type BomItem = { id: string; category: BomCategory; name: string; spec: string; quantityPerProduct: number; unit: "pc" | "set" | "g" | "m" | "ml";
+  process?: Process; costPerProductUsd?: { low: number; high: number }; notes?: string; source: "ai" | "user" }; // process only on custom parts; notes private
+type Bom = { process: Process; generatedAt: string; updatedAt?: string; items: BomItem[]; assumptions: string[]; editedByUser: boolean };
 type PitchContent = { oneLiner: string; problem: string; product: string; audience: string; ask: string; editedByUser: boolean };
 type PitchVideo = { status: "none" } | { status: "ready"; url: string; provider: string }; // nothing generates one yet
 
@@ -101,7 +107,7 @@ type AgentMessage = { role: "user" | "assistant"; content: string };
 type AppliedTweak = { fromVersion: number; process: Process; change: string; why: string; impact: string };
 
 // AI gateway (BACKEND.md A1): one metered row per AI call, never any prompt or response content
-type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation";
+type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "bom";
 type KeySource = "user" | "house";
 type AiErrorCode = "invalid_key" | "quota_exceeded" | "budget_exhausted" | "provider_down"; // `code` on AI error responses
 type AiErrorKind = Exclude<AiErrorCode, "budget_exhausted">;                                // provider failures (AiError.kind)
@@ -613,6 +619,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Stored data vs. AI rules: stored `priceSuggestion` is validated structurally only; the business rules (`priceSuggestionSchema`) gate new AI answers. Tightening a rule must never make saved projects unreadable.
 - Route lookups: API routes load `{ project, version }` with `findVersion()` from `lib/versionLookup.ts`.
 - Alibaba sourcing: Alibaba has no buyer API (its Open Platform is for sellers/ISVs) and its terms forbid automated access, so the app never searches or messages Alibaba. The AI plans the search and writes each message as an email with a subject (`lib/analysis/sourcing.ts`); the user sends it from their own email app ("Open in email" is a `mailto:` link from `lib/sourcing/email.ts`, to the supplier's stored email if any) or Alibaba chat, and marks it sent. The walk-away check covers the subject too. Negotiation numbers (open / aim / walk-away) come only from `negotiationTargets()` in `lib/sourcing/targets.ts` (analysis estimate, capped by a 30% margin when there's a business case). The walk-away is never put in a supplier message: the prompt forbids it and `runSupplierDraft` retries a draft that states it. The supplier comparison and "best pick" come only from `rankSuppliers()` in `lib/sourcing/compare.ts` (pure, no AI): all-in cost per needed part (MOQ overbuy + tooling spread over the target quantity), never a quote over the walk-away, and within 5% on price the shorter lead time wins. Shortlist edits are pure ops in `lib/sourcing/ops.ts`, saved under the project lock via `lib/sourcing/store.ts`. Supplier text is third-party input: it's fenced in the brief and the prompt ignores instructions in it. If a real integration is ever added, sending must stay an explicit per-message user action.
+- Bill of materials: `/project/[id]/make` shows `BomPanel` above the Alibaba section. The AI (`lib/analysis/bom.ts`, task `bom`, budget action `bom`) drafts lines from the analysis, notes and photos (through `lib/aiInputs.ts`); the chosen process's CAD part must be a `custom_part` line or the draft is retried. Pure helpers in `lib/bom/build.ts` (`bomFromAnswer`, `applyBomEdit`: untouched lines stay "ai", changed or new ones become "user"; `bomTotals`; `bomToCsv`, formula-safe, with a supplier copy that has no costs or notes). Sourcing reads the BOM only through `lib/bom/sourcing.ts`: `bomSourcingLines(version, { process? })` and `bomSpecText(version, { process? })`, spec-level only (never costs, notes or the product name).
 - Process names mid-sentence: `processInSentence()` ("injection molding", but "CNC milling").
 - Deploying (Railway): `railway.json` holds the build/start/healthcheck config. The service needs a volume (e.g. mounted at `/data`), `IDLEFIT_DATA_DIR=/data`, `ANTHROPIC_API_KEY`, and `KEY_ENCRYPTION_SECRET` (the server won't start without it). Optional: `IDLEFIT_BROWSER_BUDGET_USD` (default 3) and `IDLEFIT_DAILY_BUDGET_USD` (default 25) for the AI budget. The start command runs `demo:seed` first, so the examples are (re)installed on the volume at every deploy, which also resets any visitor edits to them. One volume means one replica; that's also what the in-process update lock in `projectStore` assumes.
 - Don't run `npm run build` while `next dev` runs from the same folder: the build rewrites `.next` and the dev server then 404s routes added since it started. Stop dev, build, restart.

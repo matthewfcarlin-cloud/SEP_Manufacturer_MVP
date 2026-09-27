@@ -52,6 +52,44 @@ export type ProjectVersion = {
   sourcing?: Sourcing;
   /** Quote requests to the matched local demo shops, and their simulated quotes (Phase 10+ build 3). */
   outreach?: Outreach;
+  /** Bill of materials: the AI's first draft, corrected by the user. Feeds supplier sourcing. */
+  bom?: Bom;
+};
+
+/** What kind of line a BOM item is. Only custom parts are made to the inventor's drawing; the rest are bought. */
+export type BomCategory = "custom_part" | "hardware" | "electronics" | "material" | "finish" | "packaging";
+
+export type BomUnit = "pc" | "set" | "g" | "m" | "ml";
+
+export type BomItem = {
+  id: string;
+  category: BomCategory;
+  /** "Enclosure body", "Button-head screw" */
+  name: string;
+  /** What a supplier needs to quote or pick it: material, size, standard, finish. */
+  spec: string;
+  /** Per finished product. */
+  quantityPerProduct: number;
+  unit: BomUnit;
+  /** How a custom part is made. Only on custom parts. */
+  process?: Process;
+  /** Estimated cost of this line for one finished product, at the target quantity. */
+  costPerProductUsd?: { low: number; high: number };
+  /** Private to the inventor; never sent to suppliers. */
+  notes?: string;
+  /** "ai" until the user changes the line. */
+  source: "ai" | "user";
+};
+
+export type Bom = {
+  /** The manufacturing path the BOM was drafted for. */
+  process: Process;
+  generatedAt: string;
+  updatedAt?: string;
+  items: BomItem[];
+  /** What the AI assumed where the brief was silent. */
+  assumptions: string[];
+  editedByUser: boolean;
 };
 
 /** How far a quote request goes. Private by default: a spec summary, no renders or notes. */
@@ -277,7 +315,7 @@ export type AgentMessage = { role: "user" | "assistant"; content: string };
 export type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell";
 
 /** What an AI call is for (BACKEND.md A1). The gateway routes model, effort and budget by task. */
-export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation";
+export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "bom";
 
 /** Whose API key paid for a call: the creator's own (A2) or the house demo key. */
 export type KeySource = "user" | "house";

@@ -2,14 +2,16 @@ import type { z } from "zod";
 import { gateway } from "../ai/gateway";
 import { AGENT_SYSTEM_PROMPT } from "../agent/prompt";
 import type { AgentMessage, AiTask } from "../types";
+import { bomOutputSchema } from "../bom/schemas";
 import { analysisOutputSchema, pitchOutputSchema, priceSuggestionOutputSchema } from "../schemas";
 import { getShops } from "../shops";
 import { sourcingPlanOutputSchemaWithSubject, supplierDraftOutputSchema } from "../sourcing/schemas";
+import { BOM_SYSTEM_PROMPT } from "./bom";
 import { summarizeCapacity } from "./capacity";
 import { PITCH_SYSTEM_PROMPT } from "./pitch";
 import { PRICE_SYSTEM_PROMPT } from "./price";
 import { buildSystemPrompt } from "./prompt";
-import type { CallModel } from "./run";
+import type { CallModel, ImageInput } from "./run";
 import { NEGOTIATION_SYSTEM_PROMPT, SOURCING_PLAN_SYSTEM_PROMPT } from "./sourcing";
 import type { CallTextModel } from "./structured";
 
@@ -51,6 +53,18 @@ const TEXT_TASKS: Record<TextTask, { system: string; schema: z.ZodType }> = {
 export function textCaller(task: TextTask, workspaceId: string): CallTextModel {
   const { system, schema } = TEXT_TASKS[task];
   return (text) => gateway.generate({ task, workspaceId, schema, system: [{ text: system }], messages: [{ role: "user", content: text }] });
+}
+
+/** The bill of materials: the version's photos (when allowed) go with every attempt. */
+export function bomCaller(workspaceId: string, images: ImageInput[]): CallTextModel {
+  return (text) =>
+    gateway.generate({
+      task: "bom",
+      workspaceId,
+      schema: bomOutputSchema,
+      system: [{ text: BOM_SYSTEM_PROMPT }],
+      messages: [{ role: "user", content: [...images.map((img) => ({ type: "image" as const, ...img })), { type: "text" as const, text }] }],
+    });
 }
 
 /**
