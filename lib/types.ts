@@ -102,7 +102,7 @@ export type Outreach = {
 
 /**
  * Alibaba sourcing for one version. Alibaba has no buyer API and forbids
- * automated access, so Idlefit never contacts a supplier: the AI plans the
+ * automated access, so Moko never contacts a supplier: the AI plans the
  * search and drafts messages, and the user sends each one themselves.
  */
 export type Sourcing = { plan?: SourcingPlan; suppliers: Supplier[] };

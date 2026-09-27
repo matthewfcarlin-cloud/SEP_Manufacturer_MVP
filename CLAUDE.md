@@ -1,4 +1,6 @@
-# Idlefit — Build Spec (working name)
+# Moko — Build Spec
+
+> Renamed from Idlefit on 2026-09-27. User-facing text says Moko. Internal identifiers keep the old name on purpose, because renaming them would break live data: the `idlefit_owner` cookie (every browser would lose its projects), the `IDLEFIT_*` env vars (Railway config), the `idlefit-ai-key:v1:` encryption context in `lib/ai/keyCrypto.ts` (stored AI keys would stop decrypting), and the npm package name.
 
 ## What we're building
 > The product direction is now the creator studio (idea → design → make → money → launch → sell). `PRODUCT.md` is the product spec; the build plan is under "Phase 10+: Creator studio" below.
@@ -407,7 +409,7 @@ aiInputs: { includePhotos: boolean; includeNotes: boolean };   // default both t
 
 ## Phase 10+: Creator studio
 
-Idlefit is repositioned as the all-in-one studio for first-time product creators: **idea → design → make → money → launch → sell**. `PRODUCT.md` is the product spec (why and what); this file stays the build reference (how). Build in this order, one commit each, stopping after each for testing:
+Moko is repositioned as the all-in-one studio for first-time product creators: **idea → design → make → money → launch → sell**. `PRODUCT.md` is the product spec (why and what); this file stays the build reference (how). Build in this order, one commit each, stopping after each for testing:
 
 | # | Build | Done when | Status |
 |---|---|---|---|

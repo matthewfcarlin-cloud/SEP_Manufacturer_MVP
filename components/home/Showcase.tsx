@@ -40,7 +40,7 @@ export function Showcase({ name, version, href }: { name: string; version: Proje
             <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-line" />
             <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-line" />
             <span aria-hidden className="h-2.5 w-2.5 rounded-full bg-line" />
-            <span className="eyebrow ml-3 truncate text-muted">idlefit / project / {name}</span>
+            <span className="eyebrow ml-3 truncate text-muted">moko / project / {name}</span>
           </div>
           <div className="flex flex-col gap-4 p-4 sm:p-6">
             <AtAGlance analysis={analysis} quantity={version.targetQuantity} topMatch={topMatch} />

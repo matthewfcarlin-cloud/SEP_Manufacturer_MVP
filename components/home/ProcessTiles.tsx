@@ -44,7 +44,7 @@ export function ProcessTiles({ shops }: { shops: readonly Shop[] }) {
             </h2>
           </div>
           <p className="max-w-sm text-muted">
-            Idlefit prices your part against the machines local shops actually have, and pushes
+            Moko prices your part against the machines local shops actually have, and pushes
             the ones sitting idle this month to the top.
           </p>
         </Reveal>

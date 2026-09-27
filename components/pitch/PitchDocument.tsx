@@ -355,7 +355,7 @@ function Ask({ project, version, isOwnerView }: PitchDocumentProps) {
         </MissingText>
       )}
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-xs text-muted">
-        <span>{project.name} · Idlefit licensing pitch</span>
+        <span>{project.name} · Moko licensing pitch</span>
         <span>
           All costs and margins are AI estimates. Shop listings are fictional
           demo data.

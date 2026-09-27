@@ -66,7 +66,7 @@ export function negotiationTargets(version: ProjectVersion, process?: Process): 
   };
 }
 
-/** Alibaba's public search page for a phrase. Opening it is the user's own browsing; Idlefit never fetches it. */
+/** Alibaba's public search page for a phrase. Opening it is the user's own browsing; Moko never fetches it. */
 export function alibabaSearchUrl(term: string): string {
   return `https://www.alibaba.com/trade/search?SearchText=${encodeURIComponent(term.trim())}`;
 }
