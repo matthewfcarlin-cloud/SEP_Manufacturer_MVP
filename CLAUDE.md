@@ -468,6 +468,7 @@ Moko is repositioned as the all-in-one studio for first-time product creators: *
 - `POST /api/projects/[id]/versions/[n]/quotes` (built): request quotes (spec sheet + simulated demo quotes). `PATCH .../quotes/[quoteId]` `{ status }`, `POST .../quotes/[quoteId]/choose` (built).
 - `POST /api/plan` `{ projectId, version? }` (built): Claude drafts milestones as zod-validated JSON; choosing a quote re-dates the plan without an AI call.
 - `POST /api/listing` `{ projectId, version? }` (built): generates the Etsy listing.
+- Stores (built; unlocked by order sign-off): `GET/DELETE /api/stores/etsy` (configured? + connected shop name / disconnect), `GET /api/stores/etsy/connect?returnTo` → Etsy OAuth (PKCE) → `GET /api/stores/etsy/callback`, `GET /api/stores/etsy/options` (categories + shipping profiles), `POST /api/stores/etsy/draft` `{ projectId, version, taxonomyId, shippingProfileId, whoMade, whenMade, quantity }` (creates a draft), `GET /api/stores/shopify/csv?projectId&version` (product CSV).
 - `POST /api/agent` (built): the agent's streamed answers.
 
 **New types (added to `lib/types.ts` by the build that uses them)**
@@ -502,6 +503,9 @@ type LaunchPlan = {
 
 // Build 5 (in lib/types.ts), on ProjectVersion.listing
 type EtsyListing = { title: string; description: string; tags: string[]; priceUsd: number; photos: string[]; generatedAt: string }; // title ≤ 140 chars, exactly 13 tags
+// Stores (on ProjectVersion.storeListings, owner's projects only): drafts the app created in the creator's own store; never live
+type StoreChannel = "etsy" | "shopify" | "amazon";
+type StoreListing = { channel: "etsy"; listingId: string; url: string; state: "draft"; photosUploaded: number; createdAt: string };
 ```
 
 ### Build 1 – Studio dashboard (built)
@@ -514,6 +518,7 @@ type EtsyListing = { title: string; description: string; tags: string[]; priceUs
 - `/project/[id]/sell` (tab "Sell"): title (with n/140), description, 13 tag chips, price, photos, each with a copy button (reuses `components/sourcing/CopyButton`); photo downloads; "Connect Etsy shop" and "Shopify" disabled and marked Coming soon; an honest note on Etsy's commercial review for publishing to other sellers' shops.
 - `POST /api/listing` `{ projectId, version? }` (budget action `listing`, $0.08 est.): Claude writes title/description/tags (`lib/analysis/listing.ts`, `callClaudeListing`, low effort), validated by `listingDraftSchema` against Etsy's limits (title ≤ 140, exactly 13 tags, each ≤ 20 chars, distinct). The **code** sets the price (business case retail) and the photos (studio renders). Requires an analysis and a business case.
 - `etsySale()` (`lib/sell/fees.ts`): what one sale leaves after Etsy's approximate US fees ($0.20 listing, 6.5% transaction, 3% + $0.25 payment processing), and profit per sale after the chosen quote's price or the analysis unit cost (a range). Update the constants if Etsy's fees change.
+- Stores ("Put it in a store" on Sell, `components/sell/StoreChannels.tsx`): locked until `storeReadiness()` (`lib/sell/stores.ts`, pure) sees a signed-off, still-current order plan and a listing. **Etsy**: a real Open API v3 connection. The server needs `ETSY_API_KEYSTRING` + `ETSY_SHARED_SECRET` (never in the repo; without them the card shows setup steps). Each browser connects its own shop by OAuth with PKCE; tokens are sealed with `KEY_ENCRYPTION_SECRET` under purpose `moko-store-token:v1:etsy` in `.data/stores/etsy/<workspaceId>.json` (`lib/sell/etsyStore.ts`), read only by `lib/sell/etsyClient.ts`, refreshed when near expiry. "Create Etsy draft" (one explicit click) calls createDraftListing, then uploads the renders; Etsy drafts aren't live, the creator publishes on Etsy. The app never publishes, edits or deletes live listings. Pure request building in `lib/sell/etsy.ts` (update `WHEN_MADE` when Etsy renames its decade bucket). A personal-access Etsy app only works for its developer's own shop; other sellers need Etsy's commercial access. **Shopify**: a draft-product CSV for Products > Import (`shopifyProductCsv`, formula-safe; no photos, since the renders are private URLs). **Amazon**: by hand, with copy fields from `amazonFields()` (title ≤ 200, search terms ≤ 249 bytes) and a Seller Central link; SP-API needs a registered developer app.
 - Sell stage is done when a listing exists; next step "Create your listing" follows a plan; the agent's context mentions the listing. Both examples are seeded with real listings.
 
 ### Own API key – frontend (built; backend pending)

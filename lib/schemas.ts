@@ -2,7 +2,7 @@ import { z } from "zod";
 import { PRODUCT_CATEGORIES } from "./learning/vocabulary";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AiInputs, AssemblyPartner, Bom, OrderCoordination, DemoQuote, EtsyListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
+import type { AiInputs, AssemblyPartner, Bom, OrderCoordination, DemoQuote, EtsyListing, StoreListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -342,6 +342,15 @@ export const etsyListingSchema = z.object({
   generatedAt: z.iso.datetime(),
 }) satisfies z.ZodType<EtsyListing>;
 
+export const storeListingSchema = z.object({
+  channel: z.literal("etsy"),
+  listingId: z.string().min(1),
+  url: z.string().min(1),
+  state: z.literal("draft"),
+  photosUploaded: z.number().int().nonnegative(),
+  createdAt: z.iso.datetime(),
+}) satisfies z.ZodType<StoreListing>;
+
 export const listingDraftOutputSchema = z.object({
   title: z.string().describe(`Etsy title, at most ${ETSY_TITLE_MAX} characters: what it is first, then key buyer search words. No ALL CAPS, no emoji.`),
   description: z.string().describe("Etsy description, 120-220 words, plain text with short paragraphs and '- ' bullets: what it is, who it's for, key features and dimensions, materials, what's in the box. No claims the brief doesn't support."),
@@ -493,6 +502,7 @@ export const projectVersionSchema = z.object({
   outreach: outreachSchema.optional(),
   plan: launchPlanSchema.optional(),
   listing: etsyListingSchema.optional(),
+  storeListings: z.array(storeListingSchema).optional(),
   bom: bomSchema.optional(),
 
 // ---------------------------------------------------------------------------

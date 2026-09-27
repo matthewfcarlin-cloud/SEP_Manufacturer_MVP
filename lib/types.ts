@@ -64,8 +64,24 @@ export type ProjectVersion = {
   plan?: LaunchPlan;
   /** Etsy-ready listing: AI-written copy; price from the business case; photos from the renders (build 5). */
   listing?: EtsyListing;
+  /** Store drafts made from the listing once the order plan is signed off (Etsy today). Owner's projects only. */
+  storeListings?: StoreListing[];
   /** Bill of materials: the AI's first draft, corrected by the user. Feeds supplier sourcing. */
   bom?: Bom;
+};
+
+/** Where a finished product can be sold. Etsy has a live connection; Shopify is a CSV import; Amazon is a guided handoff. */
+export type StoreChannel = "etsy" | "shopify" | "amazon";
+
+/** A draft the app created in the creator's own store. Drafts are never live: the creator publishes them in the store. */
+export type StoreListing = {
+  channel: "etsy";
+  listingId: string;
+  /** The draft in the store's own listing editor. */
+  url: string;
+  state: "draft";
+  photosUploaded: number;
+  createdAt: string;
 };
 
 export type EtsyListing = {

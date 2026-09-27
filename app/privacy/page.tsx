@@ -32,6 +32,10 @@ const POINTS: { title: string; body: React.ReactNode }[] = [
     body: "You can use your own Anthropic key instead of the demo budget (Settings). It's tested with the provider before it's saved, then stored encrypted (AES-256-GCM) on this server, tied to your browser, and used only for your projects' AI calls. It's never shown back in full, only a masked form like sk-ant-…7Q2f, and it's never written to logs. Remove key deletes it for good. Calls made with your key are billed to your Anthropic account. OpenAI keys are coming soon.",
   },
   {
+    title: "Stores only get what you send, as drafts",
+    body: "Store links open only after you approve a product's order plan. Connecting Etsy signs you in on Etsy; Moko never sees your Etsy password. Its access tokens are stored encrypted (AES-256-GCM) on this server, tied to your browser, and used only when you click Create Etsy draft, which sends that listing's title, description, tags, price, quantity and studio renders to your shop as a draft. Moko never publishes, edits or deletes live listings. Disconnect removes the tokens here; to revoke Moko's access entirely, remove it in your Etsy account settings. Shopify and Amazon get nothing from Moko: you download a file or copy the fields in yourself.",
+  },
+  {
     title: "Helping improve estimates is off until you turn it on",
     body: "Moko keeps a record of what happens to each product (analyzed, quote chosen, plan drafted and so on) with structured details only: no files, photos, notes or names. It's stored with the product and deleted with it. Separately, each product has a \"Help improve estimates\" switch on its page, off by default. When you turn it on, that product's category, process, material family, size, quantity, cost estimate and real-quote summary can be shown to the AI as a \"similar product\" when other creators get estimates. Example projects and simulated demo quotes never count. Turning it off stops this right away.",
   },

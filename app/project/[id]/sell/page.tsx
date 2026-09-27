@@ -5,9 +5,13 @@ import { AiBudgetNote } from "@/components/AiBudgetNote";
 import { PageHeader } from "@/components/PageHeader";
 import { ListingField } from "@/components/sell/ListingField";
 import { WriteListingButton } from "@/components/sell/WriteListingButton";
-import { getAccessibleProject } from "@/lib/access";
+import { StoreChannels } from "@/components/sell/StoreChannels";
+import { currentOwnerHash, getAccessibleProject } from "@/lib/access";
 import { ETSY_TAG_COUNT, ETSY_TITLE_MAX } from "@/lib/schemas";
+import { etsyConfig } from "@/lib/sell/etsy";
+import { getEtsyConnection } from "@/lib/sell/etsyStore";
 import { etsySale } from "@/lib/sell/fees";
+import { storeReadiness } from "@/lib/sell/stores";
 import { latestVersion } from "@/lib/versions";
 
 export async function generateMetadata(props: PageProps<"/project/[id]/sell">): Promise<Metadata> {
@@ -18,9 +22,10 @@ export async function generateMetadata(props: PageProps<"/project/[id]/sell">): 
 
 const usd = (n: number) => `${n < 0 ? "−" : ""}$${Math.abs(n).toFixed(2)}`;
 
-/** The Sell stage: an Etsy-ready listing to copy in, field by field. */
+/** The Sell stage: the listing, then (once the order is confirmed) the stores it goes to. */
 export default async function SellPage(props: PageProps<"/project/[id]/sell">) {
   const { id } = await props.params;
+  const connectResult = (await props.searchParams).etsy;
   const project = (await getAccessibleProject(id))?.project;
   if (!project) notFound();
   const version = latestVersion(project);
@@ -29,6 +34,9 @@ export default async function SellPage(props: PageProps<"/project/[id]/sell">) {
   const chosen = version.outreach?.quotes.find((q) => q.id === version.outreach?.chosenQuoteId);
   const unitCost = chosen ? { low: chosen.unitPriceUsd, high: chosen.unitPriceUsd } : best?.unitCostUsd;
   const sale = listing ? etsySale(listing.priceUsd, unitCost) : undefined;
+  const readiness = storeReadiness(project.id, version);
+  const workspaceId = await currentOwnerHash();
+  const etsyShop = workspaceId ? await getEtsyConnection(workspaceId).catch(() => null) : null;
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
@@ -41,17 +49,7 @@ export default async function SellPage(props: PageProps<"/project/[id]/sell">) {
           </>
         }
         title="Sell"
-        description="An Etsy-ready listing: copy each field into Etsy's listing form. Direct publishing comes later."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            {["Connect Etsy shop", "Shopify"].map((label) => (
-              <button key={label} type="button" disabled title="Coming soon" className="flex items-center gap-2 border border-line px-3 py-2 text-sm text-muted">
-                {label}
-                <span className="eyebrow border border-line px-1.5 py-0.5 text-[9px]">Coming soon</span>
-              </button>
-            ))}
-          </div>
-        }
+        description="One listing for every store. Once the order plan is approved, send it to Etsy as a draft, import it into Shopify, or paste it into Amazon."
       />
 
       {!version.analysis || !version.businessCase ? (
@@ -133,7 +131,16 @@ export default async function SellPage(props: PageProps<"/project/[id]/sell">) {
           ) : (
             <p className="border border-dashed border-line p-6 text-sm text-muted">No listing yet. One click writes the title, description and 13 tags.</p>
           )}
-          <p className="text-xs text-muted">Etsy&apos;s API lets an app publish drafts to its own shop; publishing for other sellers needs Etsy&apos;s commercial review, so for now you copy the listing in.</p>
+          <StoreChannels
+            projectId={project.id}
+            version={version.number}
+            readiness={readiness}
+            listing={listing}
+            etsy={{ configured: etsyConfig() !== null, shopName: etsyShop?.shopName ?? null }}
+            drafts={version.storeListings ?? []}
+            connectResult={typeof connectResult === "string" ? connectResult : undefined}
+          />
+          <p className="text-xs text-muted">Etsy lets an app create listings in its developer&apos;s own shop; connecting other sellers&apos; shops needs Etsy&apos;s commercial access review.</p>
         </>
       )}
     </div>

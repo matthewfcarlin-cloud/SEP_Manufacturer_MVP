@@ -32,20 +32,23 @@ export function encryptionSecret(): Buffer {
   return secret;
 }
 
-const associatedData = (workspaceId: string) => Buffer.from(`idlefit-ai-key:v1:${workspaceId}`);
+/** Keeps AI keys and other sealed secrets (store tokens) from opening as each other. */
+export type SealPurpose = "idlefit-ai-key:v1" | "moko-store-token:v1:etsy";
 
-export function encryptKey(apiKey: string, workspaceId: string): SealedKey {
+const associatedData = (workspaceId: string, purpose: SealPurpose) => Buffer.from(`${purpose}:${workspaceId}`);
+
+export function encryptKey(apiKey: string, workspaceId: string, purpose: SealPurpose = "idlefit-ai-key:v1"): SealedKey {
   const iv = randomBytes(IV_BYTES);
   const cipher = createCipheriv(ALGORITHM, encryptionSecret(), iv);
-  cipher.setAAD(associatedData(workspaceId));
+  cipher.setAAD(associatedData(workspaceId, purpose));
   const ciphertext = Buffer.concat([cipher.update(apiKey, "utf8"), cipher.final()]);
   return { ciphertext: ciphertext.toString("base64"), iv: iv.toString("base64"), authTag: cipher.getAuthTag().toString("base64") };
 }
 
 /** Opens a sealed key. Throws if the secret, workspace, ciphertext or tag don't match. */
-export function decryptKey(sealed: SealedKey, workspaceId: string): string {
+export function decryptKey(sealed: SealedKey, workspaceId: string, purpose: SealPurpose = "idlefit-ai-key:v1"): string {
   const decipher = createDecipheriv(ALGORITHM, encryptionSecret(), Buffer.from(sealed.iv, "base64"));
-  decipher.setAAD(associatedData(workspaceId));
+  decipher.setAAD(associatedData(workspaceId, purpose));
   decipher.setAuthTag(Buffer.from(sealed.authTag, "base64"));
   return Buffer.concat([decipher.update(Buffer.from(sealed.ciphertext, "base64")), decipher.final()]).toString("utf8");
 }
