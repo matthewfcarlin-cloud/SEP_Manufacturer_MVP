@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
+import { OwnKeyPrompt } from "@/components/studio/OwnKeyPrompt";
 import { StudioCard } from "@/components/studio/StudioCard";
 import { currentOwnerKey } from "@/lib/access";
 import { accessFor } from "@/lib/ownerKey";
@@ -47,7 +48,8 @@ export default async function StudioPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 sm:py-14">
+        <OwnKeyPrompt />
         <ul className="grid gap-6 lg:grid-cols-2">
           {products.map(({ project, access }) => (
             <li key={project.id} className="flex min-w-0">

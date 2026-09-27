@@ -593,3 +593,60 @@ test("choosing a different quote re-dates the launch plan", async ({ page }) => 
   expect(after >= before).toBe(true);
   expect(after).not.toBe(before);
 });
+
+async function overBudget(page: Page): Promise<string> {
+  await page.goto("/shops");
+  const cookie = (await page.context().cookies()).find((c) => c.name === "idlefit_owner")!;
+  const { createHash } = await import("node:crypto");
+  const ledger = path.join(".data", "usage", "browsers", `${createHash("sha256").update(cookie.value).digest("hex")}.json`);
+  await mkdir(path.dirname(ledger), { recursive: true });
+  await writeFile(ledger, JSON.stringify({ spentUsd: 99 }));
+  return ledger;
+}
+
+test("settings shows the AI provider form without faking a saved key", async ({ page }) => {
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { level: 1, name: "AI provider" })).toBeVisible();
+  await expect(page.getByLabel("Anthropic (Claude)")).toBeChecked();
+  await expect(page.getByLabel("API key")).toBeVisible();
+  // The key backend hasn't landed on this branch: Save and Test say so, and nothing claims a saved key.
+  await page.getByLabel("API key").fill("sk-ant-test-1234567890");
+  await expect(page.getByRole("button", { name: "Save · Coming soon" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Test key · Coming soon" })).toBeDisabled();
+  await expect(page.getByText("Saved key")).toHaveCount(0);
+  await expect(page.getByText(/Demo AI budget · this browser/)).toBeVisible();
+});
+
+test("the header pill shows the demo budget and links to settings", async ({ page }) => {
+  await page.goto("/studio");
+  const pill = page.getByRole("link", { name: /Demo AI budget: \$\d+\.\d\d left/ });
+  await expect(pill).toBeVisible();
+  await pill.click();
+  await expect(page).toHaveURL(/\/settings$/);
+});
+
+test("a spent demo budget explains itself on the screen that made the call", async ({ page }) => {
+  const ledger = await overBudget(page);
+  try {
+    await page.goto(`/project/${BRACKET.id}/plan`);
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Redraft with AI" }).click();
+    const banner = page.getByRole("alert").filter({ hasText: "Demo AI budget used up" });
+    await expect(banner).toBeVisible();
+    await expect(banner.getByRole("link", { name: "Use your own API key →" })).toHaveAttribute("href", "/settings");
+    await expect(page.getByRole("link", { name: /Demo AI budget: \$0\.00 left/ })).toBeVisible();
+  } finally {
+    await rm(ledger, { force: true });
+  }
+});
+
+test("the studio's own-key prompt can be dismissed for good", async ({ page }) => {
+  await page.goto("/studio");
+  const prompt = page.getByRole("complementary", { name: "Use your own API key" });
+  await expect(prompt).toBeVisible();
+  await prompt.getByRole("button", { name: "Not now" }).click();
+  await expect(prompt).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1, name: "Studio" })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Use your own API key" })).toHaveCount(0);
+});

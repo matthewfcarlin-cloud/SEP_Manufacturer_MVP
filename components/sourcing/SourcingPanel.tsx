@@ -1,5 +1,6 @@
 "use client";
 
+import { AiErrorBanner } from "@/components/AiErrorBanner";
 import { useMemo, useState } from "react";
 import { FormError } from "@/components/upload/UploadPickers";
 import { PROCESS_LABELS, processInSentence } from "@/lib/processes";
@@ -50,7 +51,7 @@ function TargetsCard({ targets }: { targets: NegotiationTargets }) {
 
 export function SourcingPanel({ projectId, version }: Props) {
   const { sourcing, edit, plan: requestPlan, draft } = useSourcing(projectId, version.number, version.sourcing);
-  const { busy, error, run } = useBusy();
+  const { busy, error, errorStatus, run } = useBusy();
   const paths = version.analysis?.paths ?? [];
   const [process, setProcess] = useState<Process>(sourcing.plan?.process ?? paths[0]?.process);
   const [fields, setFields] = useState(EMPTY_FIELDS);
@@ -102,7 +103,7 @@ export function SourcingPanel({ projectId, version }: Props) {
             {busy === "plan" ? "Planning the search…" : plan ? "Re-plan the search" : "Plan my Alibaba search"}
           </button>
         </div>
-        <FormError message={error} />
+        {error && <AiErrorBanner message={error} status={errorStatus} />}
         {targets && <TargetsCard targets={targets} />}
       </div>
 

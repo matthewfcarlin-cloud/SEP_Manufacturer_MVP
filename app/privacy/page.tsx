@@ -28,6 +28,10 @@ const POINTS: { title: string; body: React.ReactNode }[] = [
     body: "Alibaba sourcing only plans your search and drafts messages. Drafting sends your part's spec, notes (unless you hold them back), the supplier details you enter and the conversation you paste in to Anthropic's API. Nothing goes to a supplier unless you copy it and send it yourself on Alibaba.",
   },
   {
+    title: "Your own AI key",
+    body: "You can use your own Anthropic or OpenAI key instead of the demo budget (Settings). Saving keys arrives with the next backend update; until then nothing you type there is stored. Once live, the key is stored encrypted on this server, used only for your projects' AI calls, never shown back in full (only a masked form like sk-ant-…7Q2f), and removed for good when you click Remove key. Calls made with your key are billed to your provider account.",
+  },
+  {
     title: "Deleting is real, with one limit",
     body: "Deleting a project or a version removes its files and data from this server. It can't recall what was already sent to the AI for analysis, which Anthropic handles under its API terms and privacy policy.",
   },

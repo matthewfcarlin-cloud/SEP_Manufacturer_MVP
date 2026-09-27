@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeaderAiPill } from "./HeaderAiPill";
 import { getShops, summarizeShops } from "@/lib/shops";
 
 const NAV = [
@@ -29,6 +30,7 @@ export function SiteHeader() {
           </Link>
         </div>
         <nav className="flex shrink-0 items-center gap-1">
+          <HeaderAiPill />
           {NAV.map((item) => (
             <Link
               key={item.href}
