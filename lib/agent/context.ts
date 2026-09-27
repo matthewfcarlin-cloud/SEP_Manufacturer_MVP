@@ -1,0 +1,83 @@
+import { notesForAi } from "../aiInputs";
+import { buildBusinessCase, formatMarginRange } from "../businessCase";
+import { cheapestByVolume, effectiveCostCurve, type CostCurve } from "../costCurve";
+import { formatDaysRange, formatDimensions, formatNumber, formatToolingRange, formatUnitCostRange } from "../format";
+import { buildIterationStory } from "../iterationStory";
+import { matchVersion } from "../match";
+import { PROCESS_LABELS } from "../processes";
+import { getShopById } from "../shops";
+import type { Project, ProjectVersion } from "../types";
+
+// Everything the build agent knows about the product, as plain text for the
+// system prompt. Built only from what the app already shows the owner, and
+// through notesForAi(), so notes the inventor withheld stay withheld.
+
+function geometryLines(version: ProjectVersion): string[] {
+  const g = version.geometry;
+  if (!g) return ["Geometry: not measured."];
+  return [
+    `Geometry (measured, mm): ${formatDimensions(g.boundingBoxMm)}, volume ${formatNumber(g.volumeCm3)} cm³` +
+      (g.typicalWallMm !== undefined ? `, typical wall ${formatNumber(g.typicalWallMm)} mm` : "") +
+      `, ${g.isWatertight ? "watertight" : "mesh has gaps"}${g.thinWallWarning ? ", some walls under 1 mm" : ""}.`,
+  ];
+}
+
+function analysisLines(version: ProjectVersion): string[] {
+  const a = version.analysis;
+  if (!a) return ["Manufacturing analysis: Not analyzed yet."];
+  const lines = [
+    "Manufacturing analysis (AI estimates, USD, at the target quantity unless noted):",
+    `Summary: ${a.productSummary}`,
+    `Recommendation: ${a.topRecommendation}`,
+    ...a.paths.flatMap((p, i) => [
+      `${i + 1}. ${PROCESS_LABELS[p.process]} (${p.fitScore}/100 fit): ${formatUnitCostRange(p.unitCostUsd)} per unit, tooling ${formatToolingRange(p.toolingCostUsd)}, lead time ${formatDaysRange(p.leadTimeDays)}, materials ${p.materials.join(", ")}.`,
+      ...p.designTweaks.map((t) => `   Tweak: ${t.change} (${t.impact})`),
+    ]),
+    `Risks: ${a.risks.join(" ")}`,
+  ];
+  const curves = a.paths.map(effectiveCostCurve).filter((c): c is CostCurve => c !== null);
+  const byVolume = curves.length === a.paths.length ? cheapestByVolume(curves) : null;
+  if (byVolume) lines.push(`Cost by volume: ${byVolume}`);
+  return lines;
+}
+
+function businessCaseLines(version: ProjectVersion): string[] {
+  if (!version.analysis || !version.businessCase) return ["Business case: not set up yet."];
+  const inputs = version.businessCase;
+  const bc = buildBusinessCase(version.analysis.paths, inputs);
+  return [
+    `Business case (estimate): $${inputs.retailPriceUsd} retail, maker receives ${Math.round(inputs.revenueShare * 100)}% (~$${bc.revenuePerUnit.toFixed(2)}/unit). ${bc.verdict.headline} ${bc.verdict.detail ?? ""}`.trim(),
+    ...bc.tiers.map(
+      (t) => `   ${t.quantity.toLocaleString("en-US")} units: ${PROCESS_LABELS[t.process]}, ${formatUnitCostRange(t.allIn)} all-in per part, margin ${formatMarginRange(t.margin)}.`,
+    ),
+  ];
+}
+
+function shopLines(version: ProjectVersion): string[] {
+  const matches = matchVersion(version);
+  if (matches.length === 0) return ["Shop matches: none yet."];
+  return [
+    "Shop matches (fictional demo shops; nothing has been sent to them):",
+    ...matches.map((m) => {
+      const shop = getShopById(m.shopId);
+      return `- ${shop?.name ?? m.shopId} (${shop?.neighborhood ?? ""}): ${m.matchedMachine.model}, ${PROCESS_LABELS[m.matchedMachine.type]}, match ${m.score}/100${m.idleBoost ? ", machine idle this month" : ""}.`;
+    }),
+  ];
+}
+
+export function buildAgentContext(project: Project, version: ProjectVersion): string {
+  const story = buildIterationStory(project).filter((s) => s.to <= version.number);
+  return [
+    `PRODUCT: ${project.name} (version ${version.number} of ${project.versions.length})`,
+    `Target quantity: ${version.targetQuantity.toLocaleString("en-US")} units. Budget: ${version.budgetUsd !== undefined ? `$${version.budgetUsd.toLocaleString("en-US")}` : "not given"}. Material ideas: ${version.materialHints?.join(", ") || "none given"}.`,
+    `Inventor's description: ${notesForAi(version)}`,
+    ...geometryLines(version),
+    "",
+    ...analysisLines(version),
+    "",
+    ...businessCaseLines(version),
+    "",
+    ...shopLines(version),
+    ...(story.length ? ["", "Version history:", ...story.map((s) => `- v${s.from} → v${s.to}: ${s.summary}`)] : []),
+  ].join("\n");
+}

@@ -215,3 +215,9 @@ export type ShopMatch = {
   requiredTweaks: string[];
   idleBoost: boolean;
 };
+
+/** One turn of a build-agent conversation (Phase 10). Conversations aren't stored; the browser keeps them. */
+export type AgentMessage = { role: "user" | "assistant"; content: string };
+
+/** The creator journey's six stages (Phase 10+). Derived from a product's data, never stored. */
+export type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell";

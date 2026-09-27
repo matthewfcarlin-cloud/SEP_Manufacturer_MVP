@@ -44,7 +44,7 @@ export function DangerZone({ projectId, projectName, version, versionCount }: Pr
   const deleteProject = () =>
     run(async () => {
       await remove(`/api/projects/${projectId}`);
-      router.push("/projects");
+      router.push("/studio");
       router.refresh();
     });
 

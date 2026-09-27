@@ -15,6 +15,9 @@ import { SourcingPanel } from "@/components/sourcing/SourcingPanel";
 import { BusinessCasePanel } from "@/components/businessCase/BusinessCasePanel";
 import { VersionTimeline } from "@/components/versions/VersionTimeline";
 import { AiBudgetNote } from "@/components/AiBudgetNote";
+import { BuildAgent } from "@/components/agent/BuildAgent";
+import { starterQuestions } from "@/lib/agent/starters";
+import { getShopById } from "@/lib/shops";
 import { AiInputsPanel } from "@/components/privacy/AiInputsPanel";
 import { DangerZone } from "@/components/privacy/DangerZone";
 import { resolveAiInputs } from "@/lib/aiInputs";
@@ -78,7 +81,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
       <PageHeader
         eyebrow={
           <>
-            <Link href="/projects" className="hover:text-ink">Projects</Link>
+            <Link href="/studio" className="hover:text-ink">Studio</Link>
             <span aria-hidden>/</span>
             <span>v{version.number} · {created}</span>
             <span aria-hidden>·</span>
@@ -197,7 +200,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
       </section>
       {version.analysis && (
         <BusinessCasePanel
-          key={version.number}
+          key={`business-case-v${version.number}`}
           projectId={project.id}
           version={version.number}
           paths={version.analysis.paths}
@@ -207,6 +210,13 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
       )}
       {version.analysis && <ShopMatches matches={shopMatches} version={version} />}
       {version.analysis && <SourcingPanel key={version.number} projectId={project.id} version={version} />}
+      <BuildAgent
+        key={`agent-v${version.number}`}
+        projectId={project.id}
+        projectName={project.name}
+        version={version.number}
+        starters={starterQuestions(version, shopMatches[0] ? getShopById(shopMatches[0].shopId)?.name : undefined)}
+      />
       {access === "owner" && (
         <DangerZone projectId={project.id} projectName={project.name} version={version.number} versionCount={project.versions.length} />
       )}

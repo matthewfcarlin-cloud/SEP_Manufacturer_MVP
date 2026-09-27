@@ -232,12 +232,31 @@ test("shops page filters to idle lathes", async ({ page }) => {
   for (const card of await page.locator("article").all()) await expect(card).toContainText("Demo data");
 });
 
-test("projects page lists the examples and links to them", async ({ page }) => {
-  await page.goto("/projects");
-  const card = page.getByRole("link", { name: /Fuzz pedal enclosure[\s\S]*Example/ }).first();
-  await expect(card).toBeVisible();
-  await card.click();
-  await expect(page).toHaveURL(`/project/${PEDAL.id}`);
+test("the studio shows every product with its stage, numbers and next step", async ({ page }) => {
+  await page.goto("/projects"); // the old list redirects to the studio
+  await expect(page).toHaveURL(/\/studio$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Studio" })).toBeVisible();
+
+  const pedal = page.locator("article", { hasText: "Fuzz pedal enclosure" });
+  await expect(pedal.getByText("Demo data")).toBeVisible();
+  await expect(pedal.getByRole("list", { name: "Journey stages" }).locator("li")).toHaveCount(6);
+  await expect(pedal.getByRole("list", { name: "Journey stages" })).toContainText("Make (current stage)");
+  await expect(pedal).toContainText("$28.00–$48.00");
+  await expect(pedal).toContainText("$32");
+
+  const bracket = page.locator("article", { hasText: "E-bike charger wall bracket" });
+  await expect(bracket.getByRole("img", { name: /Unit cost went from/ })).toBeVisible();
+  await expect(bracket).toContainText("−14%");
+
+  await pedal.getByRole("link", { name: /Next step/ }).click();
+  await expect(page).toHaveURL(new RegExp(`/project/${PEDAL.id}\\?v=1#shop-matches-heading$`));
+});
+
+test("the studio fits a phone without sideways scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/studio");
+  await expect(page.locator("article").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
 });
 
 test("cost-by-quantity chart shows a summary, legend, tooltip and table", async ({ page }) => {
@@ -416,7 +435,7 @@ test("deleting a version and then the project removes their files", async ({ pag
   if (!(await nameInput.isVisible())) await page.getByText("Delete", { exact: true }).click();
   await nameInput.fill("E2E delete me");
   await page.getByRole("button", { name: "Delete project" }).click();
-  await expect(page).toHaveURL(/\/projects$/);
+  await expect(page).toHaveURL(/\/studio$/);
   await expect(readdir(dir)).rejects.toThrow();
   expect((await page.goto(`/project/${id}`))!.status()).toBe(404);
 });
@@ -484,4 +503,30 @@ test("a part that looks the wrong size gets a units warning", async ({ page }) =
   await page.getByRole("button", { name: "Create project" }).click();
   await expect(page).toHaveURL(/\/project\/[A-Za-z0-9_-]{10}$/);
   await expect(page.getByRole("region", { name: "Part geometry" })).toContainText("Check the units");
+});
+
+test("the build agent opens with product-specific starters and respects the AI budget", async ({ page }) => {
+  await page.goto(`/project/${PEDAL.id}`);
+  const cookie = (await page.context().cookies()).find((c) => c.name === "idlefit_owner")!;
+  const { createHash } = await import("node:crypto");
+  const ledger = path.join(".data", "usage", "browsers", `${createHash("sha256").update(cookie.value).digest("hex")}.json`);
+  await mkdir(path.dirname(ledger), { recursive: true });
+  await writeFile(ledger, JSON.stringify({ spentUsd: 99 })); // over budget: no real AI call is made
+  try {
+    await page.getByRole("button", { name: "Ask the build agent" }).click();
+    const panel = page.getByRole("complementary", { name: "Build agent" });
+    await expect(panel.getByRole("heading", { name: "Ask about Fuzz pedal enclosure" })).toBeVisible();
+    const starters = panel.locator("button.text-left");
+    await expect(starters).toHaveCount(3);
+    await expect(starters.nth(2)).toContainText("$32 retail");
+
+    await starters.first().click();
+    await expect(panel.getByRole("alert")).toContainText("AI budget");
+    await expect(starters).toHaveCount(3); // the failed question doesn't leave a half conversation
+
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+  } finally {
+    await rm(ledger, { force: true });
+  }
 });

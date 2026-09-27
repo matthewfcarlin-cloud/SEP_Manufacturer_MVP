@@ -19,6 +19,14 @@ export type ModelViewerProps = {
   onRenderError?: () => void;
   /** Paint the surface red wherever the wall under it is thinner than MIN_WALL_MM. */
   highlightThin?: boolean;
+  /** Turntable speed (OrbitControls units); cards use a slower spin. */
+  rotateSpeed?: number;
+  /** Scroll-to-zoom; off in dashboard cards so page scrolling isn't hijacked. */
+  enableZoom?: boolean;
+  /** Called once the model has loaded and framed itself. */
+  onReady?: () => void;
+  /** Show the "Loading model…" text; cards show their own placeholder instead. */
+  showLoading?: boolean;
 };
 
 const PART_COLOR = "#b9bec6";
@@ -180,6 +188,10 @@ function Scene({
   onRenders,
   onRenderError,
   highlightThin,
+  rotateSpeed,
+  enableZoom,
+  onReady,
+  showLoading,
 }: {
   url: string;
   autoRotate: boolean;
@@ -187,9 +199,19 @@ function Scene({
   highlightThin: boolean;
   onRenders?: (renders: string[]) => void;
   onRenderError?: () => void;
+  rotateSpeed: number;
+  enableZoom: boolean;
+  onReady?: () => void;
+  showLoading: boolean;
 }) {
   const [ready, setReady] = useState(false);
-  const markReady = useMemo(() => () => setReady(true), []);
+  const markReady = useMemo(
+    () => () => {
+      setReady(true);
+      onReady?.();
+    },
+    [onReady],
+  );
 
   return (
     <>
@@ -208,12 +230,12 @@ function Scene({
         <Suspense fallback={null}>
           <Part url={url} onReady={markReady} highlightThin={highlightThin} />
         </Suspense>
-        <OrbitControls makeDefault autoRotate={autoRotate} autoRotateSpeed={1.4} />
+        <OrbitControls makeDefault autoRotate={autoRotate} autoRotateSpeed={rotateSpeed} enableZoom={enableZoom} />
         {captureAngles && onRenders && (
           <RenderCapture ready={ready} onRenders={onRenders} onError={onRenderError} />
         )}
       </Canvas>
-      {!ready && (
+      {!ready && showLoading && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-muted">
           Loading model…
         </div>
@@ -230,6 +252,10 @@ export default function ModelViewer({
   onRenders,
   onRenderError,
   highlightThin = false,
+  rotateSpeed = 1.4,
+  enableZoom = true,
+  onReady,
+  showLoading = true,
 }: ModelViewerProps) {
   return (
     <div
@@ -243,6 +269,10 @@ export default function ModelViewer({
           onRenders={onRenders}
           onRenderError={onRenderError}
           highlightThin={highlightThin}
+          rotateSpeed={rotateSpeed}
+          enableZoom={enableZoom}
+          onReady={onReady}
+          showLoading={showLoading}
         />
       </ViewerErrorBoundary>
     </div>
