@@ -1,8 +1,8 @@
-# Using Idlefit
+# Using Moko
 
 **Design around the machines that are already running.**
 
-Idlefit is for independent inventors and small hardware teams. You upload a part (a CAD file, a few photos, and what you know about it). In return you get:
+Moko is for independent inventors and small hardware teams. You upload a part (a CAD file, a few photos, and what you know about it). In return you get:
 
 - **How it could be made:** 2–4 manufacturing processes, each with cost ranges, lead times and specific design tweaks.
 - **Who could make it:** nearby shops whose machines fit the part, with machines sitting idle this month ranked first.
@@ -13,7 +13,7 @@ Idlefit is for independent inventors and small hardware teams. You upload a part
 
 ---
 
-## Using Idlefit
+## Using Moko
 
 ### 1. Start a project
 
@@ -29,7 +29,7 @@ Click **Start a project** and fill in:
 | **Material ideas** *(optional)* | Comma-separated, e.g. `aluminum, ABS`. |
 | **Photos or sketches** *(optional)* | Up to 5. They help the AI understand features the mesh alone doesn't show. |
 
-Click **Create project**. Idlefit measures the part straight away: bounding box, volume, surface area, typical wall thickness, and whether the mesh is watertight. If the part comes out implausibly tiny or huge, a **Check the units** warning suggests re-uploading it as a new version with the right units. If the part has thin walls, **Show thin walls** paints them on the 3D model.
+Click **Create project**. Moko measures the part straight away: bounding box, volume, surface area, typical wall thickness, and whether the mesh is watertight. If the part comes out implausibly tiny or huge, a **Check the units** warning suggests re-uploading it as a new version with the right units. If the part has thin walls, **Show thin walls** paints them on the 3D model.
 
 ### 2. Check what the AI will see
 

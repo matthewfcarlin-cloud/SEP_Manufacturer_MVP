@@ -192,7 +192,7 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
               </>
             )}
           </div>
-          <p className="text-xs text-muted">Idlefit doesn&apos;t send anything. Copy the message into Alibaba&apos;s chat with this supplier, send it there, then mark it sent.</p>
+          <p className="text-xs text-muted">Moko doesn&apos;t send anything. Copy the message into Alibaba&apos;s chat with this supplier, send it there, then mark it sent.</p>
         </div>
 
         <div className="flex flex-col gap-2">

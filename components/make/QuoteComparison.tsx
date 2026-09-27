@@ -114,7 +114,7 @@ export function QuoteComparison({ projectId, version, outreach, shops, estimates
                     {PROCESS_LABELS[q.process]} · {q.machineModel}
                   </p>
                 </div>
-                <DemoBadge label="Demo quote" title="Simulated by Idlefit from a fictional demo shop" />
+                <DemoBadge label="Demo quote" title="Simulated by Moko from a fictional demo shop" />
               </div>
 
               <p className="flex items-baseline gap-1.5">

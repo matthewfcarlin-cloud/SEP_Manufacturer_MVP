@@ -1,11 +1,11 @@
-# Idlefit
+# Moko
 
 **The all-in-one studio for first-time product creators: from an idea to a design that can be made, real quotes, a price that makes money, a launch plan, and a listing ready to sell.**
 
-*Printify made selling custom merch easy by hiding the factory. Idlefit does the same for original physical products, where the factory is the hard part.*
+*Printify made selling custom merch easy by hiding the factory. Moko does the same for original physical products, where the factory is the hard part.*
 
 <!-- Hero screenshot: replace with a capture of /studio at 1600×900 (docs/hero.png). -->
-![Idlefit studio](docs/hero.png)
+![Moko studio](docs/hero.png)
 
 > Club MVP. Every shop is fictional demo data, and every cost, margin and price is an AI estimate shown as a range. Product spec: [PRODUCT.md](PRODUCT.md). How to use the app, step by step: [docs/USING.md](docs/USING.md).
 
