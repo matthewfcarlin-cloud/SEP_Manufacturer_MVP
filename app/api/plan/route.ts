@@ -6,6 +6,7 @@ import { buildPlanBrief, runPlanDraft } from "@/lib/analysis/plan";
 import { buildPlan, productionFacts, todayIso } from "@/lib/plan/schedule";
 import { updateVersion } from "@/lib/projectStore";
 import { aiBudgetGate } from "@/lib/usage/gate";
+import { recordEvent } from "@/lib/learning/record";
 import { findVersion } from "@/lib/versionLookup";
 
 export const maxDuration = 120;
@@ -28,7 +29,9 @@ export async function POST(request: Request): Promise<Response> {
     const draft = await runPlanDraft(textCaller("plan", ownerHash), buildPlanBrief(found.project, found.version, facts));
     const plan = buildPlan(draft, found.version, new Date().toISOString(), todayIso());
     const saved = await updateVersion(found.project.id, found.version.number, (v) => ({ ...v, plan }));
-    return saved ? ok(plan, 201) : fail("This version was removed while it was being planned.", 404);
+    if (!saved) return fail("This version was removed while it was being planned.", 404);
+    await recordEvent({ workspaceId: ownerHash, projectId: found.project.id, version: found.version.number, access: found.access, type: "plan_generated", payload: {} });
+    return ok(plan, 201);
   } catch (err) {
     return aiFailure(err, "api/plan");
   }

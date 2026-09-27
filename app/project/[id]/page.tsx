@@ -16,6 +16,7 @@ import { VersionTimeline } from "@/components/versions/VersionTimeline";
 import { AiBudgetNote } from "@/components/AiBudgetNote";
 import { AiInputsPanel } from "@/components/privacy/AiInputsPanel";
 import { DangerZone } from "@/components/privacy/DangerZone";
+import { LearningToggle } from "@/components/privacy/LearningToggle";
 import { resolveAiInputs } from "@/lib/aiInputs";
 import { buildProjectBrief } from "@/lib/analysis/prompt";
 import type { ProjectVersion } from "@/lib/types";
@@ -219,6 +220,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
           </span>
         </Link>
       )}
+      {access === "owner" && <LearningToggle projectId={project.id} learning={project.learning} />}
       {access === "owner" && (
         <DangerZone projectId={project.id} projectName={project.name} version={version.number} versionCount={project.versions.length} />
       )}

@@ -32,6 +32,10 @@ const POINTS: { title: string; body: React.ReactNode }[] = [
     body: "You can use your own Anthropic key instead of the demo budget (Settings). It's tested with the provider before it's saved, then stored encrypted (AES-256-GCM) on this server, tied to your browser, and used only for your projects' AI calls. It's never shown back in full, only a masked form like sk-ant-…7Q2f, and it's never written to logs. Remove key deletes it for good. Calls made with your key are billed to your Anthropic account. OpenAI keys are coming soon.",
   },
   {
+    title: "Helping improve estimates is off until you turn it on",
+    body: "Moko keeps a record of what happens to each product (analyzed, quote chosen, plan drafted and so on) with structured details only: no files, photos, notes or names. It's stored with the product and deleted with it. Separately, each product has a \"Help improve estimates\" switch on its page, off by default. When you turn it on, that product's category, process, material family, size, quantity, cost estimate and real-quote summary can be shown to the AI as a \"similar product\" when other creators get estimates. Example projects and simulated demo quotes never count. Turning it off stops this right away.",
+  },
+  {
     title: "Deleting is real, with one limit",
     body: "Deleting a project or a version removes its files and data from this server. It can't recall what was already sent to the AI for analysis, which Anthropic handles under its API terms and privacy policy.",
   },

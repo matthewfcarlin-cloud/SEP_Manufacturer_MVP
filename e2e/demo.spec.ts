@@ -363,6 +363,25 @@ test("a project is private to the browser that created it", async ({ page, brows
   await stranger.context().close();
 });
 
+test("help improve estimates is off by default, saves, and is owner-only", async ({ page }) => {
+  const id = await createProjectIn(page, "E2E learning");
+  try {
+    const toggle = page.getByRole("switch", { name: "Help improve estimates" });
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    await page.reload();
+    await expect(toggle).toHaveAttribute("aria-checked", "true");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-checked", "false");
+    // Shared examples never contribute, so they have no switch.
+    await page.goto(`/project/${PEDAL.id}`);
+    await expect(page.getByRole("switch", { name: "Help improve estimates" })).toHaveCount(0);
+  } finally {
+    await rm(path.join(".data", "projects", id), { recursive: true, force: true });
+  }
+});
+
 test("a share link works for anyone until it's turned off or revoked", async ({ page, browser }) => {
   // Seeded bracket is an example (not shareable), so share a private copy of its analyzed pitch.
   const id = "E2Eshare01";

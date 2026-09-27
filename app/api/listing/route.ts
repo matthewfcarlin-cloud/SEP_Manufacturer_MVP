@@ -7,6 +7,7 @@ import { updateVersion } from "@/lib/projectStore";
 import type { EtsyListing } from "@/lib/types";
 import { aiBudgetGate } from "@/lib/usage/gate";
 import { latestAnalyzedVersion } from "@/lib/versions";
+import { recordEvent } from "@/lib/learning/record";
 import { findVersion } from "@/lib/versionLookup";
 
 export const maxDuration = 60;
@@ -19,7 +20,7 @@ export async function POST(request: Request): Promise<Response> {
   if (!body.success) return fail('Send JSON like { "projectId": "...", "version": 1 }.', 400);
   const found = await findVersion(body.data.projectId, body.data.version);
   if (found instanceof Response) return found;
-  const { project, version } = found;
+  const { project, version, access } = found;
   if (!version.analysis) return fail("Analyze this version before writing its listing.", 422);
   if (!version.businessCase) return fail("Set a retail price in the business case first: the listing uses it.", 422);
   const ownerHash = await aiBudgetGate("listing");
@@ -35,7 +36,9 @@ export async function POST(request: Request): Promise<Response> {
       generatedAt: new Date().toISOString(),
     };
     const saved = await updateVersion(project.id, version.number, (v) => ({ ...v, listing }));
-    return saved ? ok(listing, 201) : fail("This version was removed while its listing was written.", 404);
+    if (!saved) return fail("This version was removed while its listing was written.", 404);
+    await recordEvent({ workspaceId: ownerHash, projectId: project.id, version: version.number, access, type: "listing_generated", payload: {} });
+    return ok(listing, 201);
   } catch (err) {
     return aiFailure(err, "api/listing");
   }

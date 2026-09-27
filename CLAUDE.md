@@ -592,6 +592,8 @@ For the frontend agent (BACKEND.md A2). All routes use the `ApiResponse<T>` enve
 
 Events and outcomes are stored in the project's folder. Deleting the project deletes them, and deleting a version deletes that version's rows. Only the creator's own projects give `source: "real"`, and only real rows will ever be learned from (B2+, which also adds the opt-in).
 
+The opt-in UI is `components/privacy/LearningToggle.tsx` ("Help improve estimates", owner-only, on the project page above Delete; a `role="switch"` that only moves after `PUT /api/projects/[id]/learning` saves). `/privacy` explains both the event log and the opt-in. The plan and listing routes log `plan_generated` / `listing_generated` after the save (`lib/learning/generatedEvents.test.ts`).
+
 ### `PUT /api/projects/[id]/learning`: "Help improve estimates" toggle (BACKEND.md B2)
 - Request: JSON `{ contribute: boolean }`. Owner only: other creators' products and examples → 404. Not JSON → 415, bad body → 400.
 - 200 → `{ learning: LearningConsent }`. It's off by default (`project.learning` absent). The current value is `project.learning?.contribute ?? false` on the project the page already loads.
