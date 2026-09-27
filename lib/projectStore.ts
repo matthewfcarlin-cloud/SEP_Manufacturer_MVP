@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { copyFile, mkdir, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { detectImageType, IMAGE_CONTENT_TYPES, type ImageType, type ProjectFields, type VersionFields } from "./projectInput";
 import { migrateProject } from "./projectMigration";
@@ -238,6 +238,40 @@ export async function deleteProject(id: string): Promise<boolean> {
   }
   await rm(dir, { recursive: true, force: true });
   return true;
+}
+
+/**
+ * Copies a project into a new private one owned by `ownerKeyHash`: every
+ * version and file, with file URLs pointed at the copy. The share link,
+ * learning opt-in, example flag and learning records (events, outcomes) stay
+ * with the original. Null when the source doesn't exist.
+ */
+export async function duplicateProject(id: string, ownerKeyHash: string): Promise<Project | null> {
+  const source = await getProject(id);
+  if (!source) return null;
+  const copyId = newProjectId();
+  const from = projectDir(id);
+  const to = projectDir(copyId);
+  await mkdir(to, { recursive: true });
+  const files = (await readdir(from)).filter((name) => FILE_NAME_PATTERN.test(name));
+  await Promise.all(files.map((name) => copyFile(path.join(from, name), path.join(to, name))));
+  const KEPT_WITH_ORIGINAL = new Set(["share", "learning", "isExample"]);
+  const rest = Object.fromEntries(Object.entries(source).filter(([key]) => !KEPT_WITH_ORIGINAL.has(key)));
+  const retargeted = JSON.parse(JSON.stringify(rest).replaceAll(`/api/files/${id}/`, `/api/files/${copyId}/`)) as Project;
+  const copy: Project = { ...retargeted, id: copyId, name: `${source.name} (copy)`, owner: { keyHash: ownerKeyHash }, createdAt: new Date().toISOString() };
+  await saveProject(copy);
+  return copy;
+}
+
+/** When project.json was last written (every change rewrites it). Null when it doesn't exist. */
+export async function projectUpdatedAt(id: string): Promise<Date | null> {
+  if (!isValidProjectId(id)) return null;
+  try {
+    return (await stat(path.join(projectDir(id), "project.json"))).mtime;
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw err;
+  }
 }
 
 export class RenderError extends Error {}

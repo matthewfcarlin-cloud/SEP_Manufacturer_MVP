@@ -504,6 +504,13 @@ type LaunchPlan = {
 type EtsyListing = { title: string; description: string; tags: string[]; priceUsd: number; photos: string[]; generatedAt: string }; // title ≤ 140 chars, exactly 13 tags
 ```
 
+### Everyday-people redesign, step 1 – app shell and My products (built)
+
+- Route groups: `app/(site)/` (home, privacy, shared pitch `/p/[token]`) keeps `SiteHeader`/`SiteFooter`; `app/(app)/` (studio, new, project/*, settings, shops) renders `components/shell/AppFrame.tsx`: a collapsible left sidebar (collapsed state in localStorage, try/catch), a bottom-sheet menu under `lg`, and a top bar with the page title (`titleFor` in `components/shell/nav.ts`), the AI budget pill and "+ New product". URLs didn't change.
+- `/studio` is "My products": `ProductGrid` (search, sort by last updated / name / furthest along) of `ProductCard`s (spinning model or render, name, one `statusLine()` from `lib/studio/statusLine.ts`, six progress dots, a ⋯ menu: Open, Rename, Duplicate / "Make my own copy" for examples, Share pitch, Delete with an in-card confirm). The old `StudioCard` numbers move to the product page in step 3.
+- "Last updated" is `project.json`'s mtime (`projectUpdatedAt`), so `Project` didn't change. `visibleProducts()` (`lib/studio/visibleProducts.ts`) feeds both the grid and the sidebar's Recent.
+- Two thin routes: `PATCH /api/projects/[id]` `{ name }` (owner only) and `POST /api/projects/[id]/duplicate` (yours or an example → a private copy; `duplicateProject` copies files and rewrites file URLs; share link, learning opt-in and learning records stay with the original).
+
 ### Build 1 – Studio dashboard (built)
 - `/studio` (`app/studio/page.tsx`, skeleton in `loading.tsx`): dark header band (title + products/versions/idle-machine stats), then one `StudioCard` per product this browser can see (own products newest first, then examples), plus a "Start a product" card. Header and footer link "Studio"; `/projects` redirects to `/studio`; deletes land there.
 - Derived, pure, tested (`lib/studio/`): `stageProgress()` (a stage is done when its data exists on the latest version; the current stage is the first gap, so later stages can be done out of order), `nextStep()` (ordered rules: wrong units → analyze → set a price → rework if unprofitable at every volume → talk to a shop → write pitch → share; each links to the screen that does it), `keyNumbers()` (best-path unit cost at target qty, retail, margin at target qty) and `unitCostTrend()` (best-path unit cost per analyzed version). Make/Launch/Sell rules gain quotes, plan and listing in builds 3–5.
@@ -516,7 +523,7 @@ type EtsyListing = { title: string; description: string; tags: string[]; priceUs
 - `etsySale()` (`lib/sell/fees.ts`): what one sale leaves after Etsy's approximate US fees ($0.20 listing, 6.5% transaction, 3% + $0.25 payment processing), and profit per sale after the chosen quote's price or the analysis unit cost (a range). Update the constants if Etsy's fees change.
 - Sell stage is done when a listing exists; next step "Create your listing" follows a plan; the agent's context mentions the listing. Both examples are seeded with real listings.
 
-### Own API key – frontend (built; backend pending)
+### Own API key – frontend (built; backend merged)
 - The key storage and AI gateway are the backend's (BACKEND.md A1/A2, merged). **Don't build encryption, key storage or provider routing in the frontend.** Every call to them goes through `lib/client/aiKey.ts`, which follows the contract under "Backend API contract" below. If a key route is missing (Next's HTML 404), the settings page shows "Coming soon" instead of pretending a key was saved. Only Anthropic is supported; OpenAI is listed, disabled, as Coming soon.
 - Every call goes through `lib/client/aiKey.ts`. A route that doesn't exist yet (Next's HTML 404) means "not available": `/settings` shows Save and Test as "Coming soon" and never shows a saved key the server didn't return. The trust sentence is shown as-is only once saving is live.
 - `/settings` (`components/settings/AiKeySettings.tsx`): provider picker (Anthropic; OpenAI disabled, Coming soon), password-type key field, Test key, Save, masked saved key + Remove key, and the demo budget. `HeaderAiPill` (in `SiteHeader`) shows "Your key" or "Demo budget: $X left" from `GET /api/usage` (`UsageSummary.keySource`, `demoBudgetRemainingUsd`), re-checked on each navigation. `OwnKeyPrompt` on the studio is dismissible (localStorage, try/catch). The agent panel footer links to `/settings`.
