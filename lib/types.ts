@@ -52,6 +52,8 @@ export type ProjectVersion = {
   sourcing?: Sourcing;
   /** Quote requests to the matched local demo shops, and their simulated quotes (Phase 10+ build 3). */
   outreach?: Outreach;
+  /** Order coordination: which source supplies each BOM line, the assembler, drafted orders and the user's sign-off. */
+  order?: OrderCoordination;
 };
 
 /** How far a quote request goes. Private by default: a spec summary, no renders or notes. */
@@ -271,7 +273,7 @@ export type AgentMessage = { role: "user" | "assistant"; content: string };
 export type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell";
 
 /** What an AI call is for (BACKEND.md A1). The gateway routes model, effort and budget by task. */
-export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation";
+export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "order_draft";
 
 /** Whose API key paid for a call: the creator's own (A2) or the house demo key. */
 export type KeySource = "user" | "house";
@@ -352,4 +354,89 @@ export type Outcome = {
   value?: number; // units_sold: units
   source: LearningSource;
   createdAt: string;
+};
+
+// ---------------------------------------------------------------------------
+// Order coordination: one production run across every supplier plus a
+// low-volume assembler. Only the user's choices are stored; the plan (order
+// quantities, shipping, landed cost, dates) is computed by lib/orders/plan.ts.
+// Nothing is ordered, paid or sent by the app: the user signs off in the app,
+// then sends each drafted message themselves.
+// ---------------------------------------------------------------------------
+
+/** Same values as the BOM module's categories, so its lines map across one to one. Only custom parts are made to order. */
+export type OrderLineKind = "custom_part" | "hardware" | "electronics" | "material" | "finish" | "packaging";
+
+/** One bill-of-materials line as the order layer reads it (adapter: lib/orders/lines.ts). */
+export type OrderLine = {
+  id: string;
+  name: string;
+  kind: OrderLineKind;
+  /** Per finished product, in `unit`. */
+  quantityPerUnit: number;
+  unit: "pc" | "set" | "g" | "m" | "ml";
+  /** Spec-level description a supplier can quote from (material, size, standard, finish). */
+  spec?: string;
+  process?: Process;
+  material?: string;
+};
+
+/** Where one line's parts come from. */
+export type OrderSource =
+  | { kind: "local_quote"; quoteId: string } // a demo quote on version.outreach
+  | { kind: "alibaba"; supplierId: string } // a supplier on version.sourcing, with a recorded quote
+  | { kind: "catalog"; vendor: string; unitUsd: number; leadDays: number; moq?: number; overseas: boolean }; // typed in, e.g. screws from a distributor
+
+export type OrderRecipient =
+  | { kind: "local_quote"; quoteId: string }
+  | { kind: "alibaba"; supplierId: string }
+  | { kind: "assembler"; assemblerId: string };
+
+export type OrderMessagePurpose = "purchase_order" | "assembly_rfq";
+
+export type OrderMessage = {
+  id: string;
+  to: OrderRecipient;
+  purpose: OrderMessagePurpose;
+  subject: string;
+  text: string;
+  /** "draft" until the user says they sent it themselves. */
+  state: "draft" | "sent";
+  at: string;
+  aiDrafted?: boolean;
+};
+
+export type OrderSignOff = {
+  at: string;
+  /** Fingerprint of the run, assignments and assembler signed off; any change clears the sign-off. */
+  fingerprint: string;
+  landedTotalUsd: { low: number; high: number };
+};
+
+export type OrderCoordination = {
+  /** Finished units to build in this run. */
+  runQuantity: number;
+  assignments: { lineId: string; source: OrderSource }[];
+  assemblerId?: string;
+  messages: OrderMessage[];
+  signOff?: OrderSignOff;
+};
+
+export type AssemblyCapability = "mechanical" | "electronics" | "adhesive_bonding" | "finishing" | "testing" | "kitting" | "packaging" | "fulfillment";
+
+/** A fictional LA-area contract assembler (data/assemblers.json), shown with DemoBadge. */
+export type AssemblyPartner = {
+  id: string;
+  name: string;
+  neighborhood: string;
+  description: string;
+  capabilities: AssemblyCapability[];
+  minUnits: number;
+  maxUnits: number;
+  setupUsd: number;
+  /** Loaded labor rate, per minute of hands-on assembly. */
+  laborUsdPerMinute: number;
+  leadDays: number;
+  idleThisMonth: boolean;
+  isDemoData: true;
 };

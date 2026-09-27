@@ -4,12 +4,14 @@ import { AGENT_SYSTEM_PROMPT } from "../agent/prompt";
 import type { AgentMessage, AiTask } from "../types";
 import { analysisOutputSchema, pitchOutputSchema, priceSuggestionOutputSchema } from "../schemas";
 import { getShops } from "../shops";
+import { orderDraftOutputSchema } from "../orders/schemas";
 import { sourcingPlanOutputSchema, supplierDraftOutputSchema } from "../sourcing/schemas";
 import { summarizeCapacity } from "./capacity";
 import { PITCH_SYSTEM_PROMPT } from "./pitch";
 import { PRICE_SYSTEM_PROMPT } from "./price";
 import { buildSystemPrompt } from "./prompt";
 import type { CallModel } from "./run";
+import { ORDER_DRAFT_SYSTEM_PROMPT } from "./orders";
 import { NEGOTIATION_SYSTEM_PROMPT, SOURCING_PLAN_SYSTEM_PROMPT } from "./sourcing";
 import type { CallTextModel } from "./structured";
 
@@ -38,16 +40,17 @@ export function analysisCaller(workspaceId: string): CallModel {
     });
 }
 
-type TextTask = Extract<AiTask, "price" | "pitch" | "sourcing_plan" | "negotiation">;
+type TextTask = Extract<AiTask, "price" | "pitch" | "sourcing_plan" | "negotiation" | "order_draft">;
 
 const TEXT_TASKS: Record<TextTask, { system: string; schema: z.ZodType }> = {
   price: { system: PRICE_SYSTEM_PROMPT, schema: priceSuggestionOutputSchema },
   pitch: { system: PITCH_SYSTEM_PROMPT, schema: pitchOutputSchema },
   sourcing_plan: { system: SOURCING_PLAN_SYSTEM_PROMPT, schema: sourcingPlanOutputSchema },
   negotiation: { system: NEGOTIATION_SYSTEM_PROMPT, schema: supplierDraftOutputSchema },
+  order_draft: { system: ORDER_DRAFT_SYSTEM_PROMPT, schema: orderDraftOutputSchema },
 };
 
-/** A text-only structured call (price, pitch, sourcing plan, negotiation draft). */
+/** A text-only structured call (price, pitch, sourcing plan, negotiation draft, order email). */
 export function textCaller(task: TextTask, workspaceId: string): CallTextModel {
   const { system, schema } = TEXT_TASKS[task];
   return (text) => gateway.generate({ task, workspaceId, schema, system: [{ text: system }], messages: [{ role: "user", content: text }] });

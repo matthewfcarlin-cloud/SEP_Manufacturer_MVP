@@ -33,4 +33,6 @@ export const TASK_ROUTES: Record<AiTask, TaskRoute> = {
   sourcing_plan: { model: STRONGEST_MODEL, effort: "low", maxTokens: 8_000, thinking: false, budgetAction: "sourcing" },
   // One negotiation message; judgment matters more than length.
   negotiation: { model: STRONGEST_MODEL, effort: "medium", maxTokens: 10_000, thinking: false, budgetAction: "negotiation" },
+  // One order or assembly email; it restates signed-off numbers, so low effort.
+  order_draft: { model: STRONGEST_MODEL, effort: "low", maxTokens: 8_000, thinking: false, budgetAction: "order" },
 };
