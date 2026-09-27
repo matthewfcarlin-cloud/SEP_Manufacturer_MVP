@@ -5,8 +5,13 @@ import type { ModelTurn } from "../ai/types";
 export type { ModelTurn };
 export type ImageInput = { mediaType: "image/jpeg" | "image/png" | "image/webp"; base64: string };
 
-/** Sends one user turn (images + text) and returns the model's structured answer. */
-export type CallModel = (input: { images: ImageInput[]; text: string }) => Promise<ModelTurn>;
+/**
+ * Sends one user turn and returns the model's structured answer. `text` is
+ * the project brief (what "What the AI sees" shows); `context` is extra
+ * reference material sent after it, such as similar products (B2).
+ */
+export type CallModel = (input: AnalysisInput) => Promise<ModelTurn>;
+export type AnalysisInput = { images: ImageInput[]; text: string; context?: string };
 
 /** A failure with a message safe to show the user. */
 export class AnalysisError extends Error {
@@ -85,7 +90,7 @@ Produce the complete analysis again, fixing these.`;
  */
 export async function runAnalysis(
   callModel: CallModel,
-  input: { images: ImageInput[]; text: string },
+  input: AnalysisInput,
 ): Promise<Analysis> {
   const first = checkTurn(await callModel(input));
   if (first.ok) return first.analysis;
