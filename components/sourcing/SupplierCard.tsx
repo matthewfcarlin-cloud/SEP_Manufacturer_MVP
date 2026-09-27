@@ -141,7 +141,11 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
           {sent.map((m) => (
             <li key={m.id} className={`max-w-[92%] rounded-lg border border-line p-3 text-sm ${m.from === "me" ? "self-end bg-bg" : "self-start bg-surface"}`}>
               <p className="eyebrow mb-1 text-muted">
-                {m.from === "me" ? "You (sent on Alibaba)" : supplier.name} · {time(m.at)}
+                {m.from === "me" ? "You (sent on Alibaba)" : supplier.name} ·{" "}
+                {/* Server and browser can be in different time zones; the browser's reading wins. */}
+                <time dateTime={m.at} suppressHydrationWarning>
+                  {time(m.at)}
+                </time>
               </p>
               <p className="whitespace-pre-line">{m.text}</p>
             </li>
