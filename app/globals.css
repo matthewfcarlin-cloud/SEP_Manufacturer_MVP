@@ -148,20 +148,3 @@ body {
   }
 }
 
-/* Infinite horizontal ticker: content is rendered twice, so -50% loops seamlessly. */
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@utility animate-marquee {
-  animation: marquee var(--marquee-duration, 60s) linear infinite;
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
-}

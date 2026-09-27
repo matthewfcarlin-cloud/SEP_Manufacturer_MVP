@@ -59,9 +59,9 @@ const briefSchema = z.object({
     .pipe(z.array(z.string().max(40)).max(MAX_MATERIAL_HINTS, "Up to 10 material ideas.")),
 });
 
-const fieldsSchema = briefSchema.extend({
-  name: z.string().trim().min(1, "Give the project a name.").max(120, "Keep the name under 120 characters."),
-});
+export const projectNameSchema = z.string().trim().min(1, "Give the project a name.").max(120, "Keep the name under 120 characters.");
+
+const fieldsSchema = briefSchema.extend({ name: projectNameSchema });
 
 export const MAX_CHANGE_NOTE = 1000;
 

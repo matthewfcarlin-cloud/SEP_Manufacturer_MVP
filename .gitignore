@@ -48,3 +48,6 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# eval run outputs (commit the average in the PR description instead)
+/evals/results/

@@ -1,11 +1,11 @@
 # Using Moko
 
-**Design around the machines that are already running.**
+**Turn your idea into a product you can sell: find the manufacturers who can make it, and reach out to them.**
 
 Moko is for independent inventors and small hardware teams. You upload a part (a CAD file, a few photos, and what you know about it). In return you get:
 
 - **How it could be made:** 2–4 manufacturing processes, each with cost ranges, lead times and specific design tweaks.
-- **Who could make it:** nearby shops whose machines fit the part, with machines sitting idle this month ranked first.
+- **Who could make it:** local shops whose machines fit the part, and overseas suppliers through Alibaba sourcing, with the request written for you.
 - **Whether it makes money:** unit cost at different run sizes, margins, tooling payback and a plain-English verdict.
 - **A pitch for a company:** a licensing pitch with studio renders, the economics, how the design improved, and a 30-second commercial storyboard. You can export it as a PDF or share it with a private link.
 
@@ -47,7 +47,7 @@ Click **Analyze manufacturing**. It takes about 1–2 minutes. You get:
 - **Cost per part by quantity:** a chart showing how each process's all-in cost (tooling spread over the run) changes from 10 to 10,000 units. Hover for exact ranges, or open **Show as table**.
 - **Manufacturing paths:** each process with its fit score, costs, pros and cons, and **design tweaks**. Every tweak names a concrete change to your part and what it saves.
 - **Risks to check**, and a **30-second commercial storyboard**.
-- **Shop matches:** up to five demo shops ranked by process, part size, material, order size and idle capacity. **What this shop would see** shows the spec summary a quote request would carry: size, material, quantity and process. Your design itself isn't included.
+- **Shop matches:** up to five demo shops ranked by process, part size, material, order size and how soon they can start. **What this shop would see** shows the spec summary a quote request would carry: size, material, quantity and process. Your design itself isn't included.
 
 ### 4. Iterate: versions and compare
 
@@ -113,7 +113,7 @@ To keep a public demo affordable, AI features are capped at **$3 per browser** a
 ## A 3-minute demo
 
 1. **Landing page:** scroll the "From file to factory" story, then click **See a real analysis** (the fuzz pedal enclosure).
-2. **Pedal analysis:** walk through at a glance, the cost-by-quantity chart, a design tweak, and a shop match with an idle machine.
+2. **Pedal analysis:** walk through at a glance, the cost-by-quantity chart, a design tweak, and a shop match that can start this week.
 3. **Business case:** change the retail price and watch the verdict flip.
 4. **Bracket example:** open **Compare versions**. v1 was drawn for molding; v2 applies the AI's sheet-metal tweak (unit cost −14%, margin up).
 5. **Pitch kit:** scroll the pitch, then **Download PDF**.

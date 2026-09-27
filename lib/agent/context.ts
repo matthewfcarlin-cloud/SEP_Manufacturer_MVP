@@ -102,8 +102,8 @@ function planLines(version: ProjectVersion): string[] {
   ];
 }
 
-/** `similarProducts` is the B2 block from lib/learning/retrieval.ts, when there is one. */
-export function buildAgentContext(project: Project, version: ProjectVersion, similarProducts?: string | null): string {
+/** `learned` is the block from learningContextFor() (similar products, tweaks that worked), when there is one. */
+export function buildAgentContext(project: Project, version: ProjectVersion, learned?: string | null): string {
   const story = buildIterationStory(project).filter((s) => s.to <= version.number);
   const { current } = stageProgress(project);
   const step = nextStep(project);
@@ -125,6 +125,6 @@ export function buildAgentContext(project: Project, version: ProjectVersion, sim
     ...planLines(version),
     version.listing ? `Etsy listing drafted: "${version.listing.title}" at $${version.listing.priceUsd}.` : "Etsy listing: not drafted yet.",
     ...(story.length ? ["", "Version history:", ...story.map((s) => `- v${s.from} → v${s.to}: ${s.summary}`)] : []),
-    ...(similarProducts ? ["", similarProducts] : []),
+    ...(learned ? ["", learned] : []),
   ].join("\n");
 }

@@ -11,7 +11,8 @@
     "typecheck": "next typegen && tsc --noEmit",
     "demo:stl": "node scripts/make-demo-stl.ts",
     "demo:seed": "node scripts/seed-demo.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "eval": "tsx --env-file=.env.local evals/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
@@ -37,6 +38,7 @@
     "eslint-config-next": "16.3.6",
     "manifold-3d": "^3.5.4",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.0.2"
   },

@@ -3,7 +3,7 @@ import type { Shop } from "../types";
 
 /**
  * One line per process describing local capacity, e.g.
- * "- CNC milling: 16 machines at 11 shops, 6 idle this month (largest idle envelope 1270 × 508 × 635 mm). Materials: ...".
+ * "- CNC milling: 16 machines at 11 shops, 6 can start this week (largest 1270 × 508 × 635 mm). Materials: ...".
  * Deterministic for a given seed file, so it can live in the cached system prompt.
  */
 export function summarizeCapacity(shops: readonly Shop[]): string {
@@ -23,8 +23,8 @@ export function summarizeCapacity(shops: readonly Shop[]): string {
     const maxQty = Math.max(...entries.map((e) => e.shop.maxOrderQty));
 
     const idleText = largestIdle
-      ? `${idle.length} idle this month (largest idle envelope ${largestIdle.x} × ${largestIdle.y} × ${largestIdle.z} mm)`
-      : "none idle this month";
+      ? `${idle.length} can start this week (largest ${largestIdle.x} × ${largestIdle.y} × ${largestIdle.z} mm)`
+      : "none can start this week";
     return (
       `- ${PROCESS_LABELS[process]} (${process}): ${entries.length} machines at ${shopCount} shops, ${idleText}. ` +
       `Those shops take orders of ${minQty}-${maxQty.toLocaleString("en-US")} units. Materials: ${materials.join(", ")}.`

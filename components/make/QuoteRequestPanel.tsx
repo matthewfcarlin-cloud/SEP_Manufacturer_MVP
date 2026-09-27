@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { DemoBadge, IdleBadge } from "@/components/Badges";
+import { DemoBadge, StartBadge } from "@/components/Badges";
 import { FormError } from "@/components/upload/UploadPickers";
 import type { ApiResponse } from "@/lib/api";
 import type { Outreach, ShareLevel, SpecSheet } from "@/lib/types";
@@ -73,7 +73,7 @@ export function QuoteRequestPanel({ projectId, version, shops, sheets, requested
                 </span>
               </span>
               <span className="flex flex-wrap gap-1.5">
-                {s.idle && <IdleBadge hoursPerWeek={s.idleHours} />}
+                <StartBadge canStartNow={s.idle} />
                 <DemoBadge />
               </span>
             </li>

@@ -4,7 +4,7 @@ import type { DemoQuote, ProjectVersion, Shop, ShopMatch } from "../types";
 // Simulated quotes from the fictional demo shops. Deterministic (seeded by
 // project, version and shop), free and instant; no AI. Each price sits inside
 // the analysis estimate for the shop's process, placed by how well the job
-// suits the shop: an idle machine and an order in its sweet spot land lower.
+// suits the shop: a machine that can start now and an order in its sweet spot land lower.
 
 const MAX_QUOTES = 5;
 const IDLE_DISCOUNT = 0.25;
@@ -32,13 +32,12 @@ const pick = <T,>(items: readonly T[], random: () => number): T => items[Math.fl
 /** A short, varied note in the shop's voice, from what's true about the shop and the job. */
 function shopNote(match: ShopMatch, quantity: number, shop: Shop, random: () => number): string {
   const machine = match.matchedMachine;
-  const hours = machine.idleHoursPerWeek ? ` (about ${machine.idleHoursPerWeek} h/week)` : "";
   const opener = match.idleBoost
     ? pick(
         [
-          `Our ${machine.model} has open time this month${hours}, so we can start right after sample approval.`,
-          `We have a gap on the ${machine.model}${hours} and would like to fill it with your run.`,
-          `Good timing: the ${machine.model} is open this month${hours}.`,
+          `We can start on our ${machine.model} this week, right after sample approval.`,
+          `Good timing: we can put this on our ${machine.model} this week.`,
+          `We can start this week on the ${machine.model}.`,
         ],
         random,
       )

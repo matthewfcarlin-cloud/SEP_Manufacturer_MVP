@@ -188,8 +188,8 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
           <div className="flex flex-col gap-4 rounded-xl border border-dashed border-line p-6">
             <p className="max-w-2xl text-muted">
               An AI manufacturing engineer will read your part, photos, and notes, then suggest 2–4
-              ways to make it with estimated costs, lead times, and design tweaks, favoring machines
-              that are idle at local shops this month.
+              ways to make it with estimated costs, lead times, and design tweaks, and which local
+              shops can make it.
             </p>
             <RunAnalysisButton projectId={project.id} version={version.number} />
           </div>

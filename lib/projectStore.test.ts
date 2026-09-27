@@ -2,7 +2,7 @@ import { access, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:f
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { addVersion, createProject as createOwnedProject, deleteProject, deleteVersion, type NewProjectInput, getProject, listProjects, readProjectFile, RenderError, saveVersionRenders, updateVersion } from "./projectStore";
+import { addVersion, createProject as createOwnedProject, deleteProject, deleteVersion, type NewProjectInput, duplicateProject, getProject, listProjects, projectUpdatedAt, readProjectFile, RenderError, saveVersionRenders, updateVersion } from "./projectStore";
 import type { GeometryStats } from "./types";
 
 const geometry: GeometryStats = {
@@ -221,5 +221,38 @@ describe("projectStore", () => {
     const ids = (await listProjects()).map((p) => p.id);
     expect(ids.indexOf(newer.id)).toBeLessThan(ids.indexOf(older.id));
     expect(ids).not.toContain("BROKEN0000");
+  });
+
+  test("duplicates a project as a new private copy with its files, minus sharing and learning data", async () => {
+    const stl = new Uint8Array([7, 8, 9]);
+    const source = await createProject({ fields: { name: "Stand", notes: "", targetQuantity: 20, materialHints: [] }, stl, geometry, images: [] });
+    await writeFile(path.join(dir, "projects", source.id, "events.jsonl"), "{}\n");
+    const shared = { ...source, share: { token: "t".repeat(22), enabled: true, createdAt: source.createdAt }, learning: { contribute: true, updatedAt: source.createdAt } };
+    await writeFile(path.join(dir, "projects", source.id, "project.json"), JSON.stringify(shared));
+    const OTHER = "b".repeat(64);
+
+    const copy = await duplicateProject(source.id, OTHER);
+
+    expect(copy).not.toBeNull();
+    expect(copy!.id).not.toBe(source.id);
+    expect(copy!.name).toBe("Stand (copy)");
+    expect(copy!.owner).toEqual({ keyHash: OTHER });
+    expect(copy!).not.toHaveProperty("share");
+    expect(copy!).not.toHaveProperty("learning");
+    expect(copy!.versions[0].cadFileUrl).toBe(`/api/files/${copy!.id}/model.stl`);
+    expect([...(await readProjectFile(copy!.id, "model.stl"))!.bytes]).toEqual([...stl]);
+    await expect(access(path.join(dir, "projects", copy!.id, "events.jsonl"))).rejects.toThrow();
+    expect(await getProject(copy!.id)).toEqual(copy);
+    expect(await duplicateProject("nope000000", OTHER)).toBeNull();
+  });
+
+  test("reports when a project was last saved", async () => {
+    const created = await createProject({ fields: { name: "Clock", notes: "", targetQuantity: 5, materialHints: [] }, stl: new Uint8Array([1]), geometry, images: [] });
+    const before = await projectUpdatedAt(created.id);
+    expect(before).toBeInstanceOf(Date);
+    await new Promise((r) => setTimeout(r, 20));
+    await updateVersion(created.id, 1, (v) => ({ ...v, notes: "changed" }));
+    expect((await projectUpdatedAt(created.id))!.getTime()).toBeGreaterThan(before!.getTime());
+    expect(await projectUpdatedAt("nope000000")).toBeNull();
   });
 });

@@ -25,8 +25,8 @@ export function ShopBrowser({ shops }: { shops: readonly Shop[] }) {
             type="search"
             value={filter.query}
             onChange={(e) => update({ query: e.target.value })}
-            placeholder="Search shops or machines"
-            aria-label="Search shops"
+            placeholder="Search by name, place or what they make"
+            aria-label="Search manufacturers"
             className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink sm:max-w-md"
           />
           <label className="flex items-center gap-2 text-sm">
@@ -36,7 +36,7 @@ export function ShopBrowser({ shops }: { shops: readonly Shop[] }) {
               onChange={(e) => update({ idleOnly: e.target.checked })}
               className="h-4 w-4 accent-[var(--idle)]"
             />
-            Idle machines only
+            Can start this week
           </label>
         </div>
         <div
@@ -53,19 +53,19 @@ export function ShopBrowser({ shops }: { shops: readonly Shop[] }) {
               onClick={() => update({ process: p })}
               className={`${chipBase} ${filter.process === p ? chipOn : chipOff}`}
             >
-              {p === "all" ? "All processes" : PROCESS_LABELS[p]}
+              {p === "all" ? "Everything" : PROCESS_LABELS[p]}
             </button>
           ))}
         </div>
       </div>
 
       <p className="text-sm text-muted" aria-live="polite">
-        Showing {visible.length} of {shops.length} shops
+        Showing {visible.length} of {shops.length} manufacturers
       </p>
 
       {visible.length === 0 ? (
         <div className="rounded-xl border border-dashed border-line p-10 text-center text-sm text-muted">
-          No shops match these filters.{" "}
+          No manufacturers match these filters.{" "}
           <button type="button" className="underline" onClick={() => setFilter(DEFAULT_SHOP_FILTER)}>
             Clear filters
           </button>

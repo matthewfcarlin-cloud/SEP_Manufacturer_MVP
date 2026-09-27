@@ -30,7 +30,7 @@ This doc is the team reference: what we're building, why, and how each piece wor
 
 Our customer discovery call was with a veteran model maker and inventor (Lucasfilm, Mattel, Sega). He pitched about 250 ideas a year to land two. His prototypes died on **manufacturing and tooling cost**, not design. His lessons:
 
-- Design around what a factory already has running, especially idle machines.
+- Design around what real factories already make, and find the one who can take your run early.
 - Good design alone doesn't close the deal. Manufacturability and profitability do.
 - Pitch with how it will *sell*, not just how it works.
 
@@ -43,7 +43,7 @@ Most people only learn this after years on factory floors. First-time creators d
 | **Primary (beachhead)** | Etsy sellers who've outgrown print-on-demand | Want an original product but don't know how manufacturing works; one bad tooling bet wipes out profit | Already pay for Printify/Etsy tools; understand listings and margins |
 | Secondary | Students and first-time founders | Can model something but can't tell if it's makeable or profitable | Easiest users to get today |
 | Secondary | Hobby makers with a 3D printer | Don't know when to switch from printing to molding/CNC | Loud online, most likely to share on X |
-| Supply side | Small shops and manufacturers | Idle machine time | Fill downtime with small runs (like Printify's print providers) |
+| Supply side | Small shops and manufacturers | Small runs are hard to find and quote | Clear, ready-to-quote requests from serious creators (like Printify's print providers) |
 
 ## The creator journey
 
@@ -82,10 +82,10 @@ The core engine. Measures the part, flags problems, explains the best ways to ma
 - **Later:** tolerance/material guidance, "why" explainer per tweak, sketch-to-3D.
 - **Why it's different:** design tools stop at the model; quoting sites judge a finished file. We connect each design change to cost, process, and supplier while the idea is still changing.
 
-### 3. Manufacturer match — *who can make it, including idle machines nearby* · ✅ Built
+### 3. Manufacturer match — *who can make it: local shops and overseas suppliers* · ✅ Built
 
-- **Creator sees:** ranked shop cards with score and reasons, the matched machine, "Idle this month" badge, tweaks needed to fit.
-- **How it works:** deterministic scoring (process, envelope, material, quantity, idle boost) weighted by path fit. Shops see only a spec summary until the creator shares more.
+- **Creator sees:** ranked shop cards with score and reasons, the matched machine, a plain "Can start this week" / "Can start in 2–3 weeks" badge, tweaks needed to fit. Overseas suppliers come through Alibaba sourcing: Moko plans the search and writes the emails; the creator sends them.
+- **How it works:** deterministic scoring (process, envelope, material, quantity, and a small bonus for shops that can start soon) weighted by path fit. Shops see only a spec summary until the creator shares more.
 - **Later:** real shop onboarding portal, verified reviews.
 - **Why it's different:** marketplaces route finished parts to whoever bids. We use real available capacity as a design input.
 
@@ -159,9 +159,9 @@ Upload ─▶ Design assist ─▶ Manufacturer match ─▶ Outreach & quotes �
 
 Keep the existing Moko look. Don't restyle what's built.
 
-- **Header:** dark bar, wordmark, live "N machines idle in LA" status.
+- **Header:** dark bar, wordmark, the AI budget pill.
 - **Type:** huge uppercase wide display headings; small monospace uppercase labels with letter-spacing; clean sans body.
-- **Color:** warm off-white ground in light mode, near-black in dark; one burnt-orange accent; green only for "idle/available/good".
+- **Color:** warm off-white ground in light mode, near-black in dark; one burnt-orange accent; green only for "available/good".
 - **Shape:** sharp corners, 1px borders, cards only where an object needs setting apart.
 - **Motion:** slow turntable 3D models, subtle count-ups on numbers; respect `prefers-reduced-motion`.
 - **Data:** tabular numbers, costs always as ranges labeled "est.", demo data always badged.
@@ -178,7 +178,7 @@ Keep the existing Moko look. Don't restyle what's built.
 
 **How we win**
 1. **Part-aware:** we read the geometry and tie every design change to cost, process, and shop.
-2. **Built for the first run:** idle local capacity makes 100-unit runs realistic.
+2. **Built for the first run:** Moko finds the local shops and overseas suppliers that take 100-unit runs, and writes the request for you.
 3. **One record, whole journey:** a new version updates quotes, plan, price, and listing.
 4. **Made for first-timers:** a next step at every stage, an agent that explains why, private by default.
 
@@ -214,7 +214,7 @@ Keep the existing Moko look. Don't restyle what's built.
 | **Moko** ✅ | Chosen name (2026-09-27). Logo in `public/brand/`, ring icon in `app/icon.png`. |
 | **Firstrun** ⭐ | Every creator is chasing their first production run. Easy to post. |
 | **Madeby** | Share cards write themselves: "made with Madeby." |
-| **Idlefit** | Previous working name, strongest if we lead with idle machines. |
+| **Idlefit** | Previous working name, from the first positioning. |
 | Kilnworks · Partwise · Shopfloor | Alternatives. |
 
 Domains and trademarks not checked yet.

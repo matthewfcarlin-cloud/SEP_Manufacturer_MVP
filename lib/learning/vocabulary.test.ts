@@ -45,7 +45,12 @@ describe("sizeBucket", () => {
 describe("analysis category", () => {
   // A real saved answer (it has the cost-by-volume curves the output schema requires).
   const saved = (JSON.parse(readFileSync("demo/sample-project.json", "utf8")) as Project).versions[0].analysis!;
-  const withCategory = { ...saved, category: "enclosure" };
+  // A new answer also tags every tweak (B4).
+  const withCategory = {
+    ...saved,
+    category: "enclosure",
+    paths: saved.paths.map((p) => ({ ...p, designTweaks: p.designTweaks.map((t) => ({ ...t, category: "add_draft" })) })),
+  };
 
   test("new answers must tag a category from the fixed list", () => {
     const { category: _, ...without } = withCategory;
@@ -59,6 +64,14 @@ describe("analysis category", () => {
     const { category: _, ...without } = withCategory;
     void _;
     expect(storedAnalysisShape.safeParse(without).success).toBe(true);
+  });
+
+  test("new answers must tag every tweak's category from the fixed list; saved ones without it stay readable", () => {
+    const untagged = { ...withCategory, paths: saved.paths };
+    expect(analysisOutputSchema.safeParse(untagged).success).toBe(false);
+    const freeText = { ...withCategory, paths: withCategory.paths.map((p) => ({ ...p, designTweaks: p.designTweaks.map((t) => ({ ...t, category: "make it nicer" })) })) };
+    expect(analysisOutputSchema.safeParse(freeText).success).toBe(false);
+    expect(storedAnalysisShape.safeParse(saved).success).toBe(true);
   });
 
   test("the list ends with a catch-all", () => {

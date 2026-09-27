@@ -1,77 +1,71 @@
 import { PROCESS_LABELS } from "@/lib/processes";
 import type { Machine, Shop } from "@/lib/types";
-import { DemoBadge, IdleBadge } from "./Badges";
+import { DemoBadge, StartBadge } from "./Badges";
 
-function formatEnvelope({ x, y, z }: Machine["envelopeMm"]) {
-  return `${x} × ${y} × ${z} mm`;
-}
+const formatEnvelope = ({ x, y, z }: Machine["envelopeMm"]) => `${x} × ${y} × ${z} mm`;
 
-function MachineRow({ machine }: { machine: Machine }) {
+function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <li
-      className={`rounded-lg border p-3 ${
-        machine.idleThisMonth ? "border-idle/40 bg-idle-soft/40" : "border-line"
-      }`}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <p className="text-sm font-medium">{machine.model}</p>
-          <p className="text-xs text-muted">
-            {PROCESS_LABELS[machine.type]} · {formatEnvelope(machine.envelopeMm)}
-          </p>
-        </div>
-        {machine.idleThisMonth && <IdleBadge hoursPerWeek={machine.idleHoursPerWeek} />}
-      </div>
-      <p className="mt-2 text-xs text-muted">{machine.materials.join(", ")}</p>
-    </li>
+    <div className="flex flex-col gap-0.5">
+      <dt className="eyebrow text-[10px] text-muted">{label}</dt>
+      <dd className="text-sm">{children}</dd>
+    </div>
   );
 }
 
+/** One manufacturer in the directory: who, where, what they make, order size, how soon they can start. */
 export function ShopCard({ shop }: { shop: Shop }) {
+  const makes = [...new Set(shop.machines.map((m) => PROCESS_LABELS[m.type]))];
+  const canStartNow = shop.machines.some((m) => m.idleThisMonth);
   return (
-    <article className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5">
-      <header className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-base font-semibold">{shop.name}</h2>
-          <DemoBadge />
+    <article className="flex flex-col gap-4 border border-line bg-surface p-5">
+      <header className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="font-semibold">{shop.name}</h2>
+          <p className="text-sm text-muted">{shop.neighborhood}, Los Angeles</p>
         </div>
-        <p className="text-sm text-muted">{shop.neighborhood}</p>
+        <DemoBadge />
       </header>
 
-      <p className="text-sm">{shop.description}</p>
-
-      <dl className="grid grid-cols-3 gap-2 text-center text-xs">
-        <div className="rounded-lg bg-bg p-2">
-          <dt className="text-muted">Order qty</dt>
-          <dd className="font-mono font-medium">
-            {shop.minOrderQty.toLocaleString()}–{shop.maxOrderQty.toLocaleString()}
-          </dd>
+      <dl className="grid gap-3 sm:grid-cols-2">
+        <div className="sm:col-span-2">
+          <Fact label="What they make">{makes.join(" · ")}</Fact>
         </div>
-        <div className="rounded-lg bg-bg p-2">
-          <dt className="text-muted">Lead time</dt>
-          <dd className="font-mono font-medium">~{shop.typicalLeadDays} days</dd>
-        </div>
-        <div className="rounded-lg bg-bg p-2">
-          <dt className="text-muted">Machines</dt>
-          <dd className="font-mono font-medium">{shop.machines.length}</dd>
-        </div>
+        <Fact label="Typical order size">
+          {shop.minOrderQty.toLocaleString("en-US")}–{shop.maxOrderQty.toLocaleString("en-US")} units
+        </Fact>
+        <Fact label="How fast they can start">
+          <StartBadge canStartNow={canStartNow} />
+        </Fact>
       </dl>
 
-      <ul className="flex flex-col gap-2">
-        {shop.machines.map((m) => (
-          <MachineRow key={`${m.type}-${m.model}`} machine={m} />
-        ))}
-      </ul>
-
-      {shop.specialties.length > 0 && (
-        <ul className="flex flex-wrap gap-1.5">
-          {shop.specialties.map((s) => (
-            <li key={s} className="rounded-full border border-line px-2 py-0.5 text-xs text-muted">
-              {s}
-            </li>
-          ))}
-        </ul>
-      )}
+      <details className="group border-t border-line pt-3 text-sm">
+        <summary className="cursor-pointer text-muted hover:text-ink">Machines and materials</summary>
+        <div className="mt-3 flex flex-col gap-3">
+          <p className="text-muted">{shop.description}</p>
+          <p className="text-xs text-muted">Usually delivers in about {shop.typicalLeadDays} days.</p>
+          <ul className="flex flex-col gap-2">
+            {shop.machines.map((m) => (
+              <li key={`${m.type}-${m.model}`} className="border border-line p-3">
+                <p className="font-medium">{m.model}</p>
+                <p className="text-xs text-muted">
+                  {PROCESS_LABELS[m.type]} · {formatEnvelope(m.envelopeMm)}
+                </p>
+                <p className="mt-1 text-xs text-muted">{m.materials.join(", ")}</p>
+              </li>
+            ))}
+          </ul>
+          {shop.specialties.length > 0 && (
+            <ul className="flex flex-wrap gap-1.5">
+              {shop.specialties.map((s) => (
+                <li key={s} className="border border-line px-2 py-0.5 text-xs text-muted">
+                  {s}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </details>
     </article>
   );
 }

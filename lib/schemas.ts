@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { PRODUCT_CATEGORIES } from "./learning/vocabulary";
+import { PRODUCT_CATEGORIES, TWEAK_CATEGORIES } from "./learning/vocabulary";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
 import type { AiInputs, AssemblyPartner, Bom, OrderCoordination, DemoQuote, EtsyListing, StoreListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
@@ -540,6 +540,11 @@ const designTweakSchema = z.object({
   change: z.string().describe("The concrete geometry or spec change, referencing this part's features and dimensions."),
   why: z.string().describe("Why it helps for this process at this quantity."),
   impact: z.string().describe("Expected effect, quantified where possible (e.g. '~20% lower unit cost', 'removes a second setup')."),
+  // B4: optional when stored (analyses from before B4 have none); required from the model below.
+  category: z.enum(TWEAK_CATEGORIES).optional(),
+});
+const designTweakOutputSchema = designTweakSchema.extend({
+  category: z.enum(TWEAK_CATEGORIES).describe("What kind of change this is, from the fixed list; \"other\" if none fits."),
 });
 
 /** Volumes at which the model prices each path, for the cost-by-quantity chart. */
@@ -567,7 +572,10 @@ const manufacturingPathBase = z.object({
 
 // The model must always price every volume; stored analyses from before the
 // curve existed (Phase 5 and earlier) are still valid without it.
-const manufacturingPathOutputSchema = manufacturingPathBase.extend({ unitCostAtVolume: unitCostAtVolumeSchema });
+const manufacturingPathOutputSchema = manufacturingPathBase.extend({
+  unitCostAtVolume: unitCostAtVolumeSchema,
+  designTweaks: z.array(designTweakOutputSchema).describe("2-3 tweaks that make this path cheaper or more reliable."),
+});
 const manufacturingPathSchema = manufacturingPathBase.extend({ unitCostAtVolume: unitCostAtVolumeSchema.optional() });
 
 const storyboardShotSchema = z.object({

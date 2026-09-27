@@ -238,33 +238,94 @@ test("uploading a STEP file converts it and measures it in millimeters", async (
   await expect(page.locator("canvas")).toBeVisible();
 });
 
-test("shops page filters to idle lathes", async ({ page }) => {
+test("the Manufacturers directory filters to lathe shops that can start this week", async ({ page }) => {
   await page.goto("/shops");
+  await expect(page.getByRole("heading", { level: 1, name: "Manufacturers" })).toBeVisible();
   await page.getByRole("button", { name: "CNC turning" }).click();
-  await page.getByLabel("Idle machines only").check();
-  await expect(page.getByText("Showing 3 of 25 shops")).toBeVisible();
-  for (const card of await page.locator("article").all()) await expect(card).toContainText("Demo data");
+  await page.getByLabel("Can start this week").check();
+  await expect(page.getByText("Showing 3 of 25 manufacturers")).toBeVisible();
+  for (const card of await page.locator("article").all()) {
+    await expect(card).toContainText("Demo data");
+    await expect(card).toContainText("What they make");
+    await expect(card).toContainText("Typical order size");
+    await expect(card.getByText("Can start this week")).toBeVisible();
+  }
 });
 
-test("the studio shows every product with its stage, numbers and next step", async ({ page }) => {
-  await page.goto("/projects"); // the old list redirects to the studio
+test("no page talks about idle machines", async ({ page }) => {
+  for (const url of ["/", "/present", "/studio", "/shops", `/project/${PEDAL.id}`, `/project/${PEDAL.id}/make`, `/project/${PEDAL.id}/pitch`, `/project/${BRACKET.id}/make`]) {
+    await page.goto(url);
+    await expect(page.locator("body")).not.toContainText(/idle|h\/wk/i);
+  }
+});
+
+test("My products shows each product as a card with one status line and its progress", async ({ page }) => {
+  await page.goto("/projects"); // the old list redirects here
   await expect(page).toHaveURL(/\/studio$/);
-  await expect(page.getByRole("heading", { level: 1, name: "Studio" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "My products" })).toBeVisible();
 
   const pedal = page.locator("article", { hasText: "Fuzz pedal enclosure" });
-  await expect(pedal.getByText("Demo data")).toBeVisible();
-  await expect(pedal.getByRole("list", { name: "Journey stages" }).locator("li")).toHaveCount(6);
-  await expect(pedal.getByRole("list", { name: "Journey stages" })).toContainText("Make (current stage)");
-  await expect(pedal).toContainText("$28.00–$48.00");
-  await expect(pedal).toContainText("$32");
-
-  const bracket = page.locator("article", { hasText: "E-bike charger wall bracket" });
-  await expect(bracket.getByRole("img", { name: /Unit cost went from/ })).toBeVisible();
-  await expect(bracket).toContainText("−14%");
-
+  await expect(pedal.getByText("Example")).toBeVisible();
   await expect(pedal).toContainText("5 quotes waiting");
-  await pedal.getByRole("link", { name: /Next step/ }).click();
-  await expect(page).toHaveURL(new RegExp(`/project/${PEDAL.id}/make$`));
+  await expect(pedal.getByRole("list", { name: "Stage 3 of 6: Make" }).locator("li")).toHaveCount(6);
+  const bracket = page.locator("article", { hasText: "E-bike charger wall bracket" });
+  await expect(bracket).toContainText("Ready to sell");
+
+  await pedal.getByRole("link", { name: "Fuzz pedal enclosure" }).click();
+  await expect(page).toHaveURL(new RegExp(`/project/${PEDAL.id}$`));
+});
+
+test("My products searches, and its menu copies, renames and deletes a product", async ({ page }) => {
+  await page.goto("/studio");
+  await page.getByRole("searchbox", { name: "Search products" }).fill("pedal");
+  await expect(page.locator("article")).toHaveCount(1);
+  await page.getByRole("searchbox", { name: "Search products" }).fill("");
+
+  // Examples offer a private copy instead of rename/delete.
+  const example = page.locator("article", { hasText: "E-bike charger wall bracket" }).first();
+  await example.getByRole("button", { name: /More actions/ }).click();
+  await expect(example.getByRole("menuitem", { name: "Delete…" })).toHaveCount(0);
+  await example.getByRole("menuitem", { name: "Make my own copy" }).click();
+
+  const copy = page.locator("article", { hasText: "E-bike charger wall bracket (copy)" });
+  await expect(copy).toBeVisible();
+  const copyId = new URL(await copy.getByRole("link").first().getAttribute("href") ?? "", "http://x").pathname.split("/")[2];
+  try {
+    await copy.getByRole("button", { name: /More actions/ }).click();
+    await copy.getByRole("menuitem", { name: "Rename" }).click();
+    await copy.getByLabel("New name").fill("My bracket");
+    await copy.getByRole("button", { name: "Save" }).click();
+    const renamed = page.locator("article", { hasText: "My bracket" });
+    await expect(renamed).toBeVisible();
+    await expect(page.getByRole("complementary", { name: "Main" }).getByRole("link", { name: "My bracket" })).toBeVisible();
+
+    await renamed.getByRole("button", { name: /More actions/ }).click();
+    await renamed.getByRole("menuitem", { name: "Delete…" }).click();
+    await renamed.getByRole("button", { name: "Delete for good" }).click();
+    await expect(page.locator("article", { hasText: "My bracket" })).toHaveCount(0);
+  } finally {
+    await rm(path.join(".data", "projects", copyId), { recursive: true, force: true });
+  }
+});
+
+test("the app shell: sidebar collapses and stays collapsed; phones get a bottom-sheet menu", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 860 });
+  await page.goto("/studio");
+  const sidebar = page.getByRole("complementary", { name: "Main" });
+  await expect(sidebar.getByRole("link", { name: "My products" })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("link", { name: "New product" })).toHaveAttribute("href", "/new");
+  await sidebar.getByRole("button", { name: "Collapse sidebar" }).click();
+  await page.reload();
+  await expect(sidebar.getByRole("button", { name: "Expand sidebar" })).toBeVisible();
+  await sidebar.getByRole("button", { name: "Expand sidebar" }).click();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(sidebar).toBeHidden();
+  await page.getByRole("button", { name: "Open menu" }).click();
+  const sheet = page.getByRole("dialog", { name: "Menu" });
+  await sheet.getByRole("link", { name: "Manufacturers" }).click();
+  await expect(page).toHaveURL(/\/shops$/);
+  await expect(sheet).toHaveCount(0);
 });
 
 test("the studio fits a phone without sideways scrolling", async ({ page }) => {
@@ -708,7 +769,7 @@ test("the studio's own-key prompt can be dismissed for good", async ({ page }) =
   await prompt.getByRole("button", { name: "Not now" }).click();
   await expect(prompt).toHaveCount(0);
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1, name: "Studio" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "My products" })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Use your own API key" })).toHaveCount(0);
 });
 

@@ -38,7 +38,7 @@ export function SharePanel({ projectId, share }: { projectId: string; share?: Sh
   const link = share && origin ? `${origin}/p/${share.token}` : "";
 
   return (
-    <section aria-label="Share link" className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4 text-sm">
+    <section id="share" aria-label="Share link" className="flex scroll-mt-20 flex-col gap-3 rounded-xl border border-line bg-surface p-4 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-semibold">Public link {isOn ? "on" : "off"}</p>

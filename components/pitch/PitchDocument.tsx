@@ -1,4 +1,4 @@
-import { DemoBadge, IdleBadge } from "@/components/Badges";
+import { DemoBadge, StartBadge } from "@/components/Badges";
 import { CostByVolumeChart } from "@/components/analysis/CostByVolumeChart";
 import { TierTable } from "@/components/businessCase/TierTable";
 import { VerdictCard } from "@/components/businessCase/VerdictCard";
@@ -190,13 +190,7 @@ function HowItsMade({ version, topMatch }: PitchDocumentProps) {
                 <p className="eyebrow text-accent">
                   Local shop ready to run it
                 </p>
-                {topMatch.match.idleBoost && (
-                  <IdleBadge
-                    hoursPerWeek={
-                      topMatch.match.matchedMachine.idleHoursPerWeek
-                    }
-                  />
-                )}
+                <StartBadge canStartNow={topMatch.match.idleBoost} />
                 <DemoBadge />
               </div>
               <p className="text-2xl font-semibold tracking-tight">
