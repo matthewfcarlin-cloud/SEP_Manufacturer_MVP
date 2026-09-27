@@ -65,6 +65,13 @@ describe("buildNegotiationBrief", () => {
     expect(brief).toContain("INVENTOR: Please quote 250 pcs.");
   });
 
+  test("says outright when the quote is over the walk-away", () => {
+    const over = { ...supplier, quote: { unitUsd: targets.walkAway! + 1 } };
+    expect(buildNegotiationBrief(pedal, v1, undefined, over, 0, targets)).toContain("ABOVE the walk-away");
+    const under = { ...supplier, quote: { unitUsd: targets.target } };
+    expect(buildNegotiationBrief(pedal, v1, undefined, under, 0, targets)).toContain("at or under the target");
+  });
+
   test("asks for a first message when nothing has been sent", () => {
     const brief = buildNegotiationBrief(pedal, v1, undefined, { ...supplier, messages: [] }, 0, targets);
     expect(brief).toContain("(none yet: write the first message)");

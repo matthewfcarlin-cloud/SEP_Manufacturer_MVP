@@ -4,7 +4,7 @@ import { PROCESS_LABELS } from "../processes";
 import { specSummaryFor } from "../specSummary";
 import { draftOf } from "../sourcing/ops";
 import { sourcingPlanAnswerSchema, supplierDraftAnswerSchema, type SupplierDraft } from "../sourcing/schemas";
-import type { NegotiationTargets } from "../sourcing/targets";
+import { quoteStanding, type NegotiationTargets } from "../sourcing/targets";
 import type { Project, ProjectVersion, SourcingPlan, Supplier } from "../types";
 import { runStructured, type CallTextModel } from "./structured";
 
@@ -101,6 +101,15 @@ export function buildNegotiationBrief(
     `Supplier: ${supplier.name} (status: ${supplier.status})`,
     quoteLine(supplier),
   ];
+  const quoted = supplier.quote?.unitUsd;
+  if (quoted !== undefined) {
+    // Said outright, so a model can't read a quote over the walk-away as acceptable.
+    const standing = quoteStanding(quoted, targets);
+    if (standing === "over-walk-away") {
+      lines.push("Their price is ABOVE the walk-away. Do not accept it or ask them to confirm it: push back and ask what would bring it down substantially (larger tier, simpler finish, looser tolerances, FOB).");
+    } else if (standing === "negotiable") lines.push("Their price is above the target but acceptable if it can't come down; counter toward the target before agreeing.");
+    else lines.push("Their price is at or under the target: lock it in and negotiate terms (samples, tooling, payment, inspection).");
+  }
   if (supplier.notes) lines.push(`Inventor's notes on this supplier: ${supplier.notes}`);
   lines.push(otherSupplierCount > 0 ? `The inventor is talking to ${otherSupplierCount} other supplier(s) for this part.` : "This is the only supplier on the shortlist so far.");
   if (plan) lines.push("", "RFQ the inventor uses:", plan.rfq);
