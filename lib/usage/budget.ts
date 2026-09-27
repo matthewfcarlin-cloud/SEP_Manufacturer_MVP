@@ -80,3 +80,10 @@ export async function recordSpend(ownerHash: string, usd: number): Promise<void>
   if (usd <= 0) return;
   await Promise.all([addSpent(ledgerPath("browsers", ownerHash), usd), addSpent(ledgerPath("days", today()), usd)]);
 }
+
+/** What this browser can still spend on the house key today: its own budget, capped by what's left of the site's daily budget. Rounded to cents. */
+export async function demoBudgetRemaining(ownerHash: string): Promise<number> {
+  const [{ remainingUsd }, dailySpent] = await Promise.all([budgetStatus(ownerHash), readSpent(ledgerPath("days", today()))]);
+  const remaining = Math.min(remainingUsd, Math.max(0, dailyLimit() - dailySpent));
+  return Math.floor(remaining * 100) / 100;
+}

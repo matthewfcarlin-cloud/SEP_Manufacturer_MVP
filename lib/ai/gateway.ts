@@ -2,6 +2,7 @@ import type { z } from "zod";
 import type { AiErrorKind, AiTask, KeySource, UsageRecord } from "../types";
 import { ACTION_ESTIMATE_USD, recordSpend } from "../usage/budget";
 import { costOfTurn, type TurnUsage } from "../usage/pricing";
+import { readWorkspaceKey, UnreadableKeyError } from "./keyStore";
 import { createAnthropicProvider, hasHouseKey } from "./providers/anthropic";
 import { TASK_ROUTES } from "./routing";
 import { appendUsage } from "./usageLog";
@@ -19,6 +20,8 @@ export type GatewayStreamEvent = { type: "text"; text: string } | { type: "final
 export type GatewayDeps = {
   /** The house provider, or null when the server has no key. */
   houseProvider: () => AiProvider | null;
+  /** The workspace's own provider (BYOK), or null when it has no key. Throws AiError("invalid_key", "user") if its key can't be read. */
+  userProvider: (workspaceId: string) => Promise<AiProvider | null>;
   logUsage: (record: UsageRecord) => Promise<void>;
   chargeHouse: (workspaceId: string, usd: number) => Promise<void>;
   now?: () => number;
@@ -31,9 +34,12 @@ type Outcome = { ok: true; usage?: TurnUsage } | { ok: false; error: unknown; ch
 export function createGateway(deps: GatewayDeps) {
   const now = deps.now ?? Date.now;
 
-  function pick(): Picked {
+  /** The workspace's own key when it has one (never falling back if that key fails), else the house key. */
+  async function pick(workspaceId: string): Promise<Picked> {
+    const user = await deps.userProvider(workspaceId);
+    if (user) return { provider: user, keySource: "user" };
     const house = deps.houseProvider();
-    if (!house) throw new AiError("auth", "house");
+    if (!house) throw new AiError("invalid_key", "house");
     return { provider: house, keySource: "house" };
   }
 
@@ -77,13 +83,12 @@ export function createGateway(deps: GatewayDeps) {
   return {
     /** Whether an AI call can run for this workspace right now. */
     async isConfigured(workspaceId: string): Promise<boolean> {
-      void workspaceId;
-      return deps.houseProvider() !== null;
+      return deps.houseProvider() !== null || (await deps.userProvider(workspaceId).catch(() => null)) !== null;
     },
 
     /** One structured call. Validation and retries stay with the caller (lib/analysis/). */
     async generate(req: GenerateRequest): Promise<ModelTurn> {
-      const picked = pick();
+      const picked = await pick(req.workspaceId);
       const startedAt = now();
       try {
         const turn = await picked.provider.parse({ ...providerCall(req), schema: req.schema });
@@ -97,7 +102,7 @@ export function createGateway(deps: GatewayDeps) {
 
     /** A streamed text answer, metered once when it finishes or breaks. */
     async *stream(req: StreamRequest): AsyncGenerator<GatewayStreamEvent> {
-      const picked = pick();
+      const picked = await pick(req.workspaceId);
       const startedAt = now();
       let hasStreamedText = false;
       try {
@@ -119,20 +124,33 @@ export function createGateway(deps: GatewayDeps) {
 }
 
 function errorKindOf(error: unknown): AiErrorKind {
-  return error instanceof AiError ? error.kind : "provider";
+  return error instanceof AiError ? error.kind : "provider_down";
 }
 
 export type Gateway = ReturnType<typeof createGateway>;
 
 let houseProvider: AiProvider | undefined;
 
-/** The app's gateway: the house Anthropic key, usage rows on disk, the per-browser demo budget. */
+/** A provider on the workspace's saved key. The plaintext key goes straight into the SDK client and nowhere else. */
+async function userProviderFor(workspaceId: string): Promise<AiProvider | null> {
+  try {
+    const saved = await readWorkspaceKey(workspaceId);
+    return saved ? createAnthropicProvider("user", saved.apiKey) : null;
+  } catch (err) {
+    if (!(err instanceof UnreadableKeyError)) throw err;
+    console.error("[ai/gateway] a workspace's saved key can't be decrypted; it needs to be added again");
+    throw new AiError("invalid_key", "user");
+  }
+}
+
+/** The app's gateway: the workspace's own key or the house key, usage rows on disk, the per-browser demo budget. */
 export const gateway: Gateway = createGateway({
   houseProvider: () => {
     if (!hasHouseKey()) return null;
     houseProvider ??= createAnthropicProvider("house");
     return houseProvider;
   },
+  userProvider: userProviderFor,
   logUsage: appendUsage,
   chargeHouse: recordSpend,
 });

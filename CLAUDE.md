@@ -50,6 +50,7 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `POST /api/sourcing/draft` `{ projectId, version, supplierId }` – AI drafts the next message to one supplier, saved as its unsent draft
 - `PUT /api/sourcing` `{ projectId, version, op }` – shortlist edits: add/update/remove supplier, paste a reply, save/discard a draft, mark a draft sent
 - `POST /api/agent` – build agent, streams NDJSON answer events (Phase 10)
+- `GET/POST/DELETE /api/settings/ai-key`, `POST /api/settings/ai-key/test`, `GET /api/usage` – bring your own key (see "Backend API contract")
 
 ## Data models
 ```ts
@@ -101,7 +102,10 @@ type AppliedTweak = { fromVersion: number; process: Process; change: string; why
 // AI gateway (BACKEND.md A1): one metered row per AI call, never any prompt or response content
 type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation";
 type KeySource = "user" | "house";
-type AiErrorKind = "auth" | "rate_limit" | "connection" | "provider";
+type AiErrorCode = "invalid_key" | "quota_exceeded" | "budget_exhausted" | "provider_down"; // `code` on AI error responses
+type AiErrorKind = Exclude<AiErrorCode, "budget_exhausted">;                                // provider failures (AiError.kind)
+type AiKeyInfo = { provider: "anthropic"; maskedKey: string; createdAt: string };           // maskedKey like "sk-ant-…7Q2f"
+type UsageSummary = { keySource: KeySource; maskedKey?: string; demoBudgetRemainingUsd: number };
 type UsageRecord = { at: string; workspaceId: string; task: AiTask; provider: "anthropic"; model: string;
   inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number;
   estCostUsd: number; keySource: KeySource; latencyMs: number; ok: boolean; errorKind?: AiErrorKind };
@@ -481,6 +485,49 @@ The chat underneath (built first as "phase 10"):
 - Budget: action `chat` (estimate $0.10). The gateway charges the real cost when the stream finishes, or the estimate if it breaks after text was sent. A refusal ends with an `error` event.
 - UI: `components/agent/BuildAgent.tsx`, a launcher button plus side panel (full-screen on phones, Escape closes, Stop while streaming). Three starters from `starterQuestions()` (`lib/agent/starters.ts`), built from the version's own numbers, no AI call. Conversations live in the browser only; they aren't stored.
 
+## Backend API contract
+
+For the frontend agent (BACKEND.md A2). All routes use the `ApiResponse<T>` envelope from `lib/api.ts`. Every route below works on the calling browser's workspace (its `idlefit_owner` cookie); without that cookie they answer 400. Types are in `lib/types.ts`.
+
+```ts
+// Success
+{ success: true, data: T, error: null }
+// Failure. `code` is present only for AI failures the UI should handle specially.
+{ success: false, data: null, error: string /* plain English, safe to show */, code?: AiErrorCode }
+```
+
+### `GET /api/settings/ai-key`
+- 200 → `{ key: AiKeyInfo | null }`, e.g. `{ key: { provider: "anthropic", maskedKey: "sk-ant-…7Q2f", createdAt: "2026-09-27T20:00:00.000Z" } }`
+
+### `POST /api/settings/ai-key`: test, then save
+- Request: `Content-Type: application/json` (anything else → 415), body `{ provider?: "anthropic", apiKey: string }` (1–256 chars after trimming).
+- Tests the key with a one-token call, and saves it (encrypted, replacing any earlier key) only if the test passes.
+- 200 → `AiKeyInfo` (masked; the full key is never returned).
+- Errors: 400 bad body · 415 not JSON · 422 `invalid_key` (not shaped like `sk-ant-…`, no provider call made) · 401 `invalid_key` (Anthropic rejected it) · 429 `quota_exceeded` (the key signs in but is rate-limited or out of credit; not saved) · 503 `provider_down` · 429 without a code: too many key checks (10 per browser per 10 minutes, shared with `/test`) · 500 unexpected.
+
+### `POST /api/settings/ai-key/test`: test only, never saves
+- Same request, validation and errors as the POST above.
+- 200 → `{ valid: true }`
+
+### `DELETE /api/settings/ai-key`
+- 200 → `{ removed: boolean }` (false if there was no key). AI calls go back to the demo budget.
+
+### `GET /api/usage`: for the header pill
+- 200 → `UsageSummary`: `{ keySource: "house", demoBudgetRemainingUsd: 2.55 }` or `{ keySource: "user", maskedKey: "sk-ant-…7Q2f", demoBudgetRemainingUsd: 2.55 }`.
+- `demoBudgetRemainingUsd` is this browser's demo budget left today, capped by the site's daily budget, rounded down to cents. It's reported even when the creator uses their own key.
+
+### AI error codes (every AI route: analyze, price, pitch, sourcing, agent)
+JSON routes return the code in the envelope. `POST /api/agent` streams it as `{ "type": "error", "message": string, "code"?: AiErrorCode }`. The `error` or `message` text is already written for the creator. Use `code` to choose the banner's action.
+
+| code | HTTP | when | suggested UI |
+|---|---|---|---|
+| `invalid_key` | 401 (their key) / 503 (house key) | the provider rejected the key, or a saved key can't be decrypted any more | link to Settings |
+| `quota_exceeded` | 429 | the key's account is rate-limited or out of credit | their key: link to the Anthropic Console; house key: suggest adding their own key |
+| `budget_exhausted` | 429 | no key of their own, and the demo budget (browser or site-wide daily) is used up | link to Settings to add a key |
+| `provider_down` | 503 | Anthropic is unreachable, overloaded, or returned an error | retry later |
+
+A browser with its own key is never charged to the demo budget and never falls back to the house key: if its key fails, the call fails with that key's error.
+
 ## Rules
 - Costs are always ranges, labeled as estimates.
 - Shops are clearly fictional demo data.
@@ -520,12 +567,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Pitch (Phase 8): `/project/[id]/pitch` pitches the newest analyzed version. `components/pitch/PitchDocument.tsx` is the read-only document (server component, `isOwnerView` toggles gap hints) that Phase 9's share page will reuse; owner controls live only in `PitchToolbar` (hidden in print). Renders are captured once from the 3D model and saved; the pitch then shows stills, no WebGL. Stored render URLs carry `?v=<timestamp>` because `/api/files` caches for a year. PDF = the browser's print: each `.pitch-page` section starts a new landscape Letter page (`app/globals.css`); sections are laid out to fit one page each (checked in E2E by page count). The iteration story comes from `buildIterationStory()` (analyzed versions only). The video slot is `PitchVideoSlot`; wiring a video API means setting `version.pitchVideo` to `{ status: "ready", url, provider }`.
 - Small AI calls (price, pitch, sourcing) share `runStructured()` (`lib/analysis/structured.ts`, one retry naming the failures) and `textCaller(task, workspaceId)` in `callers.ts`. Word limits gate AI answers; user edits get character limits.
 - Business case (Phase 7): all math and the verdict live in `lib/businessCase.ts` (pure, client-safe, tested); the panel recomputes it on every keystroke and auto-saves inputs. Only inputs are stored. Costs between the AI's priced volumes are interpolated log-log; outside 10–10k they're clamped and flagged. The low-volume diagnosis ("tooling makes this unprofitable…") is made on the process that becomes profitable, and an alternative process is only suggested if it covers its own cost at the smallest run.
-- AI gateway (BACKEND.md A1): `lib/ai/`. `gateway.generate({ task, workspaceId, system, messages, schema })` makes one structured call; `gateway.stream(...)` streams text. It picks the key (house `ANTHROPIC_API_KEY` today), takes model/effort/maxTokens/thinking from `TASK_ROUTES` (`routing.ts`), and meters each call: one `UsageRecord` row in `.data/usage/calls/<UTC day>.jsonl` (`usageLog.ts`; tokens, cost, latency, ok, no content) plus the house demo budget. Metering failures are logged, never thrown into the request. `workspaceId` is the owner-cookie hash. Provider adapters (`providers/anthropic.ts`) are the only SDK users (pinned by `lib/ai/boundary.test.ts`); they map SDK errors to `AiError { kind, keySource }` with fixed messages, and turn an unparseable structured answer into an empty turn so the caller's one retry runs. Callers (`lib/analysis/callers.ts`: `analysisCaller`, `textCaller`, `streamAgentReply`, `isAiConfigured`) pair prompts and schemas with a task. Route error mapping is shared: `aiFailure()` / `describeAiError()` in `lib/analysis/errors.ts`, which read only `AiError` kinds. Price briefs (`lib/analysis/price.ts`) deliberately omit costs and the analysis summary, so the price comes from the market, not cost-plus.
+- Bring your own key (BACKEND.md A2): a creator's Anthropic key is tested with a one-token call (`verifyAnthropicKey`, `claude-haiku-4-5`), then sealed with AES-256-GCM (`lib/ai/keyCrypto.ts`, `KEY_ENCRYPTION_SECRET`, workspace id bound as associated data) and stored at `.data/keys/<workspaceId>.json` (mode 600) by `lib/ai/keyStore.ts`. Only the gateway's `userProviderFor` decrypts it, straight into the SDK client. `instrumentation.ts` exits the server at startup if `KEY_ENCRYPTION_SECRET` is missing or isn't 32 base64 bytes. Changing the secret makes saved keys unreadable, which surfaces as `invalid_key` until the creator re-adds theirs. Key routes share `lib/ai/keySettings.ts` (JSON-only bodies, shape check, a 10-per-10-minutes in-memory limit per browser). Logs never include a key or a provider's error message, only status and error type. `lib/ai/keyRoutes.test.ts` checks every response body and console call for the key. User-facing messages for each code are in `lib/ai/errors.ts`.
+- AI gateway (BACKEND.md A1): `lib/ai/`. `gateway.generate({ task, workspaceId, system, messages, schema })` makes one structured call; `gateway.stream(...)` streams text. It picks the key (the workspace's own key when saved, else the house `ANTHROPIC_API_KEY`), takes model/effort/maxTokens/thinking from `TASK_ROUTES` (`routing.ts`), and meters each call: one `UsageRecord` row in `.data/usage/calls/<UTC day>.jsonl` (`usageLog.ts`; tokens, cost, latency, ok, no content) plus the house demo budget. Metering failures are logged, never thrown into the request. `workspaceId` is the owner-cookie hash. Provider adapters (`providers/anthropic.ts`) are the only SDK users (pinned by `lib/ai/boundary.test.ts`); they map SDK errors to `AiError { kind, keySource }` with fixed messages (`kind` is an `AiErrorKind`), and turn an unparseable structured answer into an empty turn so the caller's one retry runs. Callers (`lib/analysis/callers.ts`: `analysisCaller`, `textCaller`, `streamAgentReply`, `isAiConfigured`) pair prompts and schemas with a task. Route error mapping is shared: `aiFailure()` / `describeAiError()` in `lib/analysis/errors.ts`, which read only `AiError` kinds. Price briefs (`lib/analysis/price.ts`) deliberately omit costs and the analysis summary, so the price comes from the market, not cost-plus.
 - Stored data vs. AI rules: stored `priceSuggestion` is validated structurally only; the business rules (`priceSuggestionSchema`) gate new AI answers. Tightening a rule must never make saved projects unreadable.
 - Route lookups: API routes load `{ project, version }` with `findVersion()` from `lib/versionLookup.ts`.
 - Alibaba sourcing: Alibaba has no buyer API (its Open Platform is for sellers/ISVs) and its terms forbid automated access, so the app never searches or messages Alibaba. The AI plans the search and drafts messages (`lib/analysis/sourcing.ts`); the user sends each one on alibaba.com and marks it sent. Negotiation numbers (open / aim / walk-away) come only from `negotiationTargets()` in `lib/sourcing/targets.ts` (analysis estimate, capped by a 30% margin when there's a business case). The walk-away is never put in a supplier message: the prompt forbids it and `runSupplierDraft` retries a draft that states it. Shortlist edits are pure ops in `lib/sourcing/ops.ts`, saved under the project lock via `lib/sourcing/store.ts`. Supplier text is third-party input: it's fenced in the brief and the prompt ignores instructions in it. If a real integration is ever added, sending must stay an explicit per-message user action.
 - Process names mid-sentence: `processInSentence()` ("injection molding", but "CNC milling").
-- Deploying (Railway): `railway.json` holds the build/start/healthcheck config. The service needs a volume (e.g. mounted at `/data`), `IDLEFIT_DATA_DIR=/data`, and `ANTHROPIC_API_KEY`. Optional: `IDLEFIT_BROWSER_BUDGET_USD` (default 3) and `IDLEFIT_DAILY_BUDGET_USD` (default 25) for the AI budget. The start command runs `demo:seed` first, so the examples are (re)installed on the volume at every deploy, which also resets any visitor edits to them. One volume means one replica; that's also what the in-process update lock in `projectStore` assumes.
+- Deploying (Railway): `railway.json` holds the build/start/healthcheck config. The service needs a volume (e.g. mounted at `/data`), `IDLEFIT_DATA_DIR=/data`, `ANTHROPIC_API_KEY`, and `KEY_ENCRYPTION_SECRET` (the server won't start without it). Optional: `IDLEFIT_BROWSER_BUDGET_USD` (default 3) and `IDLEFIT_DAILY_BUDGET_USD` (default 25) for the AI budget. The start command runs `demo:seed` first, so the examples are (re)installed on the volume at every deploy, which also resets any visitor edits to them. One volume means one replica; that's also what the in-process update lock in `projectStore` assumes.
 - Don't run `npm run build` while `next dev` runs from the same folder: the build rewrites `.next` and the dev server then 404s routes added since it started. Stop dev, build, restart.
 - Wall thickness: `lib/wallThickness.ts` is shared by the server (sampled, for `GeometryStats`) and the browser (every triangle, for the viewer's "Show thin walls" overlay). Change the method there, not in two places.
 - Cost by quantity: `lib/costCurve.ts` turns `unitCostAtVolume` + tooling into all-in cost per part and a "cheapest by volume" sentence; `CostByVolumeChart` draws it. Series colors are the validated `--series-1..4` tokens in `app/globals.css`; keep their order.

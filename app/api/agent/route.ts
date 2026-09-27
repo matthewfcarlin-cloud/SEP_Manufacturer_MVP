@@ -52,7 +52,10 @@ export async function POST(request: Request): Promise<Response> {
           );
         }
       } catch (err) {
-        if (!request.signal.aborted) send({ type: "error", message: describeAiError(err, "api/agent").message });
+        if (!request.signal.aborted) {
+          const { message, code } = describeAiError(err, "api/agent");
+          send({ type: "error", message, ...(code && { code }) });
+        }
       } finally {
         try {
           controller.close();

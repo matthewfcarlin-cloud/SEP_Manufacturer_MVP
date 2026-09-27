@@ -25,15 +25,25 @@ describe("tolerateUnparseableOutput", () => {
 describe("toAiError", () => {
   const headers = new Headers();
   test.each([
-    [new Anthropic.AuthenticationError(401, undefined, "bad key sk-ant-SECRET", headers), "auth"],
-    [new Anthropic.PermissionDeniedError(403, undefined, "no", headers), "auth"],
-    [new Anthropic.RateLimitError(429, undefined, "slow", headers), "rate_limit"],
-    [new Anthropic.APIConnectionError({ message: "down" }), "connection"],
-    [new Anthropic.InternalServerError(500, undefined, "oops", headers), "provider"],
+    [new Anthropic.AuthenticationError(401, undefined, "bad key sk-ant-SECRET", headers), "invalid_key"],
+    [new Anthropic.PermissionDeniedError(403, undefined, "no", headers), "invalid_key"],
+    [new Anthropic.RateLimitError(429, undefined, "slow", headers), "quota_exceeded"],
+    [new Anthropic.BadRequestError(400, { type: "error", error: { type: "invalid_request_error", message: "Your credit balance is too low to access the Anthropic API." } }, "Your credit balance is too low to access the Anthropic API.", headers), "quota_exceeded"],
+    [new Anthropic.APIConnectionError({ message: "down" }), "provider_down"],
+    [new Anthropic.InternalServerError(500, undefined, "oops", headers), "provider_down"],
+    [Anthropic.APIError.generate(529, { type: "error", error: { type: "overloaded_error", message: "Overloaded" } }, "Overloaded", headers), "provider_down"],
   ] as const)("maps %s to %s", (err, kind) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
     const mapped = toAiError(err, "user");
     expect(mapped).toBeInstanceOf(AiError);
     expect(mapped).toMatchObject({ kind, keySource: "user" });
+  });
+
+  test("never logs the provider's message, which could echo request details", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    toAiError(new Anthropic.InternalServerError(500, undefined, "boom for sk-ant-SECRET", headers), "user");
+    expect(JSON.stringify(spy.mock.calls)).not.toContain("SECRET");
+    spy.mockRestore();
   });
 
   test("never copies the provider's message, which could echo request details", () => {

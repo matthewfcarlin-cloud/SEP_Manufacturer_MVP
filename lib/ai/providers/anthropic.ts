@@ -11,17 +11,30 @@ import { AiError, type AiProvider, type ChatMessage, type ModelTurn, type Provid
 const FALLBACK_BETA = "server-side-fallback-2026-07-01";
 const PARSE_FAILURE_PREFIX = "Failed to parse structured output";
 
-/** Maps an SDK error to an AiError. Anything else (a bug, a validation error) passes through unchanged. */
+const CREDIT_BALANCE = /credit balance/i;
+
+/**
+ * Maps an SDK error to an AiError. Anything else (a bug, a validation error)
+ * passes through unchanged. Logs only the status and error type: provider
+ * messages can echo request details.
+ */
 export function toAiError(err: unknown, keySource: KeySource): unknown {
   if (err instanceof AiError) return err;
-  if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) return new AiError("auth", keySource, err.status);
-  if (err instanceof Anthropic.RateLimitError) return new AiError("rate_limit", keySource, err.status);
-  if (err instanceof Anthropic.APIConnectionError) return new AiError("connection", keySource);
+  if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) return new AiError("invalid_key", keySource, err.status);
+  if (err instanceof Anthropic.RateLimitError) return new AiError("quota_exceeded", keySource, err.status);
+  if (err instanceof Anthropic.APIConnectionError) return new AiError("provider_down", keySource);
   if (err instanceof Anthropic.APIError) {
-    console.error(`[ai/anthropic] API error ${err.status}`, err.message);
-    return new AiError("provider", keySource, err.status);
+    // "Your credit balance is too low" arrives as a 400.
+    if (err.status === 400 && CREDIT_BALANCE.test(err.message)) return new AiError("quota_exceeded", keySource, err.status);
+    console.error(`[ai/anthropic] API error ${err.status} (${errorType(err)}, ${keySource} key)`);
+    return new AiError("provider_down", keySource, err.status);
   }
   return err;
+}
+
+function errorType(err: InstanceType<typeof Anthropic.APIError>): string {
+  const body = err.error as { error?: { type?: unknown } } | undefined;
+  return typeof body?.error?.type === "string" ? body.error.type : "unknown";
 }
 
 /**
@@ -124,6 +137,21 @@ export function createAnthropicProvider(keySource: KeySource, apiKey?: string): 
       }
     },
   };
+}
+
+// The cheapest possible real call: one token from the smallest model. It
+// proves the key authenticates and its account can spend.
+const VERIFY_MODEL = "claude-haiku-4-5";
+const VERIFY_TIMEOUT_MS = 15_000;
+
+/** Tests a creator's key with a tiny call. Resolves if it works, else throws an AiError (keySource "user"). */
+export async function verifyAnthropicKey(apiKey: string): Promise<void> {
+  const client = new Anthropic({ apiKey, maxRetries: 0, timeout: VERIFY_TIMEOUT_MS });
+  try {
+    await client.messages.create({ model: VERIFY_MODEL, max_tokens: 1, messages: [{ role: "user", content: "Hi" }] });
+  } catch (err) {
+    throw toAiError(err, "user");
+  }
 }
 
 /** True when the server has a house credential the SDK can use. Checked per request so adding a key only needs a restart. */

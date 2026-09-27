@@ -25,11 +25,12 @@ function fakeProvider(overrides: Partial<AiProvider> = {}): AiProvider {
   };
 }
 
-function setup(provider: AiProvider | null = fakeProvider()) {
+function setup(provider: AiProvider | null = fakeProvider(), userProvider: GatewayDeps["userProvider"] = async () => null) {
   const rows: UsageRecord[] = [];
   const charges: { workspaceId: string; usd: number }[] = [];
   const deps: GatewayDeps = {
     houseProvider: () => provider,
+    userProvider,
     logUsage: async (r) => void rows.push(r),
     chargeHouse: async (workspaceId, usd) => void charges.push({ workspaceId, usd }),
     now: (() => {
@@ -95,18 +96,18 @@ describe("gateway.generate", () => {
   });
 
   test("a provider failure is rethrown, logged as a failed row, and not charged", async () => {
-    const failure = new AiError("rate_limit", "house");
+    const failure = new AiError("quota_exceeded", "house");
     const { gateway, rows, charges } = setup(fakeProvider({ parse: vi.fn(async () => Promise.reject(failure)) }));
     await expect(gateway.generate(request)).rejects.toBe(failure);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ ok: false, errorKind: "rate_limit", estCostUsd: 0, inputTokens: 0, keySource: "house" });
+    expect(rows[0]).toMatchObject({ ok: false, errorKind: "quota_exceeded", estCostUsd: 0, inputTokens: 0, keySource: "house" });
     expect(charges).toEqual([]);
   });
 
   test("an unexpected failure is logged with the generic provider kind", async () => {
     const { gateway, rows } = setup(fakeProvider({ parse: vi.fn(async () => Promise.reject(new Error("boom"))) }));
     await expect(gateway.generate(request)).rejects.toThrow("boom");
-    expect(rows[0]).toMatchObject({ ok: false, errorKind: "provider" });
+    expect(rows[0]).toMatchObject({ ok: false, errorKind: "provider_down" });
   });
 
   test("a broken usage log never fails the AI call", async () => {
@@ -114,6 +115,7 @@ describe("gateway.generate", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     const gateway = createGateway({
       houseProvider: () => provider,
+      userProvider: async () => null,
       logUsage: async () => Promise.reject(new Error("disk full")),
       chargeHouse: async () => {},
     });
@@ -125,7 +127,7 @@ describe("gateway.generate", () => {
   test("with no key configured, the call fails as an auth problem without reaching a provider", async () => {
     const { gateway, rows } = setup(null);
     expect(await gateway.isConfigured(WORKSPACE)).toBe(false);
-    await expect(gateway.generate(request)).rejects.toMatchObject({ kind: "auth" });
+    await expect(gateway.generate(request)).rejects.toMatchObject({ kind: "invalid_key" });
     expect(rows).toEqual([]);
   });
 });
@@ -157,24 +159,69 @@ describe("gateway.stream", () => {
     const provider = fakeProvider({
       stream: vi.fn(async function* (): AsyncGenerator<ProviderStreamEvent> {
         yield { type: "text", text: "partial" };
-        throw new AiError("connection", "house");
+        throw new AiError("provider_down", "house");
       }),
     });
     const { gateway, rows, charges } = setup(provider);
-    await expect(collect(gateway.stream(streamRequest))).rejects.toMatchObject({ kind: "connection" });
+    await expect(collect(gateway.stream(streamRequest))).rejects.toMatchObject({ kind: "provider_down" });
     expect(charges).toEqual([{ workspaceId: WORKSPACE, usd: ACTION_ESTIMATE_USD.chat }]);
-    expect(rows[0]).toMatchObject({ ok: false, errorKind: "connection", estCostUsd: ACTION_ESTIMATE_USD.chat });
+    expect(rows[0]).toMatchObject({ ok: false, errorKind: "provider_down", estCostUsd: ACTION_ESTIMATE_USD.chat });
   });
 
   test("a stream that fails before any text is not charged", async () => {
     const provider = fakeProvider({
       stream: vi.fn(async function* (): AsyncGenerator<ProviderStreamEvent> {
-        throw new AiError("rate_limit", "house");
+        throw new AiError("quota_exceeded", "house");
       }),
     });
     const { gateway, rows, charges } = setup(provider);
-    await expect(collect(gateway.stream(streamRequest))).rejects.toMatchObject({ kind: "rate_limit" });
+    await expect(collect(gateway.stream(streamRequest))).rejects.toMatchObject({ kind: "quota_exceeded" });
     expect(charges).toEqual([]);
     expect(rows[0]).toMatchObject({ ok: false, estCostUsd: 0 });
+  });
+});
+
+describe("gateway with the workspace's own key", () => {
+  test("uses the workspace's key, logs it as a user call, and charges nothing to the demo budget", async () => {
+    const house = fakeProvider();
+    const user = fakeProvider();
+    const { gateway, rows, charges } = setup(house, async (ws) => (ws === WORKSPACE ? user : null));
+    await gateway.generate(request);
+    expect(user.parse).toHaveBeenCalledOnce();
+    expect(house.parse).not.toHaveBeenCalled();
+    expect(rows[0]).toMatchObject({ keySource: "user", ok: true });
+    expect(rows[0].estCostUsd).toBeGreaterThan(0);
+    expect(charges).toEqual([]);
+  });
+
+  test("streams on the workspace's key too, without charging the demo budget", async () => {
+    const user = fakeProvider();
+    const { gateway, rows, charges } = setup(fakeProvider(), async () => user);
+    for await (const event of gateway.stream({ ...request, task: "agent_chat", signal: new AbortController().signal })) void event;
+    expect(user.stream).toHaveBeenCalledOnce();
+    expect(rows[0]).toMatchObject({ keySource: "user", task: "agent_chat" });
+    expect(charges).toEqual([]);
+  });
+
+  test("a rejected user key fails the call; it never falls back to the house key", async () => {
+    const house = fakeProvider();
+    const user = fakeProvider({ parse: vi.fn(async () => Promise.reject(new AiError("invalid_key", "user"))) });
+    const { gateway, rows } = setup(house, async () => user);
+    await expect(gateway.generate(request)).rejects.toMatchObject({ kind: "invalid_key", keySource: "user" });
+    expect(house.parse).not.toHaveBeenCalled();
+    expect(rows[0]).toMatchObject({ ok: false, keySource: "user", errorKind: "invalid_key" });
+  });
+
+  test("a saved key that can't be read fails as invalid_key rather than silently using the demo budget", async () => {
+    const house = fakeProvider();
+    const { gateway } = setup(house, async () => Promise.reject(new AiError("invalid_key", "user")));
+    await expect(gateway.generate(request)).rejects.toMatchObject({ kind: "invalid_key", keySource: "user" });
+    expect(house.parse).not.toHaveBeenCalled();
+  });
+
+  test("is configured with a user key even when the server has no house key", async () => {
+    const { gateway } = setup(null, async () => fakeProvider());
+    expect(await gateway.isConfigured(WORKSPACE)).toBe(true);
+    await expect(gateway.generate(request)).resolves.toMatchObject({ output: { ok: true } });
   });
 });

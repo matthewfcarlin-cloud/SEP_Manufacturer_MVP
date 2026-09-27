@@ -40,10 +40,9 @@ export interface AiProvider {
 }
 
 const MESSAGES: Record<AiErrorKind, string> = {
-  auth: "The AI provider rejected the API key.",
-  rate_limit: "The AI provider is rate-limiting requests.",
-  connection: "Couldn't reach the AI provider.",
-  provider: "The AI provider returned an error.",
+  invalid_key: "The AI provider rejected the API key.",
+  quota_exceeded: "The AI provider's rate or spending limit was hit.",
+  provider_down: "The AI provider is unreachable or returned an error.",
 };
 
 /**
