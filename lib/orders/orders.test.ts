@@ -292,3 +292,24 @@ describe("order email briefs", () => {
     expect(orderDraftAnswerSchema.safeParse({ ...base, message: base.message + " Due [date]." }).success).toBe(false);
   });
 });
+
+describe("the bracket's real BOM", () => {
+  const v2 = (bracketRaw as Project).versions[1];
+  const lines = orderLinesFor(v2);
+
+  test("every BOM line becomes an order line, keyed by its BOM id", () => {
+    expect(lines.map((l) => l.id)).toEqual(v2.bom!.items.map((i) => i.id));
+    expect(lines[0]).toMatchObject({ kind: "custom_part", process: "sheet_metal" });
+  });
+
+  test("a finish like powder coat doesn't narrow the assemblers to finishing shops", () => {
+    expect(requiredCapabilities(lines)).not.toContain("finishing");
+    expect(matchAssemblers(lines, v2.targetQuantity).length).toBeGreaterThan(1);
+  });
+
+  test("the custom part gets the chosen quote; bought parts wait for a vendor", () => {
+    const plan = planOrder(v2, lines);
+    expect(plan.lines[0].source).toEqual({ kind: "local_quote", quoteId: "q2-oxbow-metalcraft" });
+    expect(plan.blockers.some((b) => b.lineId === lines[1].id)).toBe(true);
+  });
+});
