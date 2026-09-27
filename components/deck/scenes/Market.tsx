@@ -9,7 +9,7 @@ const SEGMENTS = [
   { tag: "Beachhead", who: "Etsy sellers who've outgrown print-on-demand", why: "Want a product that's really theirs; already pay for tools and know margins" },
   { tag: "Next", who: "Students and first-time founders", why: "Can sketch or model an idea, can't tell if it's makeable or profitable" },
   { tag: "Next", who: "Hobby makers with a 3D printer", why: "Don't know when to switch from printing to CNC or molding" },
-  { tag: "Supply", who: "Small local shops", why: "Fill idle machine time with small runs, like Printify's print providers" },
+  { tag: "Supply", who: "Small local shops", why: "Clear, ready-to-quote small-run requests, like Printify's print providers" },
 ];
 
 const CHANNELS = [

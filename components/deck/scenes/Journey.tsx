@@ -229,7 +229,7 @@ function Match({ on, facts }: { on: boolean; facts: DeckFacts }) {
               transition={{ duration: 0.7, delay: on ? 0.8 : 0 }}
             >
               <span className="size-2.5 rounded-full bg-[#5fd39a]" />
-              Idle this month
+              Can start this week
             </motion.span>
           )}
         </div>

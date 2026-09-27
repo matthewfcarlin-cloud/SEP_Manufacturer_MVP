@@ -59,7 +59,7 @@ export const notes: Record<Beat, string> = {
   moko: "So we built Moko: one guided journey in six stages, where each stage hands off to the next, so a first-timer never asks 'what do I do now?'",
   idea: "Idea: you bring whatever you have, a CAD file, photos, a sketch, notes. Here's a real one, a guitar pedal enclosure.",
   design: "Design: Moko measures the part and gives every way to make it, priced for your quantity, with specific tweaks that make it cheaper. Each tweak becomes a new version you can compare.",
-  make: "Make: it matches you with local shops, idle machines first, and requests quotes. Quotes are simulated in the demo, and labeled that way.",
+  make: "Make: it finds the manufacturers who can make it, local shops and overseas suppliers, writes the request for you, and lines up the quotes. Quotes are simulated in the demo, and labeled that way.",
   money: "Money: the business case. At $32 retail, it tells you straight that nothing makes money at 250 units yet. Better to learn that here than after a $10,000 tooling bill.",
   launch: "Launch: a launch plan with dates and budget, studio renders, and a licensing pitch. A landing page with a waitlist is what we're building today.",
   sell: "Sell: an Etsy-ready listing priced from the business case. Copy-and-paste today, because connecting other sellers' Etsy shops needs Etsy's commercial review.",

@@ -20,7 +20,7 @@ const FLOWS: Record<"printify" | "original", Card[]> = {
     { who: "You", does: "Design an original product with Moko", money: "priced from your business case" },
     { who: "Customer", does: "Orders it from your store" },
     { who: "Moko", does: "Routes the order to a matched local shop", money: "a small fee per order" },
-    { who: "Local shop", does: "Makes it and ships it to your customer", money: "idle machines first" },
+    { who: "Local shop", does: "Makes it and ships it to your customer", money: "found and contacted for you" },
   ],
 };
 

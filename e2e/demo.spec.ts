@@ -253,7 +253,7 @@ test("the Manufacturers directory filters to lathe shops that can start this wee
 });
 
 test("no page talks about idle machines", async ({ page }) => {
-  for (const url of ["/", "/studio", "/shops", `/project/${PEDAL.id}`, `/project/${PEDAL.id}/make`, `/project/${PEDAL.id}/pitch`, `/project/${BRACKET.id}/make`]) {
+  for (const url of ["/", "/present", "/studio", "/shops", `/project/${PEDAL.id}`, `/project/${PEDAL.id}/make`, `/project/${PEDAL.id}/pitch`, `/project/${BRACKET.id}/make`]) {
     await page.goto(url);
     await expect(page.locator("body")).not.toContainText(/idle|h\/wk/i);
   }
