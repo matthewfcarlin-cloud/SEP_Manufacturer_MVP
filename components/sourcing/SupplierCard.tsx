@@ -31,11 +31,13 @@ type Props = {
   targets: NegotiationTargets | null;
   edit: (op: SourcingOp) => Promise<void>;
   draft: (supplierId: string) => Promise<string>;
+  /** Shown as a "Best pick" badge when the comparison picks this supplier. */
+  isBest?: boolean;
 };
 
 const time = (iso: string) => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Props) {
+export function SupplierCard({ supplier, targets, edit, draft: askForDraft, isBest = false }: Props) {
   const { busy, error, run } = useBusy();
   const current = draftOf(supplier);
   const sent = supplier.messages.filter((m) => m.state === "sent");
@@ -74,7 +76,10 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
     <li className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h4 className="text-lg font-semibold">{supplier.name}</h4>
+          <h4 className="text-lg font-semibold">
+            {supplier.name}
+            {isBest && <span className="ml-2 align-middle rounded-full bg-accent/15 px-2 py-0.5 text-xs font-normal text-accent">Best pick</span>}
+          </h4>
           {supplier.email && <p className="truncate font-mono text-xs text-muted">{supplier.email}</p>}
           {supplier.listingUrl && (
             <a href={supplier.listingUrl} target="_blank" rel="noopener noreferrer" className="block truncate text-sm text-accent hover:underline">

@@ -3,11 +3,13 @@
 import { useMemo, useState } from "react";
 import { FormError } from "@/components/upload/UploadPickers";
 import { PROCESS_LABELS, processInSentence } from "@/lib/processes";
+import { rankSuppliers } from "@/lib/sourcing/compare";
 import { emailText } from "@/lib/sourcing/email";
 import { alibabaSearchUrl, negotiationTargets, type NegotiationTargets } from "@/lib/sourcing/targets";
 import type { Process, ProjectVersion } from "@/lib/types";
 import { CopyButton } from "./CopyButton";
 import { SupplierCard } from "./SupplierCard";
+import { SupplierComparison } from "./SupplierComparison";
 import { EMPTY_FIELDS, SupplierFields, parseSupplierFields } from "./SupplierFields";
 import { useBusy, useSourcing } from "./useSourcing";
 
@@ -58,6 +60,8 @@ export function SourcingPanel({ projectId, version }: Props) {
   const [addError, setAddError] = useState<string | null>(null);
   const plan = sourcing.plan;
   const targets = useMemo(() => negotiationTargets(version, plan?.process ?? process), [version, plan?.process, process]);
+  const ranking = useMemo(() => rankSuppliers(sourcing.suppliers, version.targetQuantity, targets), [sourcing.suppliers, version.targetQuantity, targets]);
+  const comparable = sourcing.suppliers.filter((s) => s.status !== "dropped").length >= 2;
 
   const addSupplier = () => {
     const parsed = parseSupplierFields(fields);
@@ -145,10 +149,11 @@ export function SourcingPanel({ projectId, version }: Props) {
       )}
 
       <div className="flex flex-col gap-4">
+        {comparable && <SupplierComparison ranking={ranking} />}
         <h3 className="text-xl font-semibold">Your shortlist</h3>
         {sourcing.suppliers.length > 0 && (
           <ol className="grid gap-4 xl:grid-cols-2">
-            {sourcing.suppliers.map((s) => <SupplierCard key={s.id} supplier={s} targets={targets} edit={edit} draft={draft} />)}
+            {sourcing.suppliers.map((s) => <SupplierCard key={s.id} supplier={s} targets={targets} edit={edit} draft={draft} isBest={comparable && s.id === ranking.best?.supplierId} />)}
           </ol>
         )}
         <details className="rounded-xl border border-dashed border-line p-5" open={sourcing.suppliers.length === 0}>
