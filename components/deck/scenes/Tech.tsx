@@ -8,13 +8,14 @@ import type { Beat } from "../script";
 const LAYERS = [
   { layer: "App", what: "Next.js 16 (App Router) · React 19 · TypeScript · Tailwind 4" },
   { layer: "3D", what: "three.js + react-three-fiber: live viewer, thin-wall overlay, studio renders captured in the browser" },
-  { layer: "Geometry", what: "Our own STL parser; STEP via OpenCascade in WebAssembly → size, volume, area, wall thickness by BVH ray casts" },
+  { layer: "Geometry", what: "Own STL parser; STEP via OpenCascade in WebAssembly → volume, area, wall thickness by ray casts" },
   { layer: "AI", what: "Claude through one gateway: structured JSON validated with zod, one retry, model routed per task" },
-  { layer: "No AI", what: "Shop matching, cost-by-volume curves, break-even, version deltas: plain, tested functions" },
-  { layer: "Ship", what: "Railway + persistent volume · JSON store now, Supabase next · 400+ unit tests, Playwright end-to-end" },
+  { layer: "No AI", what: "Matching, quote ranking, negotiation targets, break-even: pure, tested functions" },
+  { layer: "Privacy", what: "Owner key per browser, 404 to anyone else · CAD never sent to the AI · shops see a spec summary" },
+  { layer: "Ship", what: "Railway + persistent volume · 500+ unit tests, Playwright end-to-end, a 12-part AI eval harness" },
 ];
 
-const FEATURES = ["Analysis", "Agent", "Price", "Pitch", "Plan", "Listing", "Sourcing"];
+const FEATURES = ["Analysis", "Agent", "Price", "BOM", "Sourcing", "Supplier emails", "Orders", "Pitch", "Plan", "Listing"];
 
 const GATEWAY = [
   "Key: the creator's own (AES-256-GCM, never logged) or our capped house budget",
@@ -24,10 +25,10 @@ const GATEWAY = [
 ];
 
 const LOOP = [
-  { step: "Creators act", detail: "apply a tweak, choose a quote, report a sale", status: "Built" },
+  { step: "Creators act", detail: "apply a tweak, choose a quote, enter a real quote", status: "Built" },
   { step: "Events + outcomes", detail: "real, opted-in data only; never files or notes", status: "Built" },
   { step: "Similar products", detail: "nearest past products fed into analysis and agent prompts", status: "Built" },
-  { step: "Calibrated costs", detail: "cost ranges corrected by real quotes; tweaks ranked by what worked", status: "Next" },
+  { step: "Calibrated costs", detail: "cost ranges corrected by real quotes; tweaks ranked by what worked", status: "Built" },
 ];
 
 export function Tech({ beat }: { beat: Beat }) {
@@ -51,25 +52,25 @@ export function Tech({ beat }: { beat: Beat }) {
       ))}
 
       {LAYERS.map((l, i) => (
-        <Show key={l.layer} on={beat === "stack"} delay={0.25 + i * 0.12} className="left-[120px] w-[1680px]" style={{ top: 290 + i * 118 }}>
+        <Show key={l.layer} on={beat === "stack"} delay={0.25 + i * 0.12} className="left-[120px] w-[1680px]" style={{ top: 280 + i * 104 }}>
           <div className="flex items-baseline gap-10 border-t border-[#262624] pt-5">
             <span className="w-[190px] shrink-0 font-mono text-[24px] uppercase tracking-[0.14em] text-[#ff4a00]">{l.layer}</span>
-            <span className="text-[34px] leading-snug text-[#efeeec]">{l.what}</span>
+            <span className="text-[31px] leading-snug text-[#efeeec]">{l.what}</span>
           </div>
         </Show>
       ))}
 
-      <Show on={beat === "gateway"} delay={0.2} className="left-[120px] top-[320px] w-[360px]">
+      <Show on={beat === "gateway"} delay={0.2} className="left-[120px] top-[340px] w-[430px]">
         <Eyebrow className="mb-5 text-[#8f8b83]">Every AI feature</Eyebrow>
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 gap-2.5">
           {FEATURES.map((f) => (
-            <span key={f} className="border border-[#3a3936] bg-[#111110] px-5 py-2.5 text-[28px] text-[#efeeec]">
+            <span key={f} className="border border-[#3a3936] bg-[#111110] px-4 py-2.5 text-[24px] text-[#efeeec]">
               {f}
             </span>
           ))}
         </div>
       </Show>
-      <Show on={beat === "gateway"} delay={0.45} className="left-[600px] top-[360px] w-[820px] border-2 border-[#ff4a00] bg-[#1f130c] p-10">
+      <Show on={beat === "gateway"} delay={0.45} className="left-[610px] top-[360px] w-[810px] border-2 border-[#ff4a00] bg-[#1f130c] p-10">
         <span className="display-type text-[48px] text-[#efeeec]">Gateway</span>
         <ul className="mt-6 flex flex-col gap-4">
           {GATEWAY.map((g, i) => (
@@ -90,7 +91,7 @@ export function Tech({ beat }: { beat: Beat }) {
         <span className="display-type text-[44px] text-[#efeeec]">Claude</span>
         <p className="mt-2 font-mono text-[18px] uppercase tracking-[0.12em] text-[#8f8b83]">Anthropic API</p>
       </Show>
-      <Pulse on={beat === "gateway"} from={490} to={590} y={600} />
+      <Pulse on={beat === "gateway"} from={560} to={600} y={600} />
       <Pulse on={beat === "gateway"} from={1430} to={1530} y={600} />
 
       {LOOP.map((l, i) => (
@@ -120,7 +121,7 @@ export function Tech({ beat }: { beat: Beat }) {
           />
         </svg>
         <p className="mt-2 text-center font-mono text-[22px] uppercase tracking-[0.12em] text-[#8f8b83]">
-          Retrieval + calibration, not model training: works with little data and says where every number came from
+          Retrieval + calibration, not model training · every prompt change scored on 12 golden parts
         </p>
       </Show>
     </>

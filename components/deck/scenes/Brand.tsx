@@ -22,8 +22,8 @@ const logoSpots: Partial<Record<Beat, LogoSpot>> = {
   ...Object.fromEntries(
     (
       [
-        "idea", "design", "make", "money", "launch", "sell", "stack", "gateway", "learning", "market",
-        "distribution", "traction", "field", "whole", "reshoring", "inflection", "model", "margins", "roadmap", "hard",
+        "idea", "design", "make", "outreach", "money", "sell", "stack", "gateway", "learning", "market",
+        "distribution", "traction", "field", "whole", "model", "margins", "roadmap", "hard",
       ] as const
     ).map((b) => [b, corner]),
   ),
@@ -60,13 +60,12 @@ const marks: Partial<Record<Beat, Mark>> = {
   landed: { x: landedPair.x, y: landedPair.y, w: 190, h: 150, rotate: 8 },
   idea: aroundStage(0),
   design: aroundStage(1),
+  // Make is the heart of the pitch: the ring stays on it through the outreach beat.
   make: aroundStage(2),
+  outreach: aroundStage(2),
   money: aroundStage(3),
-  launch: aroundStage(4),
   sell: aroundStage(5),
-  reshoring: { x: 436, y: 432, w: 880, h: 440, rotate: 4 },
   whole: { x: 960, y: 896, w: 1880, h: 260, rotate: -1 },
-  demo: { x: 960, y: 524, w: 1860, h: 560, rotate: -3 },
 };
 
 const sameMark = (a?: Mark, b?: Mark) =>

@@ -9,14 +9,14 @@ const SEGMENTS = [
   { tag: "Beachhead", who: "Etsy sellers who've outgrown print-on-demand", why: "Want a product that's really theirs; already pay for tools and know margins" },
   { tag: "Next", who: "Students and first-time founders", why: "Can sketch or model an idea, can't tell if it's makeable or profitable" },
   { tag: "Next", who: "Hobby makers with a 3D printer", why: "Don't know when to switch from printing to CNC or molding" },
-  { tag: "Supply", who: "Small local shops", why: "Clear, ready-to-quote small-run requests, like Printify's print providers" },
+  { tag: "Supply", who: "Small shops and overseas suppliers", why: "Clear, ready-to-quote requests with a spec sheet, instead of vague cold emails" },
 ];
 
 const CHANNELS = [
-  { where: "Where first-timers already are", how: "USC groups, Iovine & Young Slack, Discord, X: “Have a product idea but no clue how to make it? Try it free, 5 minutes.”" },
-  { where: "Our own launch page", how: "Our waitlist runs on Moko's own landing-page feature (building today): every signup is also a demo" },
-  { where: "Every creator brings the next", how: "Creators' launch pages and share cards will carry “Made with Moko”" },
-  { where: "Shops follow orders", how: "The creator side works with zero shops; shops join as orders route through" },
+  { where: "Where first-timers already are", how: "USC groups, Iovine & Young Slack, Discord, maker subreddits: “Have a product idea? See who can make it, free, in 5 minutes.”" },
+  { where: "Free is the funnel", how: "Finding out if it can be made, and by whom, costs nothing; outreach and quotes are Pro" },
+  { where: "Every request recruits a shop", how: "Each spec sheet a creator sends shows a manufacturer what a Moko request looks like" },
+  { where: "Every creator brings the next", how: "Shared pitch pages already carry the Moko name; listings and launch pages will too" },
 ];
 
 export const segmentCard = { x: 120, y: 330, w: 400, h: 420, step: 425 };
