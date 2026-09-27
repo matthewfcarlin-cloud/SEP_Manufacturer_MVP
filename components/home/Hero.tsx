@@ -4,16 +4,17 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Fragment, useRef } from "react";
+import { STAGES } from "@/lib/studio/stage";
 
 // WebGL only exists in the browser.
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
 
-const HEADLINE = [["Design", "around"], ["the", "machines"], ["already", "idle."]];
+const HEADLINE = [["From", "idea"], ["to", "first"], ["sale."]];
 const EASE = [0.2, 0.7, 0.1, 1] as const;
 
-type Props = { shops: number; machines: number; idle: number; exampleHref: string | null };
+type Props = { exampleHref: string | null };
 
-export function Hero({ shops, machines, idle, exampleHref }: Props) {
+export function Hero({ exampleHref }: Props) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
@@ -48,7 +49,7 @@ export function Hero({ shops, machines, idle, exampleHref }: Props) {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
-            For independent inventors & small hardware teams
+            The studio for first-time product creators
           </motion.p>
 
           <h1 className="display-type text-[clamp(2.9rem,8.2vw,7.6rem)]">
@@ -61,7 +62,7 @@ export function Hero({ shops, machines, idle, exampleHref }: Props) {
                     <Fragment key={word}>
                     <span className="inline-block overflow-hidden pb-[0.04em] align-bottom">
                       <motion.span
-                        className={`inline-block ${word === "idle." ? "text-night-accent" : ""}`}
+                        className={`inline-block ${word === "sale." ? "text-night-accent" : ""}`}
                         initial={reduce ? false : { y: "105%" }}
                         animate={{ y: 0 }}
                         transition={{ duration: 0.9, ease: EASE, delay: 0.15 + i * 0.08 }}
@@ -83,9 +84,9 @@ export function Hero({ shops, machines, idle, exampleHref }: Props) {
             transition={{ duration: 0.8, ease: EASE, delay: 0.75 }}
           >
             <p className="text-lg leading-relaxed text-night-muted">
-              A good design doesn&apos;t close the deal. Whether it can be made cheaply does. Upload a
-              part and see how it gets made, what it costs, and which nearby shops have machines
-              sitting open for it.
+              Bring a CAD file, a few photos, or just an idea. Leave with a design that can actually be
+              made, quotes from real shops, a price that makes money, a launch plan, and a listing
+              ready to sell.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
@@ -100,7 +101,7 @@ export function Hero({ shops, machines, idle, exampleHref }: Props) {
                   href={exampleHref}
                   className="inline-flex items-center justify-center rounded-md border border-night-line px-5 py-4 font-medium text-night-ink transition-colors hover:border-night-muted"
                 >
-                  See a real analysis
+                  See an example product
                 </Link>
               )}
             </div>
@@ -112,16 +113,17 @@ export function Hero({ shops, machines, idle, exampleHref }: Props) {
         </div>
 
         <motion.dl
-          className="eyebrow grid grid-cols-2 gap-x-8 gap-y-3 border-t border-night-line pt-5 text-night-muted sm:flex sm:flex-wrap"
+          className="eyebrow grid grid-cols-3 gap-x-8 gap-y-3 border-t border-night-line pt-5 text-night-muted sm:flex sm:flex-wrap"
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 1.1 }}
         >
-          <div className="flex gap-2"><dt>Shops</dt><dd className="text-night-ink">{shops}</dd></div>
-          <div className="flex gap-2"><dt>Machines</dt><dd className="text-night-ink">{machines}</dd></div>
-          <div className="flex gap-2"><dt>Idle this month</dt><dd className="text-night-idle">{idle}</dd></div>
-          <div className="flex gap-2"><dt>Region</dt><dd className="text-night-ink">Los Angeles</dd></div>
-          <div className="col-span-2 sm:ml-auto">Demo data</div>
+          {STAGES.map((s, i) => (
+            <div key={s.key} className="flex gap-2">
+              <dt>{String(i + 1).padStart(2, "0")}</dt>
+              <dd className="text-night-ink">{s.label}</dd>
+            </div>
+          ))}
         </motion.dl>
       </div>
     </section>

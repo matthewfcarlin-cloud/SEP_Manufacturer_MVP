@@ -18,11 +18,25 @@ async function removeCreatedProject(page: Page): Promise<void> {
   }
 }
 
+test("landing page walks the six stages with the example's real output", async ({ page }) => {
+  await page.goto("/");
+  const journey = page.getByRole("region", { name: "Idea to first sale" });
+  const stages = journey.getByRole("listitem");
+  await expect(stages).toHaveCount(6);
+  await expect(stages.nth(2)).toContainText("Chosen of");
+  await expect(stages.nth(2)).toContainText("Demo quote");
+  await expect(stages.nth(4)).toContainText(/Launch [A-Z][a-z]{2} \d{1,2}, \d{4}/);
+  await expect(stages.nth(5)).toContainText("13 tags");
+  await journey.getByRole("link", { name: /^Sell:/ }).click();
+  await expect(page).toHaveURL(`/project/${BRACKET.id}/sell`);
+});
+
 test("landing page opens a pre-analyzed example with paths and shop matches", async ({ page }) => {
   await page.goto("/");
   // The hero links straight to the same pre-analyzed project.
-  await expect(page.getByRole("link", { name: "See a real analysis" })).toHaveAttribute("href", `/project/${PEDAL.id}`);
-  await page.getByRole("region", { name: "See an example" }).getByRole("link", { name: /Fuzz pedal enclosure/ }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/From idea to first sale\./);
+  await expect(page.getByRole("link", { name: "See an example product" })).toHaveAttribute("href", `/project/${PEDAL.id}`);
+  await page.getByRole("region", { name: "See an example product" }).getByRole("link", { name: /Fuzz pedal enclosure/ }).click();
   await expect(page).toHaveURL(`/project/${PEDAL.id}`);
 
   await expect(page.locator("canvas")).toBeVisible();
@@ -452,7 +466,7 @@ test("examples can't be deleted or shared, even by the browser that opens them",
 test("the landing storyboard shows six studio-render stills with shot and voiceover", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => {
-    const s = [...document.querySelectorAll("section")].find((el) => /from file to factory/i.test(el.innerText))!;
+    const s = [...document.querySelectorAll("section")].find((el) => /how one product gets there/i.test(el.innerText))!;
     const r = s.getBoundingClientRect();
     window.scrollTo(0, window.scrollY + r.top + r.height - window.innerHeight - 20);
   });

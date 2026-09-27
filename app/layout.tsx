@@ -24,7 +24,7 @@ const archivo = Archivo({
 export const metadata: Metadata = {
   title: { default: "Moko", template: "%s · Moko" },
   description:
-    "Design your product around the machines local shops already have running. Manufacturing paths, idle-capacity shop matches, and a pitch kit.",
+    "The studio for first-time product creators: from an idea to a design that can be made, real quotes, a price that makes money, a launch plan and a listing ready to sell.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -38,8 +38,8 @@ const STEPS = [
   { title: "Upload", body: "Drop in an STL or STEP file, a few photos, and what you know: quantity, budget, materials." },
   { title: "Measure", body: "Real dimensions, volume, and wall thickness, measured from the mesh itself." },
   { title: "Choose a path", body: "Two to four ways to make it, each with cost ranges, lead time, and the tweaks that make it cheaper." },
-  { title: "Match", body: "Nearby shops ranked by fit, with machines sitting idle this month pushed to the top." },
-  { title: "Pitch", body: "Studio renders, a cost card, and a 30-second commercial storyboard on one shareable page." },
+  { title: "Match", body: "Nearby shops ranked by fit, idle machines first, then quotes compared side by side." },
+  { title: "Launch", body: "Studio renders, a pitch page and a 30-second storyboard, then a dated plan and an Etsy-ready listing." },
 ];
 
 function Frame({ children }: { children: ReactNode }) {
@@ -193,7 +193,7 @@ export function ProcessStory({ data }: { data: StoryData }) {
     return (
       <section ref={ref} aria-labelledby="story-heading" className="bg-night px-4 py-24 text-night-ink sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-col gap-16">
-          <h2 id="story-heading" className="display-type text-5xl sm:text-7xl">From file to factory</h2>
+          <h2 id="story-heading" className="display-type text-5xl sm:text-7xl">How one product gets there</h2>
           {STEPS.map((s, i) => (
             <div key={s.title} className="grid items-center gap-8 lg:grid-cols-2">
               <div>
@@ -214,7 +214,7 @@ export function ProcessStory({ data }: { data: StoryData }) {
       <div className="sticky top-[57px] flex h-[calc(100svh-57px)] flex-col overflow-hidden">
         <div className="mx-auto grid w-full max-w-7xl flex-1 items-center gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[1fr_1fr]">
           <div className="flex flex-col gap-6">
-            <h2 id="story-heading" className="eyebrow text-night-muted">From file to factory</h2>
+            <h2 id="story-heading" className="eyebrow text-night-muted">How one product gets there</h2>
             <AnimatePresence mode="wait">
               <motion.div
                 key={active}

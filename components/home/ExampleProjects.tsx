@@ -21,9 +21,9 @@ export async function ExampleProjects() {
     <section aria-labelledby="examples-heading" className="py-24 sm:py-32">
       <div className="mx-auto flex max-w-7xl flex-col gap-12 px-4 sm:px-6">
         <Reveal>
-          <p className="eyebrow text-muted">Real Claude analyses · open them</p>
+          <p className="eyebrow text-muted">Real AI output · open them</p>
           <h2 id="examples-heading" className="display-type mt-4 text-[clamp(2.6rem,6vw,5.5rem)]">
-            See an example
+            See an example product
           </h2>
         </Reveal>
         <ul className="grid gap-4 md:grid-cols-2">
@@ -53,7 +53,7 @@ export async function ExampleProjects() {
                       ))}
                     </dl>
                     <span className="eyebrow mt-auto flex items-center gap-2 text-accent">
-                      Open analysis <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
+                      Open product <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
                     </span>
                   </Link>
                 </Reveal>

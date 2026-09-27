@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { ExampleProjects } from "@/components/home/ExampleProjects";
 import { Hero } from "@/components/home/Hero";
 import { IdleTicker } from "@/components/home/IdleTicker";
+import { JourneyStages } from "@/components/home/JourneyStages";
 import { ProcessStory, type StoryData } from "@/components/home/ProcessStory";
 import { ProcessTiles } from "@/components/home/ProcessTiles";
 import { ScrollStatement } from "@/components/home/ScrollStatement";
@@ -17,7 +18,7 @@ import { matchVersion } from "@/lib/match";
 import { PROCESS_LABELS } from "@/lib/processes";
 import { getProject } from "@/lib/projectStore";
 import { projectSchema } from "@/lib/schemas";
-import { getShopById, getShops, summarizeShops } from "@/lib/shops";
+import { getShopById, getShops } from "@/lib/shops";
 import type { ProjectVersion } from "@/lib/types";
 import { latestVersion } from "@/lib/versions";
 
@@ -51,29 +52,29 @@ export default async function Home() {
   // Per request: whether the example is installed can change after the build.
   await connection();
   const shops = getShops();
-  const stats = summarizeShops(shops);
   const demo = projectSchema.parse(sampleProject);
   const exampleHref = (await getProject(demo.id)) ? `/project/${demo.id}` : null;
 
   return (
     <>
-      <Hero shops={stats.shops} machines={stats.machines} idle={stats.idleMachines} exampleHref={exampleHref} />
-      <IdleTicker shops={shops} />
+      <Hero exampleHref={exampleHref} />
+      <JourneyStages />
       <ProcessStory data={storyData(latestVersion(demo))} />
-      <ProcessTiles shops={shops} />
       <Showcase name={demo.name} version={latestVersion(demo)} href={exampleHref} />
+      <IdleTicker shops={shops} />
+      <ProcessTiles shops={shops} />
       <ScrollStatement
-        text="Good design doesn't close the deal. Manufacturability does."
-        accentWords={["Manufacturability", "does."]}
+        text="Printify hid the factory for merch. Moko does it for your own product."
+        accentWords={["your", "own", "product."]}
       />
       <ExampleProjects />
 
       <section className="border-t border-line py-24 sm:py-32">
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-10 px-4 sm:px-6">
           <h2 className="display-type text-[clamp(3rem,9vw,8rem)]">
-            Got a part?
+            Got an idea?
             <br />
-            <span className="text-accent">Let&apos;s make it.</span>
+            <span className="text-accent">Let&apos;s sell it.</span>
           </h2>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
@@ -83,8 +84,8 @@ export default async function Home() {
               Start a project
               <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
             </Link>
-            <Link href="/shops" className="inline-flex items-center justify-center rounded-md border border-line px-6 py-4 font-medium hover:border-ink">
-              Browse {stats.shops} shops
+            <Link href="/studio" className="inline-flex items-center justify-center rounded-md border border-line px-6 py-4 font-medium hover:border-ink">
+              Open your studio
             </Link>
           </div>
         </div>

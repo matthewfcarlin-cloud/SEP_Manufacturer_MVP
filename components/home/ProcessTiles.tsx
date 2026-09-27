@@ -36,16 +36,16 @@ export function ProcessTiles({ shops }: { shops: readonly Shop[] }) {
       <div className="mx-auto flex max-w-7xl flex-col gap-12 px-4 sm:px-6">
         <Reveal className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <p className="eyebrow text-muted">Nine processes · 25 shops · Los Angeles</p>
+            <p className="eyebrow text-muted">Stage 3 · Make · nine processes · 25 demo shops · Los Angeles</p>
             <h2 id="processes-heading" className="display-type mt-4 text-[clamp(2.6rem,6vw,5.5rem)]">
-              What&apos;s running
+              Who can
               <br />
-              near you
+              make it
             </h2>
           </div>
           <p className="max-w-sm text-muted">
-            Moko prices your part against the machines local shops actually have, and pushes
-            the ones sitting idle this month to the top.
+            When it&apos;s time to make it, Moko matches your product to the machines local shops
+            actually have, puts the ones sitting idle this month first, and asks them to quote.
           </p>
         </Reveal>
 

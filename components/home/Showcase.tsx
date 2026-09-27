@@ -23,9 +23,9 @@ export function Showcase({ name, version, href }: { name: string; version: Proje
           <div>
             <p className="eyebrow text-muted">Real output · {name} · {version.targetQuantity} units</p>
             <h2 id="showcase-heading" className="display-type mt-4 text-[clamp(2.6rem,6vw,5.5rem)]">
-              One upload.
+              Can it be made?
               <br />
-              The whole picture.
+              What will it cost?
             </h2>
           </div>
           {href && (
