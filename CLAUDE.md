@@ -44,6 +44,7 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `PUT /api/projects/[id]/versions/[n]/ai-inputs` `{ includePhotos, includeNotes }` – what the AI may see
 - `/p/[token]` – public read-only pitch (noindex); its renders come only from `GET /api/share/[token]/[file]`
 - `/privacy` – the plain-language privacy note
+- `POST /api/agent` – build agent, streams NDJSON answer events (Phase 10)
 
 ## Data models
 ```ts
@@ -80,6 +81,9 @@ type PriceSuggestion = { low: number; high: number; suggested: number; comparabl
 // Phase 8, on ProjectVersion: pitch?: PitchContent; pitchVideo?: PitchVideo
 type PitchContent = { oneLiner: string; problem: string; product: string; audience: string; ask: string; editedByUser: boolean };
 type PitchVideo = { status: "none" } | { status: "ready"; url: string; provider: string }; // nothing generates one yet
+
+// Phase 10: one turn of a build-agent conversation (not stored; the browser keeps it)
+type AgentMessage = { role: "user" | "assistant"; content: string };
 
 type AppliedTweak = { fromVersion: number; process: Process; change: string; why: string; impact: string };
 
@@ -367,6 +371,24 @@ aiInputs: { includePhotos: boolean; includeNotes: boolean };   // default both t
 - Prepare 2–3 example projects in `demo/`: a guitar bridge or pedal enclosure (hero), plus one part where a tweak clearly changes the process (e.g. molded bracket → sheet metal).
 - Test AI output on these early and tune the prompt until the tweaks are specific and credible.
 
+## Phases 10–13: create → manufacture → sell
+
+Idlefit is being repositioned as an all-in-one platform for first-time product creators (Printify-style: create → manufacture → sell). Four features, built in order, each committed separately. Existing flows must keep working. Every AI feature goes through the AI budget (`aiBudgetGate` + metering) and `lib/aiInputs.ts`; anything simulated is labeled as demo.
+
+| # | Feature | Status |
+|---|---|---|
+| 10 | Build agent: streamed chat on `/project/[id]` grounded in the version's data | Built |
+| 11 | Request quotes: simulated "Demo quote" from the top 5 matched shops, persisted on the version | Planned |
+| 12 | Sell on Etsy: generated listing (title ≤140, description, exactly 13 tags, price, renders), copy buttons, "Connect Etsy shop" coming soon | Planned |
+| 13 | Share card: public page with an Open Graph image and "Share on X"; only when the owner has sharing on | Planned |
+
+### Phase 10 – Build agent (built)
+- `POST /api/agent` `{ projectId, version?, messages: AgentMessage[] }` streams newline-delimited JSON events (`lib/agent/protocol.ts`: `text` deltas, then `done` or `error`). Validated by `agentRequestSchema` (alternating turns starting and ending with the user, ≤24 turns, ≤4,000 chars each).
+- `streamAgentReply()` in `lib/analysis/claude.ts` (still the only file calling the SDK): `messages.stream()` with adaptive thinking, effort `medium`, server-side fallback. The system prompt (`lib/agent/prompt.ts`) is followed by the product context as a second system block with `cache_control`, so follow-up turns re-read it from cache.
+- Context: `buildAgentContext()` (`lib/agent/context.ts`) = brief (notes via `notesForAi`), geometry, analysis paths and tweaks, cost-by-volume, business case tiers and verdict, top 5 shop matches (labeled fictional), version history. Photos are never sent to the agent.
+- Budget: action `chat` (estimate $0.10). The route charges the real cost from `finalMessage()` usage, or the estimate if the stream breaks after text was sent. A refusal ends with an `error` event.
+- UI: `components/agent/BuildAgent.tsx`, a launcher button plus side panel (full-screen on phones, Escape closes, Stop while streaming). Three starters from `starterQuestions()` (`lib/agent/starters.ts`), built from the version's own numbers, no AI call. Conversations live in the browser only; they aren't stored.
+
 ## Rules
 - Costs are always ranges, labeled as estimates.
 - Shops are clearly fictional demo data.
@@ -399,7 +421,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 - Privacy (Phase 9): `proxy.ts` gives every browser a random owner key (httpOnly cookie `idlefit_owner`); projects store only its hash (`lib/ownerKey.ts`). Every page and API route loads projects through `getAccessibleProject()` / `findVersion()` / `requireOwner()` in `lib/access.ts`, never `getProject()` directly; a failed check is a 404 so a project's existence isn't revealed. `lib/projectStore.ts` stays access-free. Projects from before Phase 9 (no owner, not an example) are claimed by the first browser that opens them. Share links: `lib/shareStore.ts` (index at `.data/shares/<token>.json`; the project's own `share` field is the source of truth). The share page gets its version through `loadSharedPitch()`, which rewrites render URLs to the share-scoped route. All AI prompts read notes/photos through `lib/aiInputs.ts` (`notesForAi`, `changeNoteForAi`, `imagesToSend`), so withholding works for analysis, price and pitch alike. Shops only ever see `specSummaryFor()` (size, material, quantity, process). `/api/files` is `no-store` so deletes and revokes take effect at once.
-- AI budget: every AI route calls `aiBudgetGate(action)` (`lib/usage/gate.ts`) before calling the model and wraps the caller in `metered(...)` (`lib/usage/metered.ts`), which charges each response's real token usage (`lib/usage/pricing.ts`, list prices; unknown models priced at the highest rate) to a per-browser ledger and a per-UTC-day site ledger under `.data/usage/`. A conservative per-action estimate (`ACTION_ESTIMATE_USD`) must fit before a call; over budget returns 429 with a friendly message. The per-browser limit resets if cookies are cleared, so the daily cap is the real protection. Any new AI route must use both the gate and the meter.
+- AI budget: every AI route (analysis, price, pitch, agent) calls `aiBudgetGate(action)` (`lib/usage/gate.ts`) before calling the model and wraps the caller in `metered(...)` (`lib/usage/metered.ts`), which charges each response's real token usage (`lib/usage/pricing.ts`, list prices; unknown models priced at the highest rate) to a per-browser ledger and a per-UTC-day site ledger under `.data/usage/`. A conservative per-action estimate (`ACTION_ESTIMATE_USD`) must fit before a call; over budget returns 429 with a friendly message. The per-browser limit resets if cookies are cleared, so the daily cap is the real protection. Any new AI route must use both the gate and the meter.
 - Serialization: `serialized(key, fn)` in `lib/serialize.ts` is the one per-key async lock (project updates, budget ledgers). Single process only, which Railway's one-replica volume setup guarantees.
 - Landing storyboard: `ProcessStory`'s pitch step shows the six storyboard frames as stills from the pedal's saved studio renders (`demo/renders/`, static imports in `app/page.tsx`), each with its own "camera move" (render, zoom, focus) in `SHOTS`, plus the AI's shot description and voiceover. Re-render the pedal's pitch and copy the PNGs to `demo/renders/` to refresh them.
 - Privacy claims: `/privacy`, the upload form, the "What the AI sees" panel, the share panel and the home hero all make claims backed by the code above. Change a behavior and its claim together; never add a claim the code doesn't enforce.

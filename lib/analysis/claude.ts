@@ -5,6 +5,8 @@ import { getShops } from "../shops";
 import { summarizeCapacity } from "./capacity";
 import type { CallTextModel } from "./structured";
 import { tolerateUnparseableOutput } from "./structuredOutput";
+import { AGENT_SYSTEM_PROMPT } from "../agent/prompt";
+import type { AgentMessage } from "../types";
 import { PITCH_SYSTEM_PROMPT } from "./pitch";
 import { PRICE_SYSTEM_PROMPT } from "./price";
 import { buildSystemPrompt } from "./prompt";
@@ -136,3 +138,41 @@ export const callClaudePitch = makeTextCaller({
   maxTokens: 10_000,
   logTag: "pitch",
 });
+
+// The build agent: a streamed conversation. The product context is a stable
+// system block marked for caching, so follow-up turns re-read it cheaply.
+const AGENT_EFFORT = "medium" as const;
+const AGENT_MAX_TOKENS = 8_000;
+
+export type AgentStreamEvent = { type: "text"; text: string } | { type: "final"; usage: TurnUsage; stopReason: string | null };
+
+export async function* streamAgentReply(input: {
+  context: string;
+  messages: AgentMessage[];
+  signal: AbortSignal;
+}): AsyncGenerator<AgentStreamEvent> {
+  const stream = getClient().beta.messages.stream(
+    {
+      model: MODEL,
+      max_tokens: AGENT_MAX_TOKENS,
+      betas: [FALLBACK_BETA],
+      fallbacks: "default",
+      thinking: { type: "adaptive" },
+      output_config: { effort: AGENT_EFFORT },
+      system: [
+        { type: "text", text: AGENT_SYSTEM_PROMPT },
+        { type: "text", text: input.context, cache_control: { type: "ephemeral" } },
+      ],
+      messages: input.messages,
+    },
+    { signal: input.signal },
+  );
+  for await (const event of stream) {
+    if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+      yield { type: "text", text: event.delta.text };
+    }
+  }
+  const final = await stream.finalMessage();
+  console.info("[agent] claude call", { stop: final.stop_reason, ...usageOf(final) });
+  yield { type: "final", usage: usageOf(final), stopReason: final.stop_reason };
+}

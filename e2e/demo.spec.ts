@@ -485,3 +485,29 @@ test("a part that looks the wrong size gets a units warning", async ({ page }) =
   await expect(page).toHaveURL(/\/project\/[A-Za-z0-9_-]{10}$/);
   await expect(page.getByRole("region", { name: "Part geometry" })).toContainText("Check the units");
 });
+
+test("the build agent opens with product-specific starters and respects the AI budget", async ({ page }) => {
+  await page.goto(`/project/${PEDAL.id}`);
+  const cookie = (await page.context().cookies()).find((c) => c.name === "idlefit_owner")!;
+  const { createHash } = await import("node:crypto");
+  const ledger = path.join(".data", "usage", "browsers", `${createHash("sha256").update(cookie.value).digest("hex")}.json`);
+  await mkdir(path.dirname(ledger), { recursive: true });
+  await writeFile(ledger, JSON.stringify({ spentUsd: 99 })); // over budget: no real AI call is made
+  try {
+    await page.getByRole("button", { name: "Ask the build agent" }).click();
+    const panel = page.getByRole("complementary", { name: "Build agent" });
+    await expect(panel.getByRole("heading", { name: "Ask about Fuzz pedal enclosure" })).toBeVisible();
+    const starters = panel.locator("button.text-left");
+    await expect(starters).toHaveCount(3);
+    await expect(starters.nth(2)).toContainText("$32 retail");
+
+    await starters.first().click();
+    await expect(panel.getByRole("alert")).toContainText("AI budget");
+    await expect(starters).toHaveCount(3); // the failed question doesn't leave a half conversation
+
+    await page.keyboard.press("Escape");
+    await expect(panel).toHaveCount(0);
+  } finally {
+    await rm(ledger, { force: true });
+  }
+});
