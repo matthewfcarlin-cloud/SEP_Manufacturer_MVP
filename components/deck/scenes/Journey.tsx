@@ -20,7 +20,7 @@ const RENDERS = [render0, render1, render2, render3];
 
 /** Which stage of the creator journey each beat is on; -1 shows the rail with no stage active. */
 const activeStage: Partial<Record<Beat, number>> = {
-  upload: 0,
+  idea: 0,
   design: 1,
   make: 2,
   money: 3,
@@ -87,7 +87,7 @@ type Spot = { x: number; y: number; scale: number; opacity: number };
 
 const left: Spot = { x: 20, y: 330, scale: 0.8, opacity: 1 };
 const pedalSpots: Partial<Record<Beat, Spot>> = {
-  upload: { x: 940, y: 250, scale: 1.05, opacity: 1 },
+  idea: { x: 940, y: 250, scale: 1.05, opacity: 1 },
   design: left,
   make: left,
   money: left,
@@ -114,21 +114,32 @@ export function Pedal({ beat, facts }: { beat: Beat; facts: DeckFacts }) {
 
 const headlines: Partial<Record<Beat, string>> = {
   design: "Every way to make it, priced.",
-  make: "Matched to a machine that's free.",
+  make: "Matched to a local shop.",
   money: "Does it make money?",
   launch: "A plan and a pitch.",
   sell: "Ready to sell.",
+};
+
+/** What's live in the app today for each stage, said out loud rather than implied. */
+const status: Partial<Record<Beat, { label: string }>> = {
+  idea: { label: "Built · brief from text: today" },
+  design: { label: "Built" },
+  make: { label: "Built · demo quotes" },
+  money: { label: "Built" },
+  launch: { label: "Built · landing page: today" },
+  sell: { label: "Listing built · waitlist page: today" },
 };
 
 export function Journey({ beat, facts }: { beat: Beat; facts: DeckFacts }) {
   const { pedal } = facts;
   return (
     <>
-      <Show on={beat === "upload"} delay={0.3} className="left-[120px] top-[330px] w-[800px]">
+      <Show on={beat === "idea"} delay={0.3} className="left-[120px] top-[330px] w-[800px]">
         <Display size={120} className="text-[#efeeec]">
           Bring an idea.
         </Display>
         <p className="mt-8 font-mono text-[26px] uppercase tracking-[0.14em] text-[#8f8b83]">CAD · photos · a sketch · notes</p>
+        <p className="mt-3 text-[28px] text-[#b9b5ac]">Text or sketch → AI product brief: building today</p>
         <div className="mt-14 inline-flex flex-col gap-2 border border-[#3a3936] bg-[#111110] px-7 py-5">
           <span className="font-mono text-[20px] uppercase tracking-[0.14em] text-[#8f8b83]">Real example</span>
           <span className="text-[34px] font-medium text-[#efeeec]">{pedal.name}</span>
@@ -143,6 +154,11 @@ export function Journey({ beat, facts }: { beat: Beat; facts: DeckFacts }) {
           <Display size={66} className="text-[#efeeec]">
             {text}
           </Display>
+        </Show>
+      ))}
+      {Object.entries(status).map(([b, st]) => (
+        <Show key={b} on={beat === b} delay={0.35} from={10} className="right-[120px] top-[248px]">
+          <span className="bg-[#12291d] px-4 py-2 font-mono text-[20px] uppercase tracking-[0.12em] text-[#5fd39a]">{st.label}</span>
         </Show>
       ))}
 
@@ -218,7 +234,7 @@ function Match({ on, facts }: { on: boolean; facts: DeckFacts }) {
           )}
         </div>
         <ul className="mt-7 flex flex-col gap-3">
-          {m.reasons.map((r, i) => (
+          {[...m.reasons.slice(0, 2), "One click requests quotes from the top matches"].map((r, i) => (
             <motion.li
               key={r}
               className="flex gap-4 text-[26px] text-[#b9b5ac]"
@@ -336,7 +352,7 @@ function Launch({ on, facts }: { on: boolean; facts: DeckFacts }) {
         </motion.div>
       ))}
       <Show on={on} delay={0.3} className="left-[120px] top-[676px]">
-        <Eyebrow className="text-[#8f8b83]">Studio renders · licensing pitch · 30-second storyboard · PDF · private share link</Eyebrow>
+        <Eyebrow className="text-[#8f8b83]">Studio renders · pitch kit · 30-second storyboard · dated launch plan with budget</Eyebrow>
       </Show>
       {plan && (
         <Show on={on} delay={0.5} className="left-[120px] top-[760px] w-[1690px]">
@@ -377,7 +393,7 @@ function Listing({ on, facts }: { on: boolean; facts: DeckFacts }) {
       <div className="border border-[#3a3936] bg-[#111110] p-10">
         <div className="flex items-center justify-between">
           <Eyebrow className="text-[#8f8b83]">Etsy listing · copy-ready</Eyebrow>
-          <span className="font-mono text-[20px] uppercase tracking-[0.12em] text-[#5a5852]">Direct publish: coming soon</span>
+          <span className="font-mono text-[20px] uppercase tracking-[0.12em] text-[#5a5852]">Copy-and-paste today</span>
         </div>
         <p className="mt-6 text-[32px] font-medium leading-snug text-[#efeeec]">{l.title}</p>
         <div className="mt-7 flex items-baseline gap-5">

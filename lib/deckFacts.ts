@@ -1,16 +1,13 @@
-import bracketProject from "@/demo/bracket-project.json";
 import sampleProject from "@/demo/sample-project.json";
 import { buildBusinessCase } from "@/lib/businessCase";
-import { compareVersions, summarizeVersion } from "@/lib/compare";
 import { effectiveCostCurve } from "@/lib/costCurve";
 import { formatDimensions, formatToolingRange, formatUnitCostRange, formatUsd } from "@/lib/format";
 import { matchVersion } from "@/lib/match";
 import { etsySale } from "@/lib/sell/fees";
-import { PROCESSES, PROCESS_LABELS } from "@/lib/processes";
+import { PROCESS_LABELS } from "@/lib/processes";
 import { projectSchema } from "@/lib/schemas";
 import { getShopById, getShops, summarizeShops } from "@/lib/shops";
-import type { ProjectVersion } from "@/lib/types";
-import { getVersion, latestVersion } from "@/lib/versions";
+import { latestVersion } from "@/lib/versions";
 
 /**
  * Every number the pitch deck shows, computed from the saved demo projects and
@@ -21,8 +18,6 @@ export type DeckFacts = {
   shops: number;
   machines: number;
   idle: number;
-  /** One entry per seeded machine, grouped by process (in `PROCESSES` order). */
-  machineColumns: { label: string; idle: boolean[] }[];
   pedal: {
     name: string;
     quantity: number;
@@ -38,25 +33,11 @@ export type DeckFacts = {
     plan: { launchDate: string; totalDays: number; milestones: { title: string; from: number; days: number }[] } | null;
     listing: { title: string; tags: string[]; price: string; afterFees: string } | null;
   };
-  bracket: {
-    name: string;
-    change: string;
-    before: { process: string; unit: string; mid: number };
-    after: { process: string; unit: string; mid: number };
-    unitChange: string;
-    summary: string;
-  };
 };
 
 const DAY_MS = 86_400_000;
 const daysBetween = (from: string, to: string) => Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS);
 
-const mid = (r: { low: number; high: number }) => (r.low + r.high) / 2;
-
-function topShopName(version: ProjectVersion) {
-  const top = matchVersion(version)[0];
-  return top ? getShopById(top.shopId)?.name : undefined;
-}
 
 function pedalFacts() {
   const project = projectSchema.parse(sampleProject);
@@ -118,39 +99,13 @@ function pedalFacts() {
   };
 }
 
-function bracketFacts() {
-  const project = projectSchema.parse(bracketProject);
-  const a = getVersion(project, 1)!;
-  const b = getVersion(project, 2)!;
-  const comparison = compareVersions(summarizeVersion(a, topShopName(a)), summarizeVersion(b, topShopName(b)));
-  const side = (v: ProjectVersion) => {
-    const best = v.analysis!.paths[0];
-    return { process: PROCESS_LABELS[best.process], unit: formatUnitCostRange(best.unitCostUsd), mid: mid(best.unitCostUsd) };
-  };
-  const tweak = b.appliedTweak?.change ?? b.changeNote ?? "";
-  return {
-    name: project.name,
-    change: tweak.split(/(?<=\.)\s/)[0],
-    before: side(a),
-    after: side(b),
-    unitChange: comparison.rows.find((r) => r.key === "unitCost")?.change ?? "",
-    summary: comparison.summary,
-  };
-}
-
 export function buildDeckFacts(): DeckFacts {
   const shops = getShops();
   const stats = summarizeShops(shops);
-  const machines = shops.flatMap((s) => s.machines);
   return {
     shops: stats.shops,
     machines: stats.machines,
     idle: stats.idleMachines,
-    machineColumns: PROCESSES.map((process) => ({
-      label: PROCESS_LABELS[process],
-      idle: machines.filter((m) => m.type === process).map((m) => m.idleThisMonth),
-    })).filter((c) => c.idle.length > 0),
     pedal: pedalFacts(),
-    bracket: bracketFacts(),
   };
 }

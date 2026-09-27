@@ -7,8 +7,11 @@ import { color, ease, fade } from "./motion";
 import { Cells } from "./scenes/Cells";
 import { Logo, Ring } from "./scenes/Brand";
 import { Journey, Pedal, Rail } from "./scenes/Journey";
-import { Idle, Problem, Questions, Title } from "./scenes/Opening";
-import { Close, Demo, Field, Iterate, Model, WhyNow } from "./scenes/Story";
+import { Market } from "./scenes/Market";
+import { Problem, Questions, Title } from "./scenes/Opening";
+import { Printify } from "./scenes/Printify";
+import { Appendix, Business, Close, Demo, Field, WhyNow } from "./scenes/Story";
+import { Tech } from "./scenes/Tech";
 import { notes, outline, slides } from "./script";
 import { Stage } from "./Stage";
 import { advance, last, progress, retreat, start, toSearch, type Position } from "./timeline";
@@ -58,20 +61,22 @@ export function Deck({ initial, facts }: { initial: Position; facts: DeckFacts }
           {`Slide ${position.slide + 1} of ${slides.length}. ${notes[beat]}`}
         </p>
         <Stage>
-          <Cells beat={beat} facts={facts} />
+          <Cells beat={beat} />
           <Rail beat={beat} />
           <Pedal beat={beat} facts={facts} />
-          <Title beat={beat} facts={facts} />
+          <Title beat={beat} />
           <Problem beat={beat} />
           <Questions beat={beat} />
-          <Idle beat={beat} facts={facts} />
+          <Printify beat={beat} />
           <Journey beat={beat} facts={facts} />
-          <Iterate beat={beat} facts={facts} />
-          <WhyNow beat={beat} />
-          <Field beat={beat} />
-          <Model beat={beat} />
           <Demo beat={beat} />
+          <Tech beat={beat} />
+          <Market beat={beat} />
+          <Field beat={beat} />
+          <WhyNow beat={beat} />
+          <Business beat={beat} />
           <Close beat={beat} />
+          <Appendix beat={beat} />
           <Logo beat={beat} />
           <Ring beat={beat} />
 

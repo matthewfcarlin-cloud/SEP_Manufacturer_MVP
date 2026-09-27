@@ -1,79 +1,10 @@
 "use client";
 
 import { motion } from "motion/react";
-import Image from "next/image";
-import bracketRender from "@/demo/renders/bracket-v2-render-0.png";
-import type { DeckFacts } from "@/lib/deckFacts";
-import { color, ease, fade, move } from "../motion";
+import { color, ease, fade } from "../motion";
 import { stageX } from "../layout";
 import { CountUp, Display, Eyebrow, Show } from "../parts";
 import type { Beat } from "../script";
-
-export function Iterate({ beat, facts }: { beat: Beat; facts: DeckFacts }) {
-  const { bracket } = facts;
-  const on = beat === "before" || beat === "after";
-  const after = beat === "after";
-  const drop = Number(bracket.unitChange.replace(/[^\d.]/g, "")) || 0;
-  return (
-    <>
-      <Show on={on} className="left-[120px] top-[100px]">
-        <Display size={66} className="text-[#efeeec]">
-          Every change is a new version.
-          <br />
-          <span className="text-[#8f8b83]">Every version is re-priced.</span>
-        </Display>
-      </Show>
-      <Show on={on} delay={0.2} className="left-[120px] top-[330px] h-[520px] w-[780px] overflow-hidden bg-[#f3f2ee]">
-        <motion.div
-          className="absolute inset-0"
-          initial={false}
-          animate={{ opacity: after ? 1 : 0.35, filter: after ? "grayscale(0)" : "grayscale(1)", scale: after ? 1 : 0.94 }}
-          transition={move}
-        >
-          <Image src={bracketRender} alt="" fill sizes="780px" className="object-cover" />
-        </motion.div>
-        <span className="absolute left-5 top-4 font-mono text-[22px] uppercase tracking-[0.14em] text-[#5c5a55]">
-          {bracket.name} · v{after ? 2 : 1}
-        </span>
-      </Show>
-
-      <Show on={on} delay={0.3} className="left-[1000px] top-[330px] w-[800px]">
-        <VersionRow label="v1" process={bracket.before.process} unit={bracket.before.unit} dim={after} />
-      </Show>
-      <Show on={after} delay={0.2} className="left-[1000px] top-[420px] w-[800px] border-l-4 border-[#ff4a00] pl-6">
-        <Eyebrow className="text-[#8f8b83]">Applied the AI&apos;s tweak</Eyebrow>
-        <p className="mt-2 text-[26px] leading-snug text-[#efeeec]">{bracket.change}</p>
-      </Show>
-      <Show on={after} delay={0.6} className="left-[1000px] top-[590px] w-[800px]">
-        <VersionRow label="v2" process={bracket.after.process} unit={bracket.after.unit} />
-      </Show>
-      <Show on={after} delay={0.9} className="left-[1000px] top-[710px] flex flex-col items-start gap-8">
-        <Display size={180} className="text-[#5fd39a]">
-          <CountUp value={after ? drop : 0} prefix="−" suffix="%" duration={1.6} />
-        </Display>
-        <p className="pl-2 font-mono text-[24px] uppercase tracking-[0.14em] text-[#8f8b83]">unit cost, v1 → v2</p>
-      </Show>
-      <Show on={after} delay={1.3} className="left-[120px] top-[900px]">
-        <p className="font-mono text-[24px] uppercase tracking-[0.12em] text-[#b9b5ac]">{bracket.summary}</p>
-      </Show>
-    </>
-  );
-}
-
-function VersionRow({ label, process, unit, dim = false }: { label: string; process: string; unit: string; dim?: boolean }) {
-  return (
-    <motion.div
-      className="flex items-baseline gap-6 border-b border-[#262624] pb-4"
-      initial={false}
-      animate={{ opacity: dim ? 0.45 : 1 }}
-      transition={fade}
-    >
-      <span className="w-14 font-mono text-[28px] text-[#ff4a00]">{label}</span>
-      <span className="flex-1 text-[36px] font-medium text-[#efeeec]">{process}</span>
-      <span className="font-mono text-[28px] tabular-nums text-[#b9b5ac]">{unit} / part</span>
-    </motion.div>
-  );
-}
 
 const REASONS = ["AI can read 3D.", "Making went mainstream.", "Manufacturing is coming home."];
 
@@ -88,11 +19,11 @@ export function WhyNow({ beat }: { beat: Beat }) {
           <CountUp value={beat === "reshoring" ? 36 : 0} suffix="%" />
         </Display>
         <Display size={58} className="max-w-[900px] text-[#efeeec]">
-          of manufacturers have reshored or are reshoring.
+          of manufacturers are moving production back to the US.
         </Display>
       </Show>
       <Show on={beat === "reshoring"} delay={0.6} className="left-[120px] top-[900px]">
-        <Eyebrow className="text-[#5a5852]">Source: 2026 Reshoring Survey (up from 29%; 65% cite tariffs)</Eyebrow>
+        <Eyebrow className="text-[#5a5852]">Source: 2026 Reshoring Survey (up from 29%; tariffs the top reason)</Eyebrow>
       </Show>
 
       {REASONS.map((reason, i) => (
@@ -116,16 +47,16 @@ export function WhyNow({ beat }: { beat: Beat }) {
 
 type Rival = { name: string; note: string; from: number; to: number };
 
+// Stages on the rail: 0 Idea, 1 Design, 2 Make, 3 Money, 4 Launch, 5 Sell.
 const RIVALS: Rival[] = [
-  { name: "Backflip", note: "ends at the model", from: 0, to: 1 },
-  { name: "Xometry · Protolabs", note: "needs finished CAD", from: 2, to: 2 },
-  { name: "Pietra", note: "existing goods only", from: 2, to: 5 },
-  { name: "Alibaba Accio", note: "overseas, high volume", from: 2, to: 5 },
+  { name: "AdamCAD · Zoo · Fusion", note: "design only", from: 0, to: 1 },
+  { name: "MakerWorld", note: "assumes you own a printer", from: 1, to: 2 },
+  { name: "Xometry, Craftcloud", note: "needs finished CAD", from: 2, to: 2 },
   { name: "Printify", note: "catalog products only", from: 2, to: 5 },
-  { name: "Etsy · Shopify", note: "selling only", from: 5, to: 5 },
+  { name: "Shopify · Etsy · Kickstarter", note: "selling only", from: 4, to: 5 },
 ];
 
-const barSpan = (from: number, to: number) => ({ left: stageX(from) - 140, width: stageX(to) - stageX(from) + 280 });
+const barSpan = (from: number, to: number) => ({ left: stageX(from) - 150, width: stageX(to) - stageX(from) + 300 });
 
 export function Field({ beat }: { beat: Beat }) {
   const on = beat === "field" || beat === "whole";
@@ -135,14 +66,14 @@ export function Field({ beat }: { beat: Beat }) {
       {RIVALS.map((r, i) => (
         <motion.div
           key={r.name}
-          className="absolute flex h-[64px] flex-col justify-center border border-[#3a3936] bg-[#141413] px-5"
-          style={{ top: 280 + i * 88, ...barSpan(r.from, r.to) }}
+          className="absolute flex h-[76px] flex-col justify-center border border-[#3a3936] bg-[#141413] px-5"
+          style={{ top: 280 + i * 104, ...barSpan(r.from, r.to) }}
           initial={false}
           animate={{ opacity: on ? (whole ? 0.3 : 1) : 0, x: on ? 0 : -30 }}
           transition={{ ...fade, delay: on && !whole ? 0.2 + i * 0.12 : 0 }}
         >
-          <span className="text-[24px] font-medium leading-tight text-[#efeeec]">{r.name}</span>
-          <span className="font-mono text-[16px] uppercase tracking-[0.1em] text-[#8f8b83]">{r.note}</span>
+          <span className="text-[26px] font-medium leading-tight text-[#efeeec]">{r.name}</span>
+          <span className="font-mono text-[17px] uppercase tracking-[0.1em] text-[#8f8b83]">{r.note}</span>
         </motion.div>
       ))}
       <motion.div
@@ -153,7 +84,7 @@ export function Field({ beat }: { beat: Beat }) {
         transition={{ duration: 1.1, ease, delay: whole ? 0.2 : 0 }}
       >
         <span className="display-type text-[40px] text-[#0a0a0a]">Moko</span>
-        <span className="font-mono text-[20px] uppercase tracking-[0.14em] text-[#0a0a0a]">One product record · idea to first sale</span>
+        <span className="font-mono text-[20px] uppercase tracking-[0.14em] text-[#0a0a0a]">Design → make → sell · manufacturability from day one</span>
       </motion.div>
     </>
   );
@@ -161,21 +92,43 @@ export function Field({ beat }: { beat: Beat }) {
 
 const TIERS = [
   { name: "Free", text: "Upload, analysis and one product. Enough to find out if an idea can be made." },
-  { name: "Pro", text: "Unlimited products and versions, outreach, launch plans, listings and the agent." },
-  { name: "Order fee", text: "A small percentage on production orders placed through Moko." },
+  { name: "Pro", text: "A subscription: unlimited products and versions, quotes, launch plans, listings and the agent." },
+  { name: "Order fee", text: "A small fee on production orders we route to shops, plus shop referral fees." },
 ];
 
-export function Model({ beat }: { beat: Beat }) {
-  const on = beat === "model";
+const MARGINS = [
+  { k: "Bring your own key", v: "Creators can plug in their own AI key, so heavy users don't cost us per call" },
+  { k: "Capped house budget", v: "Free usage runs on a budget capped per browser and per day, metered per call" },
+  { k: "Our own bet", v: "Printify earns from subscriptions, not per-order fees; the order fee is our choice, not a copy" },
+];
+
+export function Business({ beat }: { beat: Beat }) {
+  const on = beat === "model" || beat === "margins";
+  const margins = beat === "margins";
   return (
     <>
-      <Show on={on} className="left-[120px] top-[140px]">
-        <Display size={96} className="text-[#efeeec]">
+      <Show on={on} className="left-[120px] top-[96px]">
+        <Eyebrow className="text-[#8f8b83]">Business plan</Eyebrow>
+      </Show>
+      <Show on={beat === "model"} delay={0.1} className="left-[120px] top-[140px]">
+        <Display size={80} className="text-[#efeeec]">
           How Moko makes money.
         </Display>
       </Show>
+      <Show on={margins} delay={0.1} className="left-[120px] top-[140px]">
+        <Display size={80} className="text-[#efeeec]">
+          Why the margins hold.
+        </Display>
+      </Show>
       {TIERS.map((t, i) => (
-        <Show key={t.name} on={on} delay={0.3 + i * 0.2} className="top-[400px] w-[500px]" style={{ left: 120 + i * 580 }}>
+        <motion.div
+          key={t.name}
+          className="absolute w-[500px]"
+          style={{ left: 120 + i * 580 }}
+          initial={false}
+          animate={{ opacity: on ? (margins ? 0.35 : 1) : 0, y: margins ? -40 : on ? 0 : 30, top: margins ? 300 : 360 }}
+          transition={{ duration: 0.8, ease, delay: on && !margins ? 0.3 + i * 0.2 : 0 }}
+        >
           <motion.div
             className="h-1 origin-left bg-[#ff4a00]"
             initial={false}
@@ -185,7 +138,22 @@ export function Model({ beat }: { beat: Beat }) {
           <Display size={72} className="mt-8 text-[#efeeec]">
             {t.name}
           </Display>
-          <p className="mt-6 text-[32px] leading-snug text-[#b9b5ac]">{t.text}</p>
+          <motion.p
+            className="mt-6 text-[32px] leading-snug text-[#b9b5ac]"
+            initial={false}
+            animate={{ opacity: margins ? 0 : 1, height: margins ? 0 : "auto" }}
+            transition={fade}
+          >
+            {t.text}
+          </motion.p>
+        </motion.div>
+      ))}
+      {MARGINS.map((m, i) => (
+        <Show key={m.k} on={margins} delay={0.4 + i * 0.18} className="left-[120px] w-[1680px]" style={{ top: 520 + i * 140 }}>
+          <div className="flex items-baseline gap-10 border-t border-[#262624] pt-6">
+            <span className="w-[520px] shrink-0 text-[38px] font-semibold text-[#efeeec]">{m.k}</span>
+            <span className="text-[30px] leading-snug text-[#b9b5ac]">{m.v}</span>
+          </div>
         </Show>
       ))}
     </>
@@ -202,21 +170,37 @@ export function Demo({ beat }: { beat: Beat }) {
         </Display>
       </Show>
       <Show on={on} delay={0.8} className="inset-x-0 top-[860px] text-center">
-        <Eyebrow className="text-[#8f8b83]">Switch to the app</Eyebrow>
+        <Eyebrow className="text-[#8f8b83]">One product · idea → launch page · 2 minutes</Eyebrow>
       </Show>
     </>
   );
 }
 
+const ROADMAP = ["Text-to-CAD design generation", "Real launch video generation", "Checkout and payments", "Direct Etsy publishing", "First real LA shops"];
+
 export function Close({ beat }: { beat: Beat }) {
   return (
     <>
+      <Show on={beat === "roadmap"} className="left-[120px] top-[110px]">
+        <Eyebrow className="text-[#8f8b83]">Roadmap</Eyebrow>
+        <Display size={80} className="mt-5 text-[#efeeec]">
+          What&apos;s next.
+        </Display>
+      </Show>
+      {ROADMAP.map((r, i) => (
+        <Show key={r} on={beat === "roadmap"} delay={0.3 + i * 0.15} className="left-[120px] w-[1680px]" style={{ top: 330 + i * 118 }}>
+          <div className="flex items-baseline gap-10 border-t border-[#262624] pt-5">
+            <span className="w-14 font-mono text-[28px] text-[#ff4a00]">0{i + 1}</span>
+            <span className="text-[44px] font-medium text-[#efeeec]">{r}</span>
+          </div>
+        </Show>
+      ))}
       <Show on={beat === "ask"} delay={0.4} className="inset-x-0 top-[540px] text-center">
-        <Eyebrow className="text-[#8f8b83]">What&apos;s next</Eyebrow>
+        <Eyebrow className="text-[#8f8b83]">Our ask</Eyebrow>
         <Display size={76} className="mt-8 text-[#efeeec]">
-          Sign 10 real LA shops.
+          Try it with your idea.
           <br />
-          <span style={{ color: color.orange }}>Get real creators to their first run.</span>
+          <span style={{ color: color.orange }}>Send us anyone with a product they&apos;ve never made.</span>
         </Display>
       </Show>
       <Show on={beat === "thanks"} delay={0.5} className="inset-x-0 top-[760px] text-center">
@@ -224,6 +208,36 @@ export function Close({ beat }: { beat: Beat }) {
           Thank you.
         </Display>
       </Show>
+    </>
+  );
+}
+
+const HARD = [
+  { q: "Are the quotes real?", a: "Not yet. They're simulated inside the analysis cost range and labeled “Demo quote”. Next step: sign 10 real LA shops." },
+  { q: "Can you post to Etsy?", a: "An Etsy app can post drafts to its own shop quickly; other sellers' shops need Etsy's commercial review. Today the listing is copy-and-paste." },
+  { q: "How accurate are costs?", a: "Ranges for early decisions, not final prices. The point is killing bad ideas before a $10K tooling bill." },
+  { q: "Why can't Xometry add this?", a: "Their buyer is an engineer with finished CAD. Ours is a first-timer with an idea and an Etsy shop." },
+  { q: "What about IP?", a: "Private by default. The CAD file never goes to the AI, and shops see only a spec summary." },
+];
+
+export function Appendix({ beat }: { beat: Beat }) {
+  const on = beat === "hard";
+  return (
+    <>
+      <Show on={on} className="left-[120px] top-[90px]">
+        <Eyebrow className="text-[#8f8b83]">Appendix · for Q&A</Eyebrow>
+        <Display size={64} className="mt-4 text-[#efeeec]">
+          Hard questions.
+        </Display>
+      </Show>
+      {HARD.map((h, i) => (
+        <Show key={h.q} on={on} delay={0.2 + i * 0.1} className="left-[120px] w-[1680px]" style={{ top: 270 + i * 150 }}>
+          <div className="flex gap-10 border-t border-[#262624] pt-5">
+            <span className="w-[520px] shrink-0 text-[34px] font-semibold text-[#efeeec]">{h.q}</span>
+            <span className="text-[28px] leading-snug text-[#b9b5ac]">{h.a}</span>
+          </div>
+        </Show>
+      ))}
     </>
   );
 }

@@ -18,14 +18,3 @@ export function ideaCellOrigin(index: number) {
   const step = ideaGrid.cell + ideaGrid.gap;
   return { x: ideaGrid.x + (index % ideaGrid.columns) * step, y: ideaGrid.y + Math.floor(index / ideaGrid.columns) * step };
 }
-
-/** The idle slide: one column per process, three machines wide, stacked up from the floor line. */
-export const machineGrid = { cell: 48, gap: 10, across: 3, columnStep: 200, x: 78, floor: 860 };
-
-export function machineCellOrigin(column: number, index: number) {
-  const step = machineGrid.cell + machineGrid.gap;
-  return {
-    x: machineGrid.x + column * machineGrid.columnStep + (index % machineGrid.across) * step,
-    y: machineGrid.floor - machineGrid.cell - Math.floor(index / machineGrid.across) * step,
-  };
-}

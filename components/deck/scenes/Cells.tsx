@@ -1,43 +1,29 @@
 "use client";
 
 import { motion } from "motion/react";
-import { memo, useMemo } from "react";
-import type { DeckFacts } from "@/lib/deckFacts";
+import { memo } from "react";
 import { color, ease } from "../motion";
-import { ideaCellOrigin, ideaGrid, landedCells, machineCellOrigin, machineGrid } from "../layout";
-import { isAtOrAfter, type Beat } from "../script";
+import { ideaCellOrigin, ideaGrid, landedCells } from "../layout";
+import type { Beat } from "../script";
 
 type Place = { x: number; y: number; size: number };
 type Look = { visible: boolean; fill: string; drop: number; delay: number };
 
 /**
- * One set of squares shared by two slides: 250 ideas pitched in a year, which
- * then fly into the 81 machines in the demo shops. Most of the deck they sit
- * invisible, parked wherever they last were.
+ * One square per idea Kendall pitches in a year. Two light up; the rest fall
+ * away. After the problem slide they sit invisible.
  */
-export function Cells({ beat, facts }: { beat: Beat; facts: DeckFacts }) {
-  const machines = useMemo(
-    () => facts.machineColumns.flatMap((column, c) => column.idle.map((idle, i) => ({ idle, ...machineCellOrigin(c, i) }))),
-    [facts.machineColumns],
-  );
-  const onMachines = isAtOrAfter(beat, "machines");
-
+export function Cells({ beat }: { beat: Beat }) {
   return (
     <div className="pointer-events-none absolute inset-0" aria-hidden>
-      {Array.from({ length: ideaGrid.count }, (_, index) => {
-        const machine = machines[index];
-        const place: Place =
-          onMachines && machine
-            ? { x: machine.x, y: machine.y, size: machineGrid.cell }
-            : { ...ideaCellOrigin(index), size: ideaGrid.cell };
-        const look = lookFor(beat, index, machine?.idle);
-        return <Cell key={index} {...place} {...look} />;
-      })}
+      {Array.from({ length: ideaGrid.count }, (_, index) => (
+        <Cell key={index} {...ideaCellOrigin(index)} size={ideaGrid.cell} {...lookFor(beat, index)} />
+      ))}
     </div>
   );
 }
 
-function lookFor(beat: Beat, index: number, idle: boolean | undefined): Look {
+function lookFor(beat: Beat, index: number): Look {
   const landed = landedCells.includes(index);
   switch (beat) {
     case "pitched":
@@ -46,10 +32,6 @@ function lookFor(beat: Beat, index: number, idle: boolean | undefined): Look {
       return { visible: true, fill: landed ? color.orange : color.cell, drop: 0, delay: landed ? 0.2 : 0 };
     case "died":
       return { visible: true, fill: landed ? color.orange : "#141413", drop: landed ? 0 : 36, delay: landed ? 0 : (index % 25) * 0.012 };
-    case "machines":
-      return { visible: idle !== undefined, fill: "#34332f", drop: 0, delay: index * 0.006 };
-    case "idle":
-      return { visible: idle !== undefined, fill: idle ? color.idle : "#1f1f1d", drop: 0, delay: idle ? 0.1 + index * 0.012 : 0 };
     default:
       return { visible: false, fill: color.cell, drop: 0, delay: 0 };
   }

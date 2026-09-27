@@ -19,19 +19,14 @@ const center = (w: number, y: number): LogoSpot => ({ x: (1920 - w) / 2, y, w, o
 const logoSpots: Partial<Record<Beat, LogoSpot>> = {
   title: center(1180, 330),
   moko: center(1500, 360),
-  upload: corner,
-  design: corner,
-  make: corner,
-  money: corner,
-  launch: corner,
-  sell: corner,
-  before: corner,
-  after: corner,
-  reshoring: corner,
-  inflection: corner,
-  field: corner,
-  whole: corner,
-  model: corner,
+  ...Object.fromEntries(
+    (
+      [
+        "idea", "design", "make", "money", "launch", "sell", "stack", "gateway", "learning", "market",
+        "distribution", "traction", "field", "whole", "reshoring", "inflection", "model", "margins", "roadmap", "hard",
+      ] as const
+    ).map((b) => [b, corner]),
+  ),
   ask: center(900, 240),
   thanks: center(1300, 380),
 };
@@ -63,14 +58,12 @@ const aroundStage = (index: number): Mark => ({ x: stageX(index), y: rail.labelY
 // Where the hand-drawn ring circles something, per beat. Centers, in canvas px.
 const marks: Partial<Record<Beat, Mark>> = {
   landed: { x: landedPair.x, y: landedPair.y, w: 190, h: 150, rotate: 8 },
-  idle: { x: 250, y: 204, w: 330, h: 250, rotate: -6 },
-  upload: aroundStage(0),
+  idea: aroundStage(0),
   design: aroundStage(1),
   make: aroundStage(2),
   money: aroundStage(3),
   launch: aroundStage(4),
   sell: aroundStage(5),
-  after: { x: 1270, y: 800, w: 640, h: 280, rotate: -3 },
   reshoring: { x: 436, y: 432, w: 880, h: 440, rotate: 4 },
   whole: { x: 960, y: 896, w: 1880, h: 260, rotate: -1 },
   demo: { x: 960, y: 524, w: 1860, h: 560, rotate: -3 },
