@@ -11,6 +11,12 @@ export type Project = {
   owner?: { keyHash: string };
   /** A shared demo anyone can open and edit, but not delete. */
   isExample?: true;
+  /**
+   * B2: whether this product's structured features may be shown to other
+   * creators' AI prompts as a "similar product". Absent = off (the default).
+   * Owner-only; examples never contribute.
+   */
+  learning?: LearningConsent;
   /** Public pitch link. Off by default; the owner can turn it off or rotate the token. */
   share?: ShareLink;
 };
@@ -269,6 +275,8 @@ export type Analysis = {
   topRecommendation: string;
   risks: string[];
   storyboard: { shot: number; visual: string; voiceover: string; seconds: number }[];
+  /** B2: the product's category, from a fixed list. Absent on analyses made before B2. */
+  category?: ProductCategory;
 };
 
 export type Machine = {
@@ -390,4 +398,42 @@ export type Outcome = {
   value?: number; // units_sold: units
   source: LearningSource;
   createdAt: string;
+};
+
+// Similar-product retrieval (BACKEND.md B2). Every field comes from a fixed
+// vocabulary or is a number, so no free text from one creator's product can
+// reach another creator's prompt.
+export type LearningConsent = { contribute: boolean; updatedAt: string };
+
+export type ProductCategory =
+  | "enclosure" | "bracket_mount" | "holder_stand" | "case_cover" | "knob_handle" | "clip_fastener"
+  | "gear_mechanism" | "container" | "organizer" | "kitchen_tool" | "lighting" | "wearable"
+  | "toy_game" | "decor" | "tool_part" | "other";
+
+export type MaterialFamily =
+  | "aluminum" | "stainless" | "steel" | "brass_copper" | "titanium" | "nylon" | "polycarbonate" | "abs"
+  | "acetal" | "pla_petg" | "resin" | "rubber_tpu" | "acrylic" | "wood" | "other";
+
+/** Largest bounding-box side: xs < 50 mm ≤ s < 150 ≤ m < 400 ≤ l < 1000 ≤ xl. */
+export type SizeBucket = "xs" | "s" | "m" | "l" | "xl";
+
+/**
+ * One analyzed version of a contributing product, reduced to structured
+ * features. Computed on demand from current data (never cached), so opting
+ * out or deleting takes effect at once. `projectId` is internal: it's used to
+ * exclude a creator's own product and is never put into a prompt.
+ */
+export type ProductFeatures = {
+  projectId: string;
+  version: number;
+  category?: ProductCategory;
+  process: Process; // the analysis's top path
+  material: MaterialFamily; // the top path's first material, normalized
+  sizeBucket: SizeBucket;
+  volumeCm3: number;
+  wallMm?: number;
+  quantity: number;
+  unitCostEst: { low: number; high: number }; // top path at `quantity`
+  realQuotes?: { count: number; medianUnitUsd: number; medianQuantity: number }; // real_quote outcomes with source "real"
+  revision?: { tweakProcess: Process; unitCostChangePct: number }; // this version applied a tweak; change vs the version it revised
 };

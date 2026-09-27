@@ -6,6 +6,7 @@ import { imagesToSend } from "@/lib/aiInputs";
 import { aiFailure } from "@/lib/analysis/errors";
 import { getKeyInfo } from "@/lib/ai/keyStore";
 import { recordEvent } from "@/lib/learning/record";
+import { similarProductsFor } from "@/lib/learning/retrieval";
 import { runAnalysis } from "@/lib/analysis/run";
 import { getVersionImages, updateVersion } from "@/lib/projectStore";
 import type { Analysis } from "@/lib/types";
@@ -34,9 +35,11 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const images = await imagesToSend(version, () => getVersionImages(project.id, version));
+    const similar = await similarProductsFor(project, version);
     const analysis: Analysis = await runAnalysis(analysisCaller(ownerHash), {
       images,
       text: buildProjectBrief(project, version, images.length),
+      ...(similar && { context: similar }),
     });
     // Re-reads the project before saving, so versions added meanwhile survive.
     const saved = await updateVersion(project.id, version.number, (v) => ({ ...v, analysis }));

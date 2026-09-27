@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PRODUCT_CATEGORIES } from "./learning/vocabulary";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
 import type { AiInputs, DemoQuote, EtsyListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
@@ -392,6 +393,7 @@ export const projectSchema = z.object({
   owner: z.object({ keyHash: z.string().regex(/^[0-9a-f]{64}$/) }).optional(),
   isExample: z.literal(true).optional(),
   share: shareLinkSchema.optional(),
+  learning: z.object({ contribute: z.boolean(), updatedAt: z.string() }).optional(),
 }) satisfies z.ZodType<Project>;
 
 // ---------------------------------------------------------------------------
@@ -453,6 +455,7 @@ export const analysisOutputSchema = z.object({
   topRecommendation: z.string().describe("2-3 sentences, under 70 words: the path to take now, and the quantity where that changes."),
   risks: z.array(z.string()).describe("3-5 one-sentence risks, most important first."),
   storyboard: z.array(storyboardShotSchema).describe("Exactly 6 shots of a 30-second commercial, seconds summing to 30."),
+  category: z.enum(PRODUCT_CATEGORIES).describe("What kind of product this is, from the fixed list; \"other\" if none fits."),
 });
 
 export const MIN_PATHS = 2;
@@ -475,7 +478,8 @@ function checkRange(
 }
 
 /** Structure of a stored analysis (curve optional), before the business rules. */
-export const storedAnalysisShape = analysisOutputSchema.extend({ paths: z.array(manufacturingPathSchema) });
+// category is optional here: analyses saved before B2 don't have one.
+export const storedAnalysisShape = analysisOutputSchema.extend({ paths: z.array(manufacturingPathSchema), category: z.enum(PRODUCT_CATEGORIES).optional() });
 
 export const analysisSchema = storedAnalysisShape.superRefine((a, ctx) => {
   if (a.paths.length < MIN_PATHS || a.paths.length > MAX_PATHS) {

@@ -30,13 +30,22 @@ export function isAiConfigured(workspaceId: string): Promise<boolean> {
 
 /** The manufacturing analysis: images plus the brief, one structured answer. */
 export function analysisCaller(workspaceId: string): CallModel {
-  return ({ images, text }) =>
+  return ({ images, text, context }) =>
     gateway.generate({
       task: "analyze",
       workspaceId,
       schema: analysisOutputSchema,
       system: [{ text: analysisSystemPrompt, cache: true }],
-      messages: [{ role: "user", content: [...images.map((img) => ({ type: "image" as const, ...img })), { type: "text" as const, text }] }],
+      messages: [
+        {
+          role: "user",
+          content: [
+            ...images.map((img) => ({ type: "image" as const, ...img })),
+            { type: "text" as const, text },
+            ...(context ? [{ type: "text" as const, text: context }] : []),
+          ],
+        },
+      ],
     });
 }
 
