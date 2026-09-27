@@ -61,6 +61,13 @@ export function SourcingPanel({ projectId, version }: Props) {
   const plan = sourcing.plan;
   const targets = useMemo(() => negotiationTargets(version, plan?.process ?? process), [version, plan?.process, process]);
   const ranking = useMemo(() => rankSuppliers(sourcing.suppliers, version.targetQuantity, targets), [sourcing.suppliers, version.targetQuantity, targets]);
+  const bom = version.bom;
+  const bomChangedSincePlan = !!(bom && plan && (bom.updatedAt ?? bom.generatedAt) > plan.createdAt);
+  const bomNote = !bom
+    ? null
+    : bomChangedSincePlan
+      ? "Your bill of materials changed after this plan. Re-plan so the quote request lists the current parts."
+      : `Your bill of materials (${bom.items.length} ${bom.items.length === 1 ? "line" : "lines"}) goes into the search plan, the quote request and every email: specs and quantities only, never costs or notes.`;
   const comparable = sourcing.suppliers.filter((s) => s.status !== "dropped").length >= 2;
 
   const addSupplier = () => {
@@ -107,6 +114,7 @@ export function SourcingPanel({ projectId, version }: Props) {
             {busy === "plan" ? "Planning the search…" : plan ? "Re-plan the search" : "Plan my Alibaba search"}
           </button>
         </div>
+        {bomNote && <p className="text-sm text-muted">{bomNote}</p>}
         <FormError message={error} />
         {targets && <TargetsCard targets={targets} />}
       </div>
