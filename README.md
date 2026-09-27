@@ -116,4 +116,5 @@ PRODUCT.md            Product spec
 | Money (business case) | `lib/businessCase.ts`, `components/businessCase/`, `lib/analysis/price.ts` |
 | Your own API key | UI: `app/settings/`, `components/settings/`, `lib/client/aiKey.ts`, `components/HeaderAiPill.tsx`, `components/AiErrorBanner.tsx`. Backend: `lib/ai/` (gateway, encrypted key store), `app/api/settings/ai-key/`, `app/api/usage/` |
 | Privacy, sharing, AI budget | `lib/access.ts`, `proxy.ts`, `lib/shareStore.ts`, `lib/aiInputs.ts`, `lib/usage/`, `app/privacy/` |
+| Pitch deck (`/present`) | `app/present/`, `components/deck/` (script and speaker notes in `script.ts`), `lib/deckFacts.ts`. Arrows or a clicker to step, F fullscreen, N notes |
 | Data model | `lib/types.ts` (the contract), `lib/schemas.ts`, `lib/projectStore.ts` |

@@ -16,7 +16,12 @@ const SPIN_RAD_PER_S = 0.18;
 const TILT = 0.25;
 const BASE_TILT_X = 0.55;
 
-function Part({ reduceMotion }: { reduceMotion: boolean }) {
+type Vec3 = [number, number, number];
+
+// Off-center to the right on the landing page; the pitch deck centers it.
+const HERO_OFFSET: Vec3 = [1.0, -0.45, 0];
+
+function Part({ reduceMotion, offset }: { reduceMotion: boolean; offset: Vec3 }) {
   const geometry = useLoader(STLLoader, MODEL_URL);
   const group = useRef<Group>(null);
 
@@ -35,7 +40,7 @@ function Part({ reduceMotion }: { reduceMotion: boolean }) {
   });
 
   return (
-    <group ref={group} position={[1.0, -0.45, 0]} rotation={[BASE_TILT_X, 0.6, 0]}>
+    <group ref={group} position={offset} rotation={[BASE_TILT_X, 0.6, 0]}>
       <Center>
         {/* STL is Z-up; three.js is Y-up. */}
         <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]} scale={0.017}>
@@ -60,19 +65,21 @@ function Studio() {
   );
 }
 
-export default function HeroScene() {
+export default function HeroScene({ offset = HERO_OFFSET, distance = 7 }: { offset?: Vec3; distance?: number }) {
   const reduceMotion = Boolean(useReducedMotion());
   return (
     <Canvas
       dpr={[1, 1.75]}
-      camera={{ position: [0, 0.6, 7], fov: 32 }}
+      camera={{ position: [0, 0.6, distance], fov: 32 }}
       gl={{ antialias: true, alpha: true }}
+      // Layout size, not on-screen size: the pitch deck draws this inside a CSS-scaled stage.
+      resize={{ offsetSize: true }}
       aria-hidden
     >
       <ambientLight intensity={0.15} />
       <directionalLight position={[3, 5, 4]} intensity={1.4} />
       <Suspense fallback={null}>
-        <Part reduceMotion={reduceMotion} />
+        <Part reduceMotion={reduceMotion} offset={offset} />
         <Studio />
         <ContactShadows position={[0, -1.1, 0]} scale={9} far={3} blur={2.8} opacity={0.55} color="#000000" />
       </Suspense>

@@ -3,6 +3,8 @@ import { listProjects } from "../projectStore";
 import type { Outcome, ProductFeatures, Project, ProjectVersion } from "../types";
 import { buildFeatureRows, isContributing, queryFeatures } from "./features";
 import { findSimilar, similarProductsBlock } from "./similar";
+import { currentTweakStats } from "./tweakData";
+import { tweaksThatWorkedBlock } from "./tweakStats";
 
 // Loads current data for the features job. Deliberately uncached: an
 // opt-out or a delete is reflected on the very next prompt. At demo scale
@@ -32,4 +34,21 @@ export async function similarProductsFor(project: Project, version: ProjectVersi
     console.error(`[learning] similar-product lookup failed for ${project.id}`, err);
     return null;
   }
+}
+
+/**
+ * Everything learned that's worth putting in this version's prompts: similar
+ * products (B2) and the kinds of tweaks that worked (B4). Null when there's
+ * nothing. Never throws.
+ */
+export async function learningContextFor(project: Project, version: ProjectVersion): Promise<string | null> {
+  const [similar, tweaks] = await Promise.all([
+    similarProductsFor(project, version),
+    currentTweakStats().then(tweaksThatWorkedBlock, (err) => {
+      console.error(`[learning] tweak stats failed for ${project.id}`, err);
+      return null;
+    }),
+  ]);
+  const blocks = [similar, tweaks].filter((b): b is string => Boolean(b));
+  return blocks.length ? blocks.join("\n\n") : null;
 }

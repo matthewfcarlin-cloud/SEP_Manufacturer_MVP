@@ -1,0 +1,86 @@
+[
+  {
+    "name": "pedal-enclosure",
+    "notes": "Die-cast-style enclosure for a boutique guitar fuzz pedal. Open bottom, holes for 2 jacks, a DC jack and 3 knobs. Needs to survive stomping.",
+    "targetQuantity": 250, "materialHints": ["aluminum"],
+    "geometry": { "boundingBoxMm": { "x": 122, "y": 66, "z": 39.5 }, "volumeCm3": 56.5, "surfaceAreaCm2": 452, "triangleCount": 3200, "isWatertight": true, "typicalWallMm": 2.5 },
+    "expected": { "bestProcess": ["cnc_milling", "sheet_metal", "urethane_casting"], "unitCostUsd": { "low": 12, "high": 90 }, "mustMention": ["wall", "knob"] }
+  },
+  {
+    "name": "charger-bracket",
+    "notes": "Wall-mount bracket that holds a phone charging puck under a desk. L-shaped with two screw holes and a cable slot.",
+    "targetQuantity": 500, "materialHints": [],
+    "geometry": { "boundingBoxMm": { "x": 80, "y": 60, "z": 50 }, "volumeCm3": 22, "surfaceAreaCm2": 230, "triangleCount": 900, "isWatertight": true, "typicalWallMm": 3 },
+    "expected": { "bestProcess": ["sheet_metal", "injection_molding", "sls_print", "fdm_print"], "unitCostUsd": { "low": 1, "high": 20 }, "mustMention": ["screw", "slot"] }
+  },
+  {
+    "name": "phone-stand",
+    "notes": "Desk phone stand, one solid-looking piece with a lip at the front and a cable pass-through. Selling on Etsy, want it cheap at volume.",
+    "targetQuantity": 5000, "materialHints": ["plastic"],
+    "geometry": { "boundingBoxMm": { "x": 90, "y": 80, "z": 110 }, "volumeCm3": 70, "surfaceAreaCm2": 520, "triangleCount": 4100, "isWatertight": true, "typicalWallMm": 2.5 },
+    "expected": { "bestProcess": ["injection_molding"], "unitCostUsd": { "low": 0.5, "high": 8 }, "mustMention": ["lip", "cable"] }
+  },
+  {
+    "name": "synth-knob",
+    "notes": "Replacement knob for a synthesizer, D-shaft, knurled grip, pointer line on top.",
+    "targetQuantity": 10000, "materialHints": ["ABS"],
+    "geometry": { "boundingBoxMm": { "x": 30, "y": 30, "z": 20 }, "volumeCm3": 6, "surfaceAreaCm2": 48, "triangleCount": 6000, "isWatertight": true, "typicalWallMm": 1.8 },
+    "expected": { "bestProcess": ["injection_molding"], "unitCostUsd": { "low": 0.05, "high": 1.5 }, "mustMention": ["shaft", "knurl"] }
+  },
+  {
+    "name": "drone-arm",
+    "notes": "Arm for a small FPV drone prototype. Motor mount at one end, two bolt holes at the other. Needs to be stiff and light.",
+    "targetQuantity": 20, "materialHints": ["nylon", "carbon fiber"],
+    "geometry": { "boundingBoxMm": { "x": 180, "y": 25, "z": 12 }, "volumeCm3": 18, "surfaceAreaCm2": 160, "triangleCount": 2400, "isWatertight": true, "typicalWallMm": 3 },
+    "expected": { "bestProcess": ["sls_print", "fdm_print", "cnc_milling"], "unitCostUsd": { "low": 3, "high": 80 }, "mustMention": ["motor", "stiff"] }
+  },
+  {
+    "name": "turned-spacer",
+    "notes": "Round standoff spacer, 12 mm diameter, 40 mm long, M4 thread tapped at both ends. For a modular shelving kit.",
+    "targetQuantity": 1000, "materialHints": ["aluminum"],
+    "geometry": { "boundingBoxMm": { "x": 12, "y": 12, "z": 40 }, "volumeCm3": 4.1, "surfaceAreaCm2": 17, "triangleCount": 1200, "isWatertight": true },
+    "expected": { "bestProcess": ["cnc_turning"], "unitCostUsd": { "low": 0.3, "high": 6 }, "mustMention": ["thread", "M4"] }
+  },
+  {
+    "name": "acrylic-sign",
+    "notes": "Flat shop sign with cut-out lettering, 3 mm clear acrylic, two mounting holes.",
+    "targetQuantity": 50, "materialHints": ["acrylic"],
+    "geometry": { "boundingBoxMm": { "x": 300, "y": 200, "z": 3 }, "volumeCm3": 150, "surfaceAreaCm2": 1250, "triangleCount": 8000, "isWatertight": true, "typicalWallMm": 3 },
+    "expected": { "bestProcess": ["laser_cutting"], "unitCostUsd": { "low": 2, "high": 40 }, "mustMention": ["letter", "acrylic"] }
+  },
+  {
+    "name": "steel-electronics-box",
+    "notes": "Rectangular box for a small audio amplifier: folded base with a removable lid, vent slots, rear panel cut-outs.",
+    "targetQuantity": 300, "materialHints": ["steel"],
+    "geometry": { "boundingBoxMm": { "x": 200, "y": 150, "z": 60 }, "volumeCm3": 150, "surfaceAreaCm2": 1000, "triangleCount": 2600, "isWatertight": true, "typicalWallMm": 1.5 },
+    "expected": { "bestProcess": ["sheet_metal"], "unitCostUsd": { "low": 5, "high": 60 }, "mustMention": ["vent", "lid"] }
+  },
+  {
+    "name": "soft-grip",
+    "notes": "Soft over-grip for a garden tool handle, rubbery feel, ribbed texture. Small first batch to test with customers.",
+    "targetQuantity": 50, "materialHints": ["rubber"],
+    "geometry": { "boundingBoxMm": { "x": 120, "y": 30, "z": 30 }, "volumeCm3": 25, "surfaceAreaCm2": 210, "triangleCount": 7000, "isWatertight": true, "typicalWallMm": 3 },
+    "expected": { "bestProcess": ["urethane_casting", "sls_print"], "unitCostUsd": { "low": 3, "high": 60 }, "mustMention": ["rib", "handle"] }
+  },
+  {
+    "name": "pendant",
+    "notes": "Jewelry pendant with fine filigree detail and a loop for a chain. Will be plated.",
+    "targetQuantity": 100, "materialHints": ["brass", "resin"],
+    "geometry": { "boundingBoxMm": { "x": 25, "y": 25, "z": 3 }, "volumeCm3": 0.9, "surfaceAreaCm2": 14, "triangleCount": 20000, "isWatertight": true, "typicalWallMm": 1 },
+    "expected": { "bestProcess": ["sla_print", "cnc_milling", "urethane_casting"], "unitCostUsd": { "low": 0.5, "high": 40 }, "mustMention": ["filigree", "loop"] }
+  },
+  {
+    "name": "large-planter",
+    "notes": "Faceted geometric planter for indoor plants, drainage hole in the base. Tiny first run for a craft fair.",
+    "targetQuantity": 20, "materialHints": ["PLA"],
+    "geometry": { "boundingBoxMm": { "x": 300, "y": 300, "z": 250 }, "volumeCm3": 900, "surfaceAreaCm2": 5200, "triangleCount": 600, "isWatertight": true, "typicalWallMm": 3 },
+    "expected": { "bestProcess": ["fdm_print"], "unitCostUsd": { "low": 5, "high": 120 }, "mustMention": ["drainage", "facet"] }
+  },
+  {
+    "name": "nylon-gear",
+    "notes": "Spur gear for a toy gearbox, 24 teeth, module 1.5, center bore with a flat.",
+    "targetQuantity": 20000, "materialHints": ["nylon", "acetal"],
+    "geometry": { "boundingBoxMm": { "x": 40, "y": 40, "z": 8 }, "volumeCm3": 7.5, "surfaceAreaCm2": 45, "triangleCount": 9000, "isWatertight": true, "typicalWallMm": 4 },
+    "expected": { "bestProcess": ["injection_molding"], "unitCostUsd": { "low": 0.03, "high": 1 }, "mustMention": ["teeth", "bore"] }
+  }
+]
