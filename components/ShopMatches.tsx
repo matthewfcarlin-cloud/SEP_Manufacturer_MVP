@@ -1,4 +1,4 @@
-import { DemoBadge, IdleBadge } from "@/components/Badges";
+import { DemoBadge, StartBadge } from "@/components/Badges";
 import { PROCESS_LABELS } from "@/lib/processes";
 import { getShopById } from "@/lib/shops";
 import { specSummaryFor, type SpecSummary } from "@/lib/specSummary";
@@ -6,7 +6,7 @@ import type { ProjectVersion, ShopMatch } from "@/lib/types";
 
 // Labels by position: lib/match.ts emits reasons in this order, and
 // lib/match.test.ts fails if that order changes.
-const REASON_LABELS = ["Process", "Part size", "Material", "Order size", "Capacity"];
+const REASON_LABELS = ["Process", "Part size", "Material", "Order size", "Timing"];
 
 function SpecShared({ spec }: { spec: SpecSummary }) {
   const rows: [string, string][] = [
@@ -41,7 +41,7 @@ export function ShopMatches({ matches, version }: { matches: ShopMatch[]; versio
     <section aria-labelledby="shop-matches-heading" className="flex flex-col gap-4 border-t border-line pt-8">
       <div>
         <h2 id="shop-matches-heading" className="display-type text-[clamp(2rem,4vw,3.25rem)]">Shop matches</h2>
-        <p className="mt-1 text-sm text-muted">Ranked by process fit, material, order size, and available machine time.</p>
+        <p className="mt-1 text-sm text-muted">Ranked by process fit, material, order size, and how soon they can start.</p>
       </div>
       {matches.length ? (
         <ol className="grid gap-4 lg:grid-cols-2">
@@ -57,7 +57,7 @@ export function ShopMatches({ matches, version }: { matches: ShopMatch[]; versio
                     <p className="text-sm text-muted">{shop.neighborhood}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {match.idleBoost && <IdleBadge hoursPerWeek={match.matchedMachine.idleHoursPerWeek} />}
+                    <StartBadge canStartNow={match.idleBoost} />
                     <DemoBadge />
                   </div>
                 </div>

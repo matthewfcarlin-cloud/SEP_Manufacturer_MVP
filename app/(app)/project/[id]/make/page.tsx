@@ -39,7 +39,7 @@ export default async function MakePage(props: PageProps<"/project/[id]/make">) {
         </>
       }
       title="Make"
-      description="Get quotes from shops that can make this version, compare them, then plan the order: who supplies each part, who assembles it, and what the run costs landed."
+      description="Find manufacturers who can make this, send them a request, and compare what they offer."
     />
   );
 

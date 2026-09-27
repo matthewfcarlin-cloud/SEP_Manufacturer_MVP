@@ -52,10 +52,9 @@ export function nextStep(project: Project): NextStep {
   }
   const matches = matchVersion(v);
   if (!isMade && matches.length > 0) {
-    const idle = matches.filter((m) => m.idleBoost).length;
     return {
       title: "Request quotes",
-      detail: `${Math.min(matches.length, 5)} demo shops can make it${idle ? `; ${idle} have machines idle this month` : ""}. One click sends them a spec sheet.`,
+      detail: `${Math.min(matches.length, 5)} demo shops can make it. One click sends them a request.`,
       href: `${base}/make`,
       cta: "Go to Make",
     };

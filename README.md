@@ -30,7 +30,7 @@ Every product moves through six stages, and the app always shows the next step.
 |---|---|
 | [Studio dashboard](PRODUCT.md#1-studio-dashboard--home-base-for-every-product---build-today) | Every product, where it stands, and the single next thing to do. |
 | [Design assist](PRODUCT.md#2-design-assist--how-to-make-it-and-how-to-make-it-better---built) | How to manufacture the part at your quantity, with cost ranges and design tweaks. |
-| [Manufacturer match](PRODUCT.md#3-manufacturer-match--who-can-make-it-including-idle-machines-nearby---built) | Nearby shops ranked by fit, with idle machines first. |
+| [Manufacturer match](PRODUCT.md#3-manufacturer-match--who-can-make-it-local-shops-and-overseas-suppliers---built) | Local shops and overseas suppliers that can make it, ranked by fit, with the request written for you. |
 | [Manufacturer outreach](PRODUCT.md#4-manufacturer-outreach--real-quotes-without-the-back-and-forth---build-today) | One click sends a spec sheet to top matches; quotes compared side by side. |
 | [Plan and timeline](PRODUCT.md#5-plan-and-timeline--a-launch-plan-built-from-real-numbers---build-today) | Milestones, dates and budget from the chosen quote or the analysis. |
 | [Marketing](PRODUCT.md#6-marketing--build-demand-before-paying-for-tooling---roadmap-reuse-pitch-kit-today) | Pitch kit and storyboard today; launch posts and waitlist later. |

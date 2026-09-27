@@ -188,10 +188,10 @@ describe("prompts", () => {
     expect(brief.indexOf("Revision:")).toBeLessThan(brief.indexOf("Analyze this part."));
   });
 
-  test("the system prompt lists every process with idle counts from the seed data", () => {
+  test("the system prompt lists every process with how many shops can start this week", () => {
     const capacity = summarizeCapacity(getShops());
     expect(capacity.split("\n")).toHaveLength(9);
-    expect(capacity).toMatch(/CNC turning \(cnc_turning\): \d+ machines at \d+ shops, 4 idle this month/);
+    expect(capacity).toMatch(/CNC turning \(cnc_turning\): \d+ machines at \d+ shops, 4 can start this week/);
     expect(buildSystemPrompt(capacity)).toContain(capacity);
   });
 

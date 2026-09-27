@@ -1,6 +1,5 @@
 import { connection } from "next/server";
 import { AppFrame } from "@/components/shell/AppFrame";
-import { getShops, summarizeShops } from "@/lib/shops";
 import { visibleProducts } from "@/lib/studio/visibleProducts";
 
 const RECENT_COUNT = 3;
@@ -11,9 +10,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const products = await visibleProducts();
   const productNames = Object.fromEntries(products.map(({ project }) => [project.id, project.name]));
   const recent = products.slice(0, RECENT_COUNT).map(({ project, access }) => ({ id: project.id, name: project.name, isExample: access === "example" }));
-  const { idleMachines } = summarizeShops(getShops());
   return (
-    <AppFrame recent={recent} productNames={productNames} idleMachines={idleMachines}>
+    <AppFrame recent={recent} productNames={productNames}>
       {children}
     </AppFrame>
   );

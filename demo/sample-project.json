@@ -65,7 +65,7 @@
             "pros": [
               "Billet 6061 shell is the boutique-standard look and feel",
               "Anodize or powder coat gives the premium finish buyers pay for",
-              "Six idle local mills; no tooling wait",
+              "Six local mill shops can take it; no tooling wait",
               "Metal body shields pickups from hum"
             ],
             "cons": [
@@ -138,7 +138,7 @@
             "pros": [
               "Cheapest metal route that fits the $4,000 budget at 250",
               "All holes cut in the flat blank by laser, no drilling",
-              "Five idle laser and three idle brake stations locally",
+              "Plenty of local laser and brake shops",
               "Powder coat and screen print look genuinely boutique"
             ],
             "cons": [
@@ -150,7 +150,7 @@
             "designTweaks": [
               {
                 "change": "Redraw as one 1.5 mm 5052 blank with four bends and two welded end corners; replace the four M3 bosses with pressed-in standoffs.",
-                "why": "A bend-and-weld box needs no pocket machining and uses the idle laser plus brake capacity.",
+                "why": "A bend-and-weld box needs no pocket machining, and many local laser and brake shops can make it.",
                 "impact": "Unit cost roughly halves versus billet CNC, around $22 at 250 units."
               },
               {
@@ -214,7 +214,7 @@
               "Can print PCB standoffs and cable guides for free"
             ],
             "cons": [
-              "Only two idle SLS machines locally; 250 units queues up",
+              "Only a few local SLS machines; 250 units queues up",
               "Grainy surface needs dye plus sealing for a boutique finish",
               "Plastic body requires conductive shielding paint for hum",
               "Cost never drops much below $25 at any volume"
@@ -283,7 +283,7 @@
             "pros": [
               "Cheapest part cost once past a few thousand units",
               "PC/ABS survives stomping and takes texture well",
-              "Part fits comfortably in the 400 x 350 x 180 idle presses",
+              "Part fits comfortably in the local 400 x 350 x 180 presses",
               "Molded-in logo and texture cost nothing per shot"
             ],
             "cons": [
@@ -449,7 +449,7 @@
             "toolingUsd": 470,
             "leadTimeDays": 13,
             "moq": 5,
-            "note": "We have a gap on the Haas VF-4 (about 10 h/week) and would like to fill it with your run. We'll confirm tolerances on a quick call before cutting metal.",
+            "note": "We can start this week on the Haas VF-4. We'll confirm tolerances on a quick call before cutting metal.",
             "status": "quoted",
             "isDemo": true
           },
@@ -463,7 +463,7 @@
             "toolingUsd": 400,
             "leadTimeDays": 12,
             "moq": 5,
-            "note": "Good timing: the Haas VF-2 is open this month (about 22 h/week). Happy to send one first-article sample before the full run.",
+            "note": "Good timing: we can put this on our Haas VF-2 this week. Happy to send one first-article sample before the full run.",
             "status": "quoted",
             "isDemo": true
           },
@@ -477,7 +477,7 @@
             "toolingUsd": 320,
             "leadTimeDays": 11,
             "moq": 25,
-            "note": "Good timing: the Haas UMC-750 (5-axis) is open this month (about 18 h/week). Price holds for 30 days; 50% up front, 50% on delivery.",
+            "note": "Good timing: we can put this on our Haas UMC-750 (5-axis) this week. Price holds for 30 days; 50% up front, 50% on delivery.",
             "status": "quoted",
             "isDemo": true
           },
@@ -491,7 +491,7 @@
             "toolingUsd": 320,
             "leadTimeDays": 11,
             "moq": 100,
-            "note": "Good timing: the Haas VF-2 is open this month (about 15 h/week). We'll confirm tolerances on a quick call before cutting metal.",
+            "note": "Good timing: we can put this on our Haas VF-2 this week. We'll confirm tolerances on a quick call before cutting metal.",
             "status": "quoted",
             "isDemo": true
           },
@@ -505,7 +505,7 @@
             "toolingUsd": 540,
             "leadTimeDays": 14,
             "moq": 25,
-            "note": "Good timing: the Amada EG-6013 is open this month (about 12 h/week). Finishing can be quoted separately; we work with a coater in Gardena.",
+            "note": "Good timing: we can put this on our Amada EG-6013 this week. Finishing can be quoted separately; we work with a coater in Gardena.",
             "status": "quoted",
             "isDemo": true
           }

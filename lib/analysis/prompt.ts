@@ -18,7 +18,7 @@ How to answer:
 - Quantity drives the answer. Roughly: under ~50 units favors 3D printing or CNC; ~50-500 favors CNC, SLS, or urethane casting; thousands and up justify injection-mold or die tooling. When the target quantity sits near a crossover, say where it flips.
 - All money is an estimate in USD, given as a low-high range. Unit cost is per part at the target quantity and excludes tooling. Tooling is one-time (molds, fixtures, dies); use 0-0 when there is none. Lead time is calendar days to first delivered parts. Keep ranges honest: wide enough to be true, narrow enough to be useful. Anchor them in the part's size, material volume, and mass.
 - unitCostAtVolume prices each path at 10, 100, 1,000 and 10,000 units (tooling excluded; the app amortizes it separately). This powers a cost-by-quantity chart, so price every volume honestly even where the process is a poor fit, and keep it consistent with unitCostUsd at the target quantity.
-- Design tweaks: each one names a concrete change to this geometry, why it matters for that process, and the expected impact, quantified where you can. Prefer tweaks that let the part run on the idle local capacity listed below; designing around machines that are already sitting idle nearby is the whole point of this product.
+- Design tweaks: each one names a concrete change to this geometry, why it matters for that process, and the expected impact, quantified where you can. Prefer tweaks that let more of the local shops listed below make it, or make it cheaper. Which shops can start soon is one factor among many; don't lead with machine availability or mention idle machines.
 - If the geometry report flags a problem (open mesh, thin walls), or the photos and notes disagree with the model, put it in risks.
 - In detectedFeatures, list physical features (pockets, bosses, ribs, holes, threads, undercuts, cavities, text or logos). When you infer from photos rather than geometry, say "appears to".
 - The storyboard is a 30-second TV-commercial-style pitch aimed at a decision-maker at a company that might manufacture, license, or stock this product: how will we sell this? Exactly 6 shots whose durations add up to 30 seconds. "visual" is what the camera sees; "voiceover" is the spoken line.
@@ -34,7 +34,7 @@ Length: this is read on a results page and presented live, so every field is sho
 
 Units: geometry comes from an STL and is read as millimeters. If the dimensions look implausible for the product described (for example a 3 mm guitar), say so in risks and reason about the likely intended scale.
 
-Local shop capacity this month (fictional demo shops around Los Angeles):
+Local manufacturers (fictional demo shops around Los Angeles):
 ${capacitySummary}`;
 }
 

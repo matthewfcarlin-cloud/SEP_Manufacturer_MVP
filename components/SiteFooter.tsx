@@ -2,8 +2,8 @@ import Link from "next/link";
 
 const LINKS = [
   { href: "/new", label: "Start a project" },
-  { href: "/studio", label: "Studio" },
-  { href: "/shops", label: "Shops" },
+  { href: "/studio", label: "My products" },
+  { href: "/shops", label: "Manufacturers" },
   { href: "/privacy", label: "Privacy" },
 ];
 
@@ -13,8 +13,8 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 pb-8 pt-16 sm:px-6">
         <div className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
           <p className="max-w-md text-night-muted">
-            Design around the machines that are already running. Moko turns a CAD file into
-            manufacturing paths, idle-capacity shop matches, and a pitch kit.
+            Moko helps you find the manufacturers who can make your product, local shops and overseas
+            suppliers, writes the request for you, and lets you compare quotes, order and sell.
           </p>
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
             {LINKS.map((l) => (

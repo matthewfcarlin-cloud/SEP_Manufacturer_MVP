@@ -238,12 +238,25 @@ test("uploading a STEP file converts it and measures it in millimeters", async (
   await expect(page.locator("canvas")).toBeVisible();
 });
 
-test("shops page filters to idle lathes", async ({ page }) => {
+test("the Manufacturers directory filters to lathe shops that can start this week", async ({ page }) => {
   await page.goto("/shops");
+  await expect(page.getByRole("heading", { level: 1, name: "Manufacturers" })).toBeVisible();
   await page.getByRole("button", { name: "CNC turning" }).click();
-  await page.getByLabel("Idle machines only").check();
-  await expect(page.getByText("Showing 3 of 25 shops")).toBeVisible();
-  for (const card of await page.locator("article").all()) await expect(card).toContainText("Demo data");
+  await page.getByLabel("Can start this week").check();
+  await expect(page.getByText("Showing 3 of 25 manufacturers")).toBeVisible();
+  for (const card of await page.locator("article").all()) {
+    await expect(card).toContainText("Demo data");
+    await expect(card).toContainText("What they make");
+    await expect(card).toContainText("Typical order size");
+    await expect(card.getByText("Can start this week")).toBeVisible();
+  }
+});
+
+test("no page talks about idle machines", async ({ page }) => {
+  for (const url of ["/", "/studio", "/shops", `/project/${PEDAL.id}`, `/project/${PEDAL.id}/make`, `/project/${PEDAL.id}/pitch`, `/project/${BRACKET.id}/make`]) {
+    await page.goto(url);
+    await expect(page.locator("body")).not.toContainText(/idle|h\/wk/i);
+  }
 });
 
 test("My products shows each product as a card with one status line and its progress", async ({ page }) => {
@@ -310,7 +323,7 @@ test("the app shell: sidebar collapses and stays collapsed; phones get a bottom-
   await expect(sidebar).toBeHidden();
   await page.getByRole("button", { name: "Open menu" }).click();
   const sheet = page.getByRole("dialog", { name: "Menu" });
-  await sheet.getByRole("link", { name: "Shops" }).click();
+  await sheet.getByRole("link", { name: "Manufacturers" }).click();
   await expect(page).toHaveURL(/\/shops$/);
   await expect(sheet).toHaveCount(0);
 });

@@ -26,7 +26,7 @@ export function AtAGlance({ analysis, quantity, topMatch }: { analysis: Analysis
       <Stat
         label="Best local shop (demo)"
         value={shop?.name ?? "No match yet"}
-        sub={topMatch ? `${topMatch.idleBoost ? "Idle machine · " : ""}${shop?.neighborhood ?? ""}` : undefined}
+        sub={topMatch ? `${topMatch.idleBoost ? "Can start this week · " : ""}${shop?.neighborhood ?? ""}` : undefined}
       />
     </dl>
   );

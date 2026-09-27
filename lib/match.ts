@@ -49,7 +49,7 @@ export function matchVersion(version: Matchable): ShopMatch[] {
         reasons.push(quantityFits
           ? `Target quantity (${version.targetQuantity}) is within this shop's ${shop.minOrderQty}–${shop.maxOrderQty} unit range.`
           : `Target quantity (${version.targetQuantity}) is outside this shop's ${shop.minOrderQty}–${shop.maxOrderQty} unit range.`);
-        if (machine.idleThisMonth) reasons.push("This machine has idle capacity this month.");
+        if (machine.idleThisMonth) reasons.push("This shop can start this week.");
 
         matches.push({
           shopId: shop.id,

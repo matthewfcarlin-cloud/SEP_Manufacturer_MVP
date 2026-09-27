@@ -2,10 +2,9 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { ExampleProjects } from "@/components/home/ExampleProjects";
 import { Hero } from "@/components/home/Hero";
-import { IdleTicker } from "@/components/home/IdleTicker";
+import { FindMakers } from "@/components/home/FindMakers";
 import { JourneyStages } from "@/components/home/JourneyStages";
 import { ProcessStory, type StoryData } from "@/components/home/ProcessStory";
-import { ProcessTiles } from "@/components/home/ProcessTiles";
 import { ScrollStatement } from "@/components/home/ScrollStatement";
 import { Showcase } from "@/components/home/Showcase";
 import render0 from "@/demo/renders/pedal-render-0.png";
@@ -61,8 +60,7 @@ export default async function Home() {
       <JourneyStages />
       <ProcessStory data={storyData(latestVersion(demo))} />
       <Showcase name={demo.name} version={latestVersion(demo)} href={exampleHref} />
-      <IdleTicker shops={shops} />
-      <ProcessTiles shops={shops} />
+      <FindMakers localShops={shops.length} />
       <ScrollStatement
         text="Printify hid the factory for merch. Moko does it for your own product."
         accentWords={["your", "own", "product."]}

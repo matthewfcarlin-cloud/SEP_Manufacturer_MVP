@@ -34,10 +34,10 @@ const writeCollapsed = (value: boolean) => {
   listeners.forEach((fn) => fn());
 };
 
-type Props = { recent: readonly RecentProduct[]; productNames: Readonly<Record<string, string>>; idleMachines: number; children: ReactNode };
+type Props = { recent: readonly RecentProduct[]; productNames: Readonly<Record<string, string>>; children: ReactNode };
 
 /** The app shell: a collapsible left sidebar (a bottom sheet on phones), a top bar, and the page. */
-export function AppFrame({ recent, productNames, idleMachines, children }: Props) {
+export function AppFrame({ recent, productNames, children }: Props) {
   const pathname = usePathname();
   const isCollapsed = useSyncExternalStore(subscribe, readCollapsed, () => false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -81,10 +81,6 @@ export function AppFrame({ recent, productNames, idleMachines, children }: Props
         </div>
         {!isCollapsed && (
           <div className="flex flex-col gap-3 border-t border-night-line px-4 py-4">
-            <p className="eyebrow flex items-center gap-2 text-[10px] text-night-muted">
-              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-night-idle" />
-              {idleMachines} machines idle in LA · demo
-            </p>
             <Link href="/privacy" className="eyebrow text-[10px] text-night-muted hover:text-night-ink">
               Privacy
             </Link>
@@ -138,11 +134,7 @@ export function AppFrame({ recent, productNames, idleMachines, children }: Props
             <div className="px-1 pb-2">
               <SidebarNav recent={recent} onNavigate={() => setIsSheetOpen(false)} />
             </div>
-            <div className="flex items-center justify-between border-t border-night-line px-4 pt-3">
-              <p className="eyebrow flex items-center gap-2 text-[10px] text-night-muted">
-                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-night-idle" />
-                {idleMachines} machines idle in LA · demo
-              </p>
+            <div className="flex items-center justify-end border-t border-night-line px-4 pt-3">
               <Link href="/privacy" onClick={() => setIsSheetOpen(false)} className="eyebrow text-[10px] text-night-muted hover:text-night-ink">
                 Privacy
               </Link>

@@ -74,7 +74,7 @@ describe("matchVersion", () => {
   it("keeps reasons in the order ShopMatches labels them", () => {
     // components/ShopMatches.tsx labels reasons by position:
     // Process, Part size, Material, Order size, Capacity (only when idle).
-    const patterns = [/^Process matches/, /^Part (fits|exceeds)/, /^(Material match|No direct material)/, /^Target quantity/, /idle capacity/];
+    const patterns = [/^Process matches/, /^Part (fits|exceeds)/, /^(Material match|No direct material)/, /^Target quantity/, /can start this week/];
     for (const match of matchVersion(sample)) {
       expect(match.reasons.length).toBe(match.idleBoost ? 5 : 4);
       match.reasons.forEach((reason, i) => expect(reason).toMatch(patterns[i]));

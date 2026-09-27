@@ -5,9 +5,9 @@
 ## What we're building
 > The product direction is now the creator studio (idea → design → make → money → launch → sell). `PRODUCT.md` is the product spec; the build plan is under "Phase 10+: Creator studio" below.
 
-A web app for independent inventors and small hardware teams. They upload a product idea (CAD file + photos + notes). The app shows how it could be manufactured, which local shops have idle machines that fit it, what design tweaks would make it cheaper, and generates a shareable pitch kit.
+A web app for independent inventors and small hardware teams. They upload a product idea (CAD file + photos + notes). The app shows how it could be manufactured, helps them find and contact the manufacturers who can make it (local shops and overseas suppliers), compares quotes, and takes it through pricing, launch and selling.
 
-**Core insight (from customer discovery with a veteran model maker/inventor):** design around what factories already have running, especially idle machines. Good design alone doesn't close the deal; manufacturability and profitability do.
+**Core insight (from customer discovery with a veteran model maker/inventor):** good design alone doesn't close the deal; manufacturability and profitability do, and first-time creators don't know how to find a manufacturer or what to ask. **Positioning:** Moko is about finding manufacturers and reaching out to them. Machine availability is one quiet ranking factor (`idleThisMonth`, `idleBoost` stay in the data and scoring), never the headline: user-facing copy never mentions idle machines (an E2E test checks the main pages).
 
 **Scope:** inventor side only. Shops are seeded demo data. This is a club MVP demo, so it must be fully functional end to end, but it doesn't need to be production-scaled.
 
@@ -15,7 +15,7 @@ A web app for independent inventors and small hardware teams. They upload a prod
 1. **Upload** – CAD (STL required, STEP stretch goal), 1–5 photos/sketches, notes (target quantity, budget, material ideas, what it is).
 2. **Understand** – 3D viewer shows the part; app extracts geometry stats; AI reads photos + notes + stats.
 3. **Manufacturing paths** – 2–4 candidate processes, each with unit cost range, tooling cost range, lead time, pros/cons, and specific design tweaks.
-4. **Shop matches** – seeded shops ranked by fit, highlighting idle capacity ("CNC mill idle this month – fits with tweak X").
+4. **Shop matches** – seeded shops ranked by fit, each with how soon it can start ("Can start this week – fits with tweak X").
 5. **Pitch kit** – one shareable page: rendered hero shots, product summary, manufacturing path + cost card, 30-second commercial storyboard (6 shots).
 
 ## Stack
@@ -32,7 +32,7 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `/new` – upload form
 - `/project/[id]` – analysis results: viewer, paths, tweaks, shop matches
 - `/project/[id]/pitch` – shareable pitch kit
-- `/shops` – browse seeded shops (idle capacity visible)
+- `/shops` – the Manufacturers directory: name, location, what they make, typical order size, how soon they can start
 - `/project/[id]?v=2` – a specific version (default: latest)
 - `/project/[id]/versions/new?from=1&tweak=0.0` – new-version form, optionally applying an AI tweak
 - `/project/[id]/compare?a=1&b=2` – side-by-side version comparison
@@ -220,7 +220,7 @@ Return top 5 with human-readable `reasons`.
 
 ## Seed data
 - `data/shops.json`: 25 **fictional** LA-area shops (e.g. Vernon, Burbank, Gardena, Van Nuys, Downtown Arts District). Mix: machine shops, print farms, sheet-metal fabs, a small injection molder, a makerspace, a guitar/wood shop.
-- About 40% of machines flagged idle.
+- About 40% of machines flagged available now (`idleThisMonth`; shown as "Can start this week").
 - Every shop has `isDemoData: true` and the UI shows a "Demo data" badge. Do not use real business names.
 
 ## Pitch kit (`/project/[id]/pitch`)
@@ -512,7 +512,7 @@ type EtsyListing = { title: string; description: string; tags: string[]; priceUs
 - Two thin routes: `PATCH /api/projects/[id]` `{ name }` (owner only) and `POST /api/projects/[id]/duplicate` (yours or an example → a private copy; `duplicateProject` copies files and rewrites file URLs; share link, learning opt-in and learning records stay with the original).
 
 ### Build 1 – Studio dashboard (built)
-- `/studio` (`app/studio/page.tsx`, skeleton in `loading.tsx`): dark header band (title + products/versions/idle-machine stats), then one `StudioCard` per product this browser can see (own products newest first, then examples), plus a "Start a product" card. Header and footer link "Studio"; `/projects` redirects to `/studio`; deletes land there.
+- *(Superseded by the redesign step 1 "My products" grid above; kept for history.)* `/studio`: dark header band (title + product stats), then one `StudioCard` per product this browser can see (own products newest first, then examples), plus a "Start a product" card. Header and footer link "Studio"; `/projects` redirects to `/studio`; deletes land there.
 - Derived, pure, tested (`lib/studio/`): `stageProgress()` (a stage is done when its data exists on the latest version; the current stage is the first gap, so later stages can be done out of order), `nextStep()` (ordered rules: wrong units → analyze → set a price → rework if unprofitable at every volume → talk to a shop → write pitch → share; each links to the screen that does it), `keyNumbers()` (best-path unit cost at target qty, retail, margin at target qty) and `unitCostTrend()` (best-path unit cost per analyzed version). Make/Launch/Sell rules gain quotes, plan and listing in builds 3–5.
 - `StudioModel` mounts the WebGL viewer only while the card is on screen (browsers cap live contexts), shows the saved render or a skeleton until `onReady`, spins slowly (`rotateSpeed` 0.5, zoom off) and not at all under reduced motion. `ModelViewer` gained `rotateSpeed`, `enableZoom`, `onReady`, `showLoading` (defaults unchanged).
 - Grid children need `min-w-0` or a long title widens the page on phones (E2E checks no horizontal scroll at 390 px).
@@ -655,7 +655,7 @@ A browser with its own key is never charged to the demo budget and never falls b
 - Shop data: `data/shops.json`, validated at load by `lib/schemas.ts` (`shopsSchema`). Read it through `getShops()` / `getShopById()` in `lib/shops.ts`, never by importing the JSON directly.
 - Process names and display labels: `lib/processes.ts` (`PROCESSES`, `PROCESS_LABELS`).
 - Colors are theme tokens in `app/globals.css` (`bg`, `surface`, `ink`, `muted`, `line`, `accent`, `idle`, `demo`) with light and dark values. Use them instead of raw Tailwind colors.
-- Badges: `DemoBadge` and `IdleBadge` in `components/Badges.tsx`. Any UI showing a shop must show `DemoBadge`.
+- Badges: `DemoBadge` and `StartBadge` in `components/Badges.tsx` (`StartBadge` maps availability to "Can start this week" / "Can start in 2–3 weeks" via `lib/availability.ts`). Any UI showing a shop must show `DemoBadge`.
 - Projects: read and write only through `lib/projectStore.ts` (`getProject`, `createProject`, `addVersion`, `updateProject`, `updateVersion`). Storage is `.data/projects/<id>/` (gitignored); uploads are served by `GET /api/files/[id]/[file]` with an allowlist of file names. Every read-modify-write goes through `updateProject`/`updateVersion`, which re-read under a per-project lock. Never do `getProject` → long await → `saveProject`: a version added meanwhile would be lost.
 - Versions (Phase 6): helpers in `lib/versions.ts` (`latestVersion`, `latestAnalyzedVersion`, `getVersion`, `parseVersionParam`). Version 1 files keep their original names (`model.stl`, `image-0.jpg`); version n > 1 files are `vn-model.stl` etc. Pre-Phase-6 flat `project.json` files are migrated on read by `lib/projectMigration.ts` (fixture: `test/fixtures/legacy-project.json`). Matches are per version: `matchVersion(version)`. Version deltas come only from `compareVersions` in `lib/compare.ts`. AI tweak picks are sent as `pathIndex.tweakIndex` and resolved server-side by `lib/tweaks.ts`, so the stored text is always the real analysis text.
 - Geometry: `analyzeStl()` in `lib/geometry.ts` runs server-side at upload and stores `GeometryStats` on the version. Everything downstream is in mm: the upload form sends `units` (mm/cm/m/in, `lib/units.ts`) and `readUploadedParts` scales STL files with `scaleStl()` before measuring and storing them; STEP is converted to mm by OpenCascade and ignores `units`. `scaleWarning()` flags parts under 5 mm or over 3 m across in the geometry panel.
@@ -699,5 +699,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Pages that read project files per request call `await connection()` (Next 16's replacement for `force-dynamic`).
 - E2E: `npm run test:e2e` (Playwright on installed Chrome). Tests clean up projects they create in `afterEach`.
 - Design system (industrial redesign): tokens in `app/globals.css` (theme `bg/surface/ink/muted/line/accent` plus always-dark `night-*` for the header, footer, hero and statement bands; use `night-accent`, not `accent`, on night surfaces). Utilities: `display-type` (Archivo, uppercase headlines) and `eyebrow` (mono caps captions). Page titles use `components/PageHeader.tsx`. Radii are tightened globally in `@theme`.
-- Home page sections live in `components/home/` (3D hero, idle ticker, pinned `ProcessStory`, `ProcessTiles`, `Showcase`, `ScrollStatement`). Animation uses `motion` (`motion/react`); every animated component must respect `useReducedMotion()`. Animated words need real spaces between them, not just margins.
+- Home page sections live in `components/home/` (3D hero, `JourneyStages`, pinned `ProcessStory`, `Showcase`, `FindMakers`, `ScrollStatement`). Animation uses `motion` (`motion/react`); every animated component must respect `useReducedMotion()`. Animated words need real spaces between them, not just margins.
 

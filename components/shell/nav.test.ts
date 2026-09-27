@@ -9,6 +9,7 @@ describe("app shell nav", () => {
     expect(isActive(item("/studio"), "/new")).toBe(true);
     expect(isActive(item("/"), "/studio")).toBe(false);
     expect(isActive(item("/shops"), "/shops")).toBe(true);
+    expect(titleFor("/shops", {})).toBe("Manufacturers");
   });
 
   test("titles name the product and tab, and fall back when the name isn't known", () => {

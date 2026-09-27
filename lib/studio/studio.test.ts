@@ -67,7 +67,8 @@ describe("nextStep", () => {
   test("with a price set, asks for quotes from the matched shops", () => {
     const step = nextStep(withLatest(pedal, { outreach: undefined }));
     expect(step.title).toBe("Request quotes");
-    expect(step.detail).toMatch(/idle/);
+    expect(step.detail).toMatch(/^\d demo shops can make it\. One click sends them a request\.$/);
+    expect(step.detail).not.toMatch(/idle/i);
     expect(step.href).toBe(`/project/${pedal.id}/make`);
   });
 

@@ -38,7 +38,7 @@ const STEPS = [
   { title: "Upload", body: "Drop in an STL or STEP file, a few photos, and what you know: quantity, budget, materials." },
   { title: "Measure", body: "Real dimensions, volume, and wall thickness, measured from the mesh itself." },
   { title: "Choose a path", body: "Two to four ways to make it, each with cost ranges, lead time, and the tweaks that make it cheaper." },
-  { title: "Match", body: "Nearby shops ranked by fit, idle machines first, then quotes compared side by side." },
+  { title: "Match", body: "Local shops and overseas suppliers that can make it, a request written for you, and their quotes side by side." },
   { title: "Launch", body: "Studio renders, a pitch page and a 30-second storyboard, then a dated plan and an Etsy-ready listing." },
 ];
 
@@ -123,7 +123,7 @@ function Visual({ step, data }: { step: number; data: StoryData }) {
                   <p className="text-night-ink">{s.name}</p>
                   <p className="eyebrow text-night-muted">{s.neighborhood} · {s.machine}</p>
                 </div>
-                {s.idle && <span className="eyebrow text-night-idle">● Idle</span>}
+                {s.idle && <span className="eyebrow shrink-0 text-night-idle">● Can start this week</span>}
               </motion.li>
             ))}
           </ul>

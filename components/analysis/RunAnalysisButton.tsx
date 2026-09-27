@@ -15,7 +15,7 @@ const STAGES = [
   "Comparing manufacturing processes…",
   "Estimating costs at your quantity…",
   "Looking for design tweaks…",
-  "Checking which local machines are idle…",
+  "Finding shops that can make it…",
   "Writing the commercial storyboard…",
 ];
 const STAGE_MS = 9000;

@@ -100,7 +100,7 @@ export function assemblyCost(assembler: AssemblyPartner, lines: readonly OrderLi
 /**
  * Assemblers that can build this BOM, best first. Anyone missing a required
  * capability is left out; a run outside their size range is kept but
- * penalized and flagged. Score also favors idle capacity and lower cost.
+ * penalized and flagged. Score also favors partners who can start now and lower cost.
  */
 export function matchAssemblers(lines: readonly OrderLine[], units: number, list: readonly AssemblyPartner[] = partners): AssemblerMatch[] {
   const required = requiredCapabilities(lines);
@@ -131,7 +131,7 @@ export function matchAssemblers(lines: readonly OrderLine[], units: number, list
       }
       if (a.idleThisMonth) {
         score += IDLE_BONUS;
-        reasons.push("Has open bench time this month");
+        reasons.push("Can start this week");
       }
       // Up to 20 points for cost: the cheapest gets all of them.
       score += Math.round(20 * (cheapest / mids[i]));

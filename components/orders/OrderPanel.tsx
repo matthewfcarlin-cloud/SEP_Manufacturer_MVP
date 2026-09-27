@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DemoBadge, IdleBadge } from "@/components/Badges";
+import { DemoBadge, StartBadge } from "@/components/Badges";
 import { useBusy } from "@/components/sourcing/useSourcing";
 import { AiErrorBanner } from "@/components/AiErrorBanner";
 import { inputClass } from "@/components/upload/UploadPickers";
@@ -218,7 +218,7 @@ export function OrderPanel({ projectId, version, initial }: Props) {
                       </div>
                       <DemoBadge />
                     </div>
-                    {m.assembler.idleThisMonth && <IdleBadge />}
+                    <StartBadge canStartNow={m.assembler.idleThisMonth} />
                     <p className="text-sm">{m.assembler.description}</p>
                     <p className="text-sm">
                       <span className="font-mono tabular-nums">{range(m.costUsd)}</span> <span className="text-muted">for the run · {range(m.perUnitUsd, usd)} per unit (est.)</span>
