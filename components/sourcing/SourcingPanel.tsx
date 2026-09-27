@@ -42,7 +42,7 @@ function TargetsCard({ targets }: { targets: NegotiationTargets }) {
         {targets.tooling.low.toLocaleString("en-US")}–${targets.tooling.high.toLocaleString("en-US")}). Overseas quotes often come in lower.{" "}
         {targets.walkAway === null
           ? "At your current retail price no per-part price leaves a healthy margin, so the AI will push on terms and ask what brings the price down."
-          : `Walk-away is ${walkAwayNote}. It stays private: the AI is told never to reveal it${targets.walkAway > targets.target ? ", and drafts that state it are rejected" : ""}.`}
+          : `Walk-away is ${walkAwayNote}. It stays private: the AI is told never to reveal it, and drafts that state it are rejected.`}
       </p>
     </div>
   );

@@ -79,6 +79,11 @@ describe("revealsWalkAway", () => {
     expect(revealsWalkAway(`Max USD ${w.toFixed(2)} per piece`, targets)).toBe(true);
     expect(revealsWalkAway(`Could you do $${targets.openingAsk.toFixed(2)}?`, targets)).toBe(false);
   });
+
+  test("still applies when the margin cap pulls the walk-away down to the target", () => {
+    const capped = { ...targets, walkAway: targets.target };
+    expect(revealsWalkAway(`Our maximum is $${capped.target.toFixed(2)} per piece.`, capped)).toBe(true);
+  });
 });
 
 const goodDraft = {

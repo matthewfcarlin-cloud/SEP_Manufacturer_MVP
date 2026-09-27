@@ -143,7 +143,8 @@ export function runSupplierDraft(callModel: CallTextModel, brief: string, target
 
 /** True when the text states the walk-away price, which the prompt forbids. Checked before a draft is saved. */
 export function revealsWalkAway(text: string, targets: NegotiationTargets): boolean {
-  if (targets.walkAway === null || targets.walkAway <= targets.target) return false;
+  // Checked even when the walk-away equals the target: "our maximum is $X" gives it away either way.
+  if (targets.walkAway === null) return false;
   const prices = [...text.matchAll(/(?:\$|USD\s?)\s?(\d[\d,]*(?:\.\d{1,2})?)/gi)].map((m) => Number(m[1].replaceAll(",", "")));
   return prices.some((p) => Math.abs(p - targets.walkAway!) < 0.005);
 }
