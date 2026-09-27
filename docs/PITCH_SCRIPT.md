@@ -29,14 +29,12 @@ Open `/present`. Click / arrow / space = next line. **N** shows these notes on s
 
 ## Slide 5 · tech (02 · Tech stack)
 
-- **[click]** The stack. Next.js 16 and React 19, 3D in the browser with three.js. We parse STL ourselves and STEP through OpenCascade compiled to WebAssembly, and measure volume and wall thickness with ray casts. Matching, quote ranking, negotiation targets and break-even are plain tested functions, no AI.
-- **[click]** Every AI call goes through one gateway. It picks the key, the creator's own, encrypted with AES-256-GCM, or our capped house budget; routes each task to a model; validates structured output against a schema with one retry; and meters tokens without storing any content.
+- **[click]** The stack: Next.js 16, React 19 and three.js, with STEP files read through OpenCascade in WebAssembly. Every AI call goes through one gateway. It picks the key, the creator's own, encrypted with AES-256-GCM, or our capped house budget; routes each task to a model; validates structured output against a schema with one retry; and meters tokens without storing any content.
 - **[click]** And it learns from real results, only from creators who opt in, and never from files or notes. Real quotes calibrate the cost ranges, tweaks are ranked by what actually worked, and a 12-part eval harness scores every prompt change.
 
 ## Slide 6 · market (03 · Market & distribution)
 
-- **[click]** Who it's for. Our beachhead is Etsy sellers who've outgrown print-on-demand and want a product that's really theirs. Then students and first-time founders, and hobby makers with a 3D printer. Manufacturers are the other side: they get clear, ready-to-quote requests instead of vague cold emails.
-- **[click]** Distribution: we go where first-timers already are. USC groups, the Iovine and Young Slack, Discord, maker subreddits. The hook is free: upload your idea and see who can make it in five minutes. Every request a creator sends introduces a shop to Moko.
+- **[click]** Who it's for. Our beachhead is Etsy sellers who've outgrown print-on-demand and want a product that's really theirs. Then students and first-time founders, and hobby makers with a 3D printer. Manufacturers are the other side: they get clear, ready-to-quote requests instead of vague cold emails. We reach creators where they already are: USC groups, Discord and maker subreddits, with a free five-minute 'see who can make it'.
 - **[click]** Here's where we are today. (Read the numbers, or today's goal if they're not in yet.)
 
 ## Slide 7 · field (03 · Market & distribution)

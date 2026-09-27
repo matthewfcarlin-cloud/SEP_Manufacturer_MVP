@@ -22,8 +22,8 @@ const logoSpots: Partial<Record<Beat, LogoSpot>> = {
   ...Object.fromEntries(
     (
       [
-        "idea", "design", "make", "outreach", "money", "sell", "stack", "gateway", "learning", "market",
-        "distribution", "traction", "field", "whole", "model", "margins", "roadmap", "hard",
+        "idea", "design", "make", "outreach", "money", "sell", "gateway", "learning", "market",
+        "traction", "field", "whole", "model", "margins", "roadmap", "hard",
       ] as const
     ).map((b) => [b, corner]),
   ),

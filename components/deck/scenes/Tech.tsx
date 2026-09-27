@@ -5,16 +5,6 @@ import { color, ease } from "../motion";
 import { Display, Eyebrow, Show } from "../parts";
 import type { Beat } from "../script";
 
-const LAYERS = [
-  { layer: "App", what: "Next.js 16 (App Router) · React 19 · TypeScript · Tailwind 4" },
-  { layer: "3D", what: "three.js + react-three-fiber: live viewer, thin-wall overlay, studio renders captured in the browser" },
-  { layer: "Geometry", what: "Own STL parser; STEP via OpenCascade in WebAssembly → volume, area, wall thickness by ray casts" },
-  { layer: "AI", what: "Claude through one gateway: structured JSON validated with zod, one retry, model routed per task" },
-  { layer: "No AI", what: "Matching, quote ranking, negotiation targets, break-even: pure, tested functions" },
-  { layer: "Privacy", what: "Owner key per browser, 404 to anyone else · CAD never sent to the AI · shops see a spec summary" },
-  { layer: "Ship", what: "Railway + persistent volume · 500+ unit tests, Playwright end-to-end, a 12-part AI eval harness" },
-];
-
 const FEATURES = ["Analysis", "Agent", "Price", "BOM", "Sourcing", "Supplier emails", "Orders", "Pitch", "Plan", "Listing"];
 
 const GATEWAY = [
@@ -32,9 +22,8 @@ const LOOP = [
 ];
 
 export function Tech({ beat }: { beat: Beat }) {
-  const on = beat === "stack" || beat === "gateway" || beat === "learning";
+  const on = beat === "gateway" || beat === "learning";
   const titles: Partial<Record<Beat, string>> = {
-    stack: "The stack.",
     gateway: "One gateway for every AI call.",
     learning: "It gets better with every real quote.",
   };
@@ -48,15 +37,6 @@ export function Tech({ beat }: { beat: Beat }) {
           <Display size={72} className="text-[#efeeec]">
             {text}
           </Display>
-        </Show>
-      ))}
-
-      {LAYERS.map((l, i) => (
-        <Show key={l.layer} on={beat === "stack"} delay={0.25 + i * 0.12} className="left-[120px] w-[1680px]" style={{ top: 280 + i * 104 }}>
-          <div className="flex items-baseline gap-10 border-t border-[#262624] pt-5">
-            <span className="w-[190px] shrink-0 font-mono text-[24px] uppercase tracking-[0.14em] text-[#ff4a00]">{l.layer}</span>
-            <span className="text-[31px] leading-snug text-[#efeeec]">{l.what}</span>
-          </div>
         </Show>
       ))}
 

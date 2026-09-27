@@ -12,17 +12,10 @@ const SEGMENTS = [
   { tag: "Supply", who: "Small shops and overseas suppliers", why: "Clear, ready-to-quote requests with a spec sheet, instead of vague cold emails" },
 ];
 
-const CHANNELS = [
-  { where: "Where first-timers already are", how: "USC groups, Iovine & Young Slack, Discord, maker subreddits: “Have a product idea? See who can make it, free, in 5 minutes.”" },
-  { where: "Free is the funnel", how: "Finding out if it can be made, and by whom, costs nothing; outreach and quotes are Pro" },
-  { where: "Every request recruits a shop", how: "Each spec sheet a creator sends shows a manufacturer what a Moko request looks like" },
-  { where: "Every creator brings the next", how: "Shared pitch pages already carry the Moko name; listings and launch pages will too" },
-];
-
 export const segmentCard = { x: 120, y: 330, w: 400, h: 420, step: 425 };
 
 export function Market({ beat }: { beat: Beat }) {
-  const on = beat === "market" || beat === "distribution" || beat === "traction";
+  const on = beat === "market" || beat === "traction";
   return (
     <>
       <Show on={on} className="left-[120px] top-[96px]">
@@ -57,21 +50,6 @@ export function Market({ beat }: { beat: Beat }) {
           </motion.div>
         );
       })}
-
-      <Show on={beat === "distribution"} delay={0.1} className="left-[120px] top-[140px]">
-        <Display size={72} className="text-[#efeeec]">
-          Go where first-timers already are.
-        </Display>
-      </Show>
-      {CHANNELS.map((c, i) => (
-        <Show key={c.where} on={beat === "distribution"} delay={0.3 + i * 0.15} className="left-[120px] w-[1680px]" style={{ top: 300 + i * 150 }}>
-          <div className="flex items-baseline gap-10 border-t border-[#262624] pt-6">
-            <span className="w-14 shrink-0 font-mono text-[28px] text-[#ff4a00]">0{i + 1}</span>
-            <span className="w-[520px] shrink-0 text-[36px] font-semibold text-[#efeeec]">{c.where}</span>
-            <span className="text-[30px] leading-snug text-[#b9b5ac]">{c.how}</span>
-          </div>
-        </Show>
-      ))}
 
       <Traction on={beat === "traction"} />
     </>
