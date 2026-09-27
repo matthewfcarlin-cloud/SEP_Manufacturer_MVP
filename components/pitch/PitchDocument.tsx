@@ -68,7 +68,7 @@ function Cover({ project, version, isOwnerView }: PitchDocumentProps) {
             value={formatUnitCostRange(best.unitCostUsd)}
           />
           <Fact
-            label="Tooling, est."
+            label="One-time setup (tooling), est."
             value={formatToolingRange(best.toolingCostUsd)}
           />
         </dl>
@@ -175,9 +175,9 @@ function HowItsMade({ version, topMatch }: PitchDocumentProps) {
             {version.analysis.topRecommendation}
           </p>
           <dl className="grid grid-cols-3 gap-4">
-            <Fact label="Fit" value={`${best.fitScore}/100`} />
+            <Fact label="How well it fits" value={`${best.fitScore}/100`} />
             <Fact
-              label="Lead time, est."
+              label="How long it takes, est."
               value={formatDaysRange(best.leadTimeDays)}
             />
             <Fact label="Material" value={best.materials[0] ?? "—"} />

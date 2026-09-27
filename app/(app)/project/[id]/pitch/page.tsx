@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { TabIntro } from "@/components/product/TabIntro";
+import { tabSummary } from "@/lib/studio/plainSummary";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PitchDocument } from "@/components/pitch/PitchDocument";
@@ -43,7 +45,7 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
         {back}
         <section className="rounded-2xl border border-line bg-surface p-8">
           <p className="eyebrow text-accent">Licensing pitch</p>
-          <h1 className="display-type mt-2 text-4xl">{project.name}</h1>
+          <h2 className="display-type mt-2 text-4xl">{project.name}</h2>
           <p className="mt-3 max-w-xl text-muted">Run a manufacturing analysis first. The pitch is built from it: how it gets made, what it costs, and the storyboard.</p>
           <Link href={`/project/${project.id}`} className="mt-5 inline-flex rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink">
             View project analysis
@@ -60,7 +62,7 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12 print:max-w-none print:px-0 print:py-0">
       <div className="flex flex-col gap-4 border-b border-line pb-6 print:hidden">
-        {back}
+        <TabIntro eyebrow={<><span>Stage 5 · Launch</span><span aria-hidden>·</span><span>v{analyzed.number}</span></>} title="Pitch" lines={tabSummary(analyzed, "pitch")} />
         <PitchToolbar
           projectId={project.id}
           projectName={project.name}

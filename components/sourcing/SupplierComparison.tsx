@@ -22,9 +22,9 @@ export function SupplierComparison({ ranking }: { ranking: SupplierRanking }) {
                 <th className="px-4 py-3 font-medium">Supplier</th>
                 <th className="px-4 py-3 font-medium">Quoted per part</th>
                 <th className="px-4 py-3 font-medium">MOQ</th>
-                <th className="px-4 py-3 font-medium">Tooling</th>
+                <th className="px-4 py-3 font-medium">One-time setup</th>
                 <th className="px-4 py-3 font-medium">All-in per part @ {quantity.toLocaleString("en-US")}, est.</th>
-                <th className="px-4 py-3 font-medium">Lead time</th>
+                <th className="px-4 py-3 font-medium">How long it takes</th>
               </tr>
             </thead>
             <tbody>
@@ -56,8 +56,8 @@ export function SupplierComparison({ ranking }: { ranking: SupplierRanking }) {
         <p className="text-xs text-muted">Waiting on a price from {unquoted.map((u) => u.name).join(", ")}. Add it with Edit when they reply.</p>
       )}
       <p className="text-xs text-muted">
-        All-in counts the parts you&apos;d have to buy to meet each MOQ plus tooling, spread over the {quantity.toLocaleString("en-US")} you need. Quotes
-        over your walk-away are never picked; at about the same price (within 5%), the shorter lead time wins. Based only on the numbers you entered.
+        All-in counts the parts you&apos;d have to buy to meet each smallest order, plus the one-time setup cost, spread over the {quantity.toLocaleString("en-US")} you need. Quotes
+        over your walk-away are never picked; at about the same price (within 5%), the faster one wins. Based only on the numbers you entered.
       </p>
     </div>
   );

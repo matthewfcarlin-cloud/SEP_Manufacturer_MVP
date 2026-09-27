@@ -159,7 +159,7 @@ export function BomPanel({ projectId, projectName, version, targetQuantity, proc
             <Stat
               label={`${targetQuantity.toLocaleString("en-US")} units · est.`}
               value={totals.perProduct ? formatUnitCostRange({ low: totals.perProduct.low * targetQuantity, high: totals.perProduct.high * targetQuantity }) : "—"}
-              note="Tooling not included"
+              note="One-time setup costs not included"
             />
           </dl>
 
@@ -198,7 +198,7 @@ export function BomPanel({ projectId, projectName, version, targetQuantity, proc
           <p className="text-xs text-muted">
             Drafted for {processInSentence(bom.process)}
             {bom.editedByUser ? ", edited by you" : ""}. Costs are estimates per finished unit at {targetQuantity.toLocaleString("en-US")} units, from the AI&apos;s
-            general knowledge, not live prices; tooling is one-time and shown in the analysis.
+            general knowledge, not live prices; one-time setup costs (molds, fixtures) are in the analysis.
           </p>
         </div>
       ) : (

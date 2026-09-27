@@ -159,7 +159,7 @@ export function BusinessCasePanel({ projectId, version, paths, targetQuantity, i
                 curves={curves}
                 targetQuantity={targetQuantity}
                 title="Cost per part vs. what you receive"
-                description="Each process's all-in cost per part (tooling spread over the run) against your revenue per unit. Where a line drops below the dashed line, that process pays back its tooling and starts making money."
+                description="Each process's all-in cost per part (the one-time setup cost spread over the run) against your revenue per unit. Where a line drops below the dashed line, that process pays back its tooling and starts making money."
                 priceLine={{ value: result.revenuePerUnit, label: "You receive" }}
               />
             )}

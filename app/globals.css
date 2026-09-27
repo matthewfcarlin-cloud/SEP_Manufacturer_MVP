@@ -148,3 +148,38 @@ body {
   }
 }
 
+
+/* Product spotlight: the model pops in, then the callout lines draw toward it. */
+@keyframes spotlight-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.86) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.spotlight-animate {
+  animation: spotlight-pop 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+}
+
+.spotlight-connector {
+  animation: spotlight-grow 0.5s ease-out both;
+}
+
+@keyframes spotlight-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spotlight-connector {
+    animation: none;
+  }
+}

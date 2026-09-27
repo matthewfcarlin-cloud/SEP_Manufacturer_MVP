@@ -48,7 +48,7 @@ export function nextStep(project: Project): NextStep {
   const isMade = Boolean(v.outreach?.chosenQuoteId) || Boolean(v.sourcing?.suppliers.some((sup) => sup.status === "agreed"));
   if (!isMade && v.outreach && v.outreach.quotes.length > 0) {
     const n = v.outreach.quotes.length;
-    return { title: `${n} quote${n === 1 ? "" : "s"} waiting`, detail: "Compare them side by side and choose one to plan around.", href: `${base}/make`, cta: "Compare quotes" };
+    return { title: `${n} quote${n === 1 ? "" : "s"} waiting`, detail: "Compare them side by side and choose one to plan around.", href: `${base}/make`, cta: n === 1 ? "Look at your quote" : `Compare your ${n} quotes` };
   }
   const matches = matchVersion(v);
   if (!isMade && matches.length > 0) {

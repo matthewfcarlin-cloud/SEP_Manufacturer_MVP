@@ -1,4 +1,5 @@
 import { AskMokoPanel } from "@/components/agent/AskMokoPanel";
+import { ProductHero } from "@/components/product/ProductHero";
 import { ProductNav } from "@/components/product/ProductNav";
 import { getAccessibleProject } from "@/lib/access";
 import { STAGES, stageProgress } from "@/lib/studio/stage";
@@ -13,12 +14,13 @@ export default async function ProductLayout({ children, params }: LayoutProps<"/
   const { id } = await params;
   const found = await getAccessibleProject(id);
   if (!found) return children; // the page itself answers 404
-  const { project } = found;
+  const { project, access } = found;
   const { current } = stageProgress(project);
 
   return (
     <div className="xl:flex">
       <div className="min-w-0 flex-1">
+        <ProductHero project={project} isExample={access === "example"} />
         <ProductNav projectId={project.id} projectName={project.name} />
         {children}
       </div>

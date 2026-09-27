@@ -19,7 +19,7 @@ export function ProductNav({ projectId, projectName }: { projectId: string; proj
     <nav aria-label={`${projectName} screens`} className="border-b border-line bg-surface/60 print:hidden">
       <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-4 sm:px-6">
         <Link href="/studio" className="eyebrow shrink-0 py-3 pr-3 text-[11px] text-muted hover:text-ink">
-          Studio /
+          My products /
         </Link>
         {TABS.map((tab) => {
           const href = `${base}${tab.href}`;

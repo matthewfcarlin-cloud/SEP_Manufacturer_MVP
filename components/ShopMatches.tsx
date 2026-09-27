@@ -68,7 +68,7 @@ export function ShopMatches({ matches, version }: { matches: ShopMatch[]; versio
                     <p className="text-sm text-muted">{PROCESS_LABELS[match.matchedMachine.type]} · {match.matchedMachine.envelopeMm.x} × {match.matchedMachine.envelopeMm.y} × {match.matchedMachine.envelopeMm.z} mm</p>
                   </div>
                   <div className="sm:text-right">
-                    <p className="text-xs font-medium uppercase tracking-wider text-muted">Match score</p>
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted">How well it fits</p>
                     <p className="text-2xl font-semibold tabular-nums">{match.score}<span className="text-sm font-normal text-muted"> / 100</span></p>
                   </div>
                 </div>

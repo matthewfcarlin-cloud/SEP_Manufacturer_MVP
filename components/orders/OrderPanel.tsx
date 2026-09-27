@@ -98,7 +98,7 @@ export function OrderPanel({ projectId, version, initial }: Props) {
         <Stat
           label={gaps.isComplete ? "Landed cost · est." : "Landed cost so far · est."}
           value={range(plan.totals.landedUsd)}
-          note={gaps.isComplete ? `Parts, tooling, freight${plan.needsAssembly ? " and assembly" : ""}` : gapNote}
+          note={gaps.isComplete ? `Parts, setup costs, shipping${plan.needsAssembly ? " and assembly" : ""}` : gapNote}
         />
         <Stat label={gaps.isComplete ? "Per unit · est." : "Per unit so far · est."} value={range(plan.totals.perUnitUsd, usd)} note={`${whole(plan.runQuantity)} units`} />
         <Stat label="Ready in · est." value={plan.timeline.readyInDays.high ? days(plan.timeline.readyInDays) : "—"} note="From placing the orders" />
@@ -181,7 +181,7 @@ export function OrderPanel({ projectId, version, initial }: Props) {
                   <dd className="font-mono tabular-nums">{p.goodsUsd === null ? "—" : usd0(p.goodsUsd)}</dd>
                   {p.toolingUsd > 0 && (
                     <>
-                      <dt className="text-muted">Tooling</dt>
+                      <dt className="text-muted">One-time setup</dt>
                       <dd className="font-mono tabular-nums">{usd0(p.toolingUsd)}</dd>
                     </>
                   )}
@@ -327,7 +327,7 @@ function CatalogForm({ onSave, onCancel }: { onSave: (s: OrderSource) => void; o
     const minimum = moq ? Number(moq) : undefined;
     if (!vendor.trim()) return setProblem("Name the vendor.");
     if (!(unitUsd > 0)) return setProblem("Enter the price per piece.");
-    if (!Number.isInteger(leadDays) || leadDays < 0) return setProblem("Enter the lead time in whole days.");
+    if (!Number.isInteger(leadDays) || leadDays < 0) return setProblem("Enter how long it takes, in whole days.");
     if (minimum !== undefined && !(Number.isInteger(minimum) && minimum > 0)) return setProblem("The minimum order is a whole number.");
     onSave({ kind: "catalog", vendor: vendor.trim(), unitUsd, leadDays, overseas, ...(minimum && { moq: minimum }) });
   };
@@ -336,7 +336,7 @@ function CatalogForm({ onSave, onCancel }: { onSave: (s: OrderSource) => void; o
       <input aria-label="Vendor" placeholder="Vendor" value={vendor} onChange={(e) => setVendor(e.target.value)} className={inputClass} />
       <div className="grid grid-cols-3 gap-2">
         <input aria-label="Price per piece, USD" placeholder="$ / pc" inputMode="decimal" value={price} onChange={(e) => setPrice(e.target.value)} className={inputClass} />
-        <input aria-label="Lead time, days" placeholder="Days" inputMode="numeric" value={lead} onChange={(e) => setLead(e.target.value)} className={inputClass} />
+        <input aria-label="How long it takes, days" placeholder="Days" inputMode="numeric" value={lead} onChange={(e) => setLead(e.target.value)} className={inputClass} />
         <input aria-label="Minimum order" placeholder="MOQ" inputMode="numeric" value={moq} onChange={(e) => setMoq(e.target.value)} className={inputClass} />
       </div>
       <label className="flex items-center gap-2 text-sm">

@@ -6,7 +6,8 @@ import { QuoteComparison } from "@/components/make/QuoteComparison";
 import { QuoteRequestPanel, type MatchSummary } from "@/components/make/QuoteRequestPanel";
 import { SpecSheetCard } from "@/components/make/SpecSheetCard";
 import { OrderPanel } from "@/components/orders/OrderPanel";
-import { PageHeader } from "@/components/PageHeader";
+import { TabIntro } from "@/components/product/TabIntro";
+import { tabSummary } from "@/lib/studio/plainSummary";
 import { SourcingPanel } from "@/components/sourcing/SourcingPanel";
 import { getAccessibleProject } from "@/lib/access";
 import { matchVersion } from "@/lib/match";
@@ -30,16 +31,10 @@ export default async function MakePage(props: PageProps<"/project/[id]/make">) {
   const version = latestVersion(project);
 
   const header = (
-    <PageHeader
-      eyebrow={
-        <>
-          <span>Stage 3 · Make</span>
-          <span aria-hidden>·</span>
-          <span>v{version.number} · {version.targetQuantity.toLocaleString("en-US")} units</span>
-        </>
-      }
+    <TabIntro
+      eyebrow={<><span>Stage 3 · Make</span><span aria-hidden>·</span><span>v{version.number} · {version.targetQuantity.toLocaleString("en-US")} units</span></>}
       title="Make"
-      description="Find manufacturers who can make this, send them a request, and compare what they offer."
+      lines={tabSummary(version, "make")}
     />
   );
 

@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AiBudgetNote } from "@/components/AiBudgetNote";
-import { PageHeader } from "@/components/PageHeader";
+import { TabIntro } from "@/components/product/TabIntro";
+import { tabSummary } from "@/lib/studio/plainSummary";
 import { DraftPlanButton } from "@/components/plan/DraftPlanButton";
 import { PlanBudget } from "@/components/plan/PlanBudget";
 import { PlanTimeline } from "@/components/plan/PlanTimeline";
@@ -31,16 +32,10 @@ export default async function PlanPage(props: PageProps<"/project/[id]/plan">) {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
-      <PageHeader
-        eyebrow={
-          <>
-            <span>Stage 5 · Launch</span>
-            <span aria-hidden>·</span>
-            <span>v{version.number} · {version.targetQuantity.toLocaleString("en-US")} units</span>
-          </>
-        }
-        title="Plan"
-        description="Every step from here to launch day, with dates and a budget. Production timing comes from your chosen quote, so choosing a different quote re-dates the plan."
+      <TabIntro
+        eyebrow={<><span>Stage 5 · Launch</span><span aria-hidden>·</span><span>v{version.number} · {version.targetQuantity.toLocaleString("en-US")} units</span></>}
+        title="Launch plan"
+        lines={tabSummary(version, "plan")}
       />
 
       {!version.analysis ? (
@@ -55,7 +50,7 @@ export default async function PlanPage(props: PageProps<"/project/[id]/plan">) {
               {chosen ? (
                 <>Production is dated from your chosen demo quote: <strong>{getShopById(chosen.shopId)?.name}</strong>, {chosen.leadTimeDays} days.</>
               ) : (
-                <>No quote chosen yet, so production uses the analysis lead time ({facts.leadDays} days, est.). <Link href={`/project/${project.id}/make`} className="underline">Choose a quote</Link> to date it from a shop.</>
+                <>No quote chosen yet, so production timing comes from the analysis ({facts.leadDays} days, est.). <Link href={`/project/${project.id}/make`} className="underline">Choose a quote</Link> to date it from a shop.</>
               )}
             </p>
             <DraftPlanButton projectId={project.id} version={version.number} hasPlan={Boolean(plan)} />

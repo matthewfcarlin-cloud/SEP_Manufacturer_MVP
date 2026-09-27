@@ -37,8 +37,8 @@ export function parseSupplierFields(d: FieldDraft): { error: string } | { suppli
     const friendly: Record<string, string> = {
       unitUsd: "Enter the per-part price as a number, like 3.40.",
       moq: "Enter the MOQ as a whole number.",
-      toolingUsd: "Enter tooling as a number of dollars.",
-      leadDays: "Enter lead time as a whole number of days.",
+      toolingUsd: "Enter the one-time setup cost as a number of dollars.",
+      leadDays: "Enter how long it takes as a whole number of days.",
     };
     return { error: friendly[field] ?? issue?.message ?? "Check the supplier details." };
   }
@@ -63,8 +63,8 @@ export function SupplierFields({ value, onChange, idPrefix }: Props) {
       <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:grid-cols-4">
         {field("unitUsd", "Quoted $/part", "3.40", "decimal")}
         {field("moq", "MOQ", "500", "numeric")}
-        {field("toolingUsd", "Tooling $", "1200", "decimal")}
-        {field("leadDays", "Lead time (days)", "30", "numeric")}
+        {field("toolingUsd", "One-time setup cost $", "1200", "decimal")}
+        {field("leadDays", "How long it takes (days)", "30", "numeric")}
       </div>
       <label className="flex flex-col gap-1.5 text-sm font-medium sm:col-span-2" htmlFor={`${idPrefix}-notes`}>
         Notes (optional)

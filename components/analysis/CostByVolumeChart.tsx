@@ -65,8 +65,8 @@ type Props = {
 
 const DEFAULT_DESCRIPTION = (
   <>
-    Estimated all-in cost per part, with tooling spread over the run. AI estimates, shown as ranges. Cost only: the fit
-    score above also weighs finish, strength and lead time, so the best fit isn&apos;t always the cheapest.
+    Estimated all-in cost per part, with the one-time setup cost spread over the run. AI estimates, shown as ranges. Cost only: &ldquo;how well it fits&rdquo;
+    above also weighs finish, strength and timing, so the best fit isn&apos;t always the cheapest.
   </>
 );
 

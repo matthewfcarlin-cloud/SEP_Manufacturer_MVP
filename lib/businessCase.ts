@@ -151,7 +151,7 @@ export function formatCompactUsd(n: number): string {
 }
 
 /** Retail needed for a healthy margin at this all-in cost, rounded up to a whole dollar. */
-const retailNeededFor = (cost: number, share: number) => Math.ceil(cost / share / (1 - MIN_HEALTHY_MARGIN));
+export const retailNeededFor = (cost: number, share: number) => Math.ceil(cost / share / (1 - MIN_HEALTHY_MARGIN));
 
 /**
  * Why runs below `healthyFrom` don't work, diagnosed on the process that

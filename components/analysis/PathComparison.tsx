@@ -1,4 +1,5 @@
 import { formatDaysRange, formatToolingRange, formatUnitCostRange } from "@/lib/format";
+import { InfoTip, PLAIN_TERMS } from "@/components/InfoTip";
 import { PROCESS_LABELS } from "@/lib/processes";
 import type { ManufacturingPath } from "@/lib/types";
 
@@ -11,10 +12,10 @@ export function PathComparison({ paths, quantity }: { paths: ManufacturingPath[]
         <thead>
           <tr className="border-b border-line text-xs text-muted">
             <th className="px-4 py-3 font-medium">Process</th>
-            <th className="px-4 py-3 font-medium">Fit</th>
+            <th className="px-4 py-3 font-medium">{PLAIN_TERMS.fit.label}<InfoTip text={PLAIN_TERMS.fit.tip} /></th>
             <th className="px-4 py-3 font-medium">Per part @ {quantity.toLocaleString("en-US")}, est.</th>
-            <th className="px-4 py-3 font-medium">Tooling, est.</th>
-            <th className="px-4 py-3 font-medium">Lead time, est.</th>
+            <th className="px-4 py-3 font-medium">{PLAIN_TERMS.setup.label}, est.<InfoTip text={PLAIN_TERMS.setup.tip} /></th>
+            <th className="px-4 py-3 font-medium">{PLAIN_TERMS.time.label}, est.<InfoTip text={PLAIN_TERMS.time.tip} /></th>
             <th className="px-4 py-3 font-medium">Top tweak</th>
           </tr>
         </thead>

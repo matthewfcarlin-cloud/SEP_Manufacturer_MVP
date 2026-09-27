@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { InfoTip, PLAIN_TERMS } from "@/components/InfoTip";
 import { formatDaysRange, formatToolingRange, formatUnitCostRange } from "@/lib/format";
 import { PROCESS_LABELS } from "@/lib/processes";
 import type { ManufacturingPath } from "@/lib/types";
 
 function FitBar({ score }: { score: number }) {
   return (
-    <div className="flex items-center gap-2" aria-label={`Fit score ${score} out of 100`}>
+    <div className="flex items-center gap-2" aria-label={`How well it fits: ${score} out of 100`}>
       <div className="h-1.5 w-24 overflow-hidden rounded-full bg-line">
         <div className="h-full rounded-full bg-accent" style={{ width: `${score}%` }} />
       </div>
@@ -14,7 +15,7 @@ function FitBar({ score }: { score: number }) {
   );
 }
 
-function Cost({ label, value }: { label: string; value: string }) {
+function Cost({ label, value }: { label: React.ReactNode; value: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 rounded-lg bg-bg p-3 sm:block">
       <dt className="text-xs text-muted">{label}</dt>
@@ -68,8 +69,8 @@ export function PathCard({ path, pathIndex, quantity, tweakLink }: Props) {
         <div className="flex flex-col gap-4 px-5 pb-5">
           <dl className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             <Cost label={`Per unit @ ${quantity.toLocaleString("en-US")}, est.`} value={formatUnitCostRange(path.unitCostUsd)} />
-            <Cost label="Tooling, est." value={formatToolingRange(path.toolingCostUsd)} />
-            <Cost label="Lead time, est." value={formatDaysRange(path.leadTimeDays)} />
+            <Cost label={<>{PLAIN_TERMS.setup.label}, est.<InfoTip text={PLAIN_TERMS.setup.tip} /></>} value={formatToolingRange(path.toolingCostUsd)} />
+            <Cost label={<>{PLAIN_TERMS.time.label}, est.<InfoTip text={PLAIN_TERMS.time.tip} /></>} value={formatDaysRange(path.leadTimeDays)} />
           </dl>
 
           <div className="grid gap-4 sm:grid-cols-2">

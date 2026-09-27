@@ -22,7 +22,7 @@ type Props = {
 const SORTS: { value: QuoteSort; label: string }[] = [
   { value: "value", label: "Best value" },
   { value: "price", label: "Unit price" },
-  { value: "lead", label: "Lead time" },
+  { value: "lead", label: "How long it takes" },
 ];
 const usd = (n: number) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const usdWhole = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
@@ -72,7 +72,7 @@ export function QuoteComparison({ projectId, version, outreach, shops, estimates
           </h2>
           <p className="mt-1 text-sm text-muted">
             {outreach.quotes.length} demo quotes for {outreach.quotes[0]?.quantity.toLocaleString("en-US")} units. Best value = lowest all-in cost per unit, with
-            tooling spread over your run.
+            the one-time setup cost spread over your run.
           </p>
         </div>
         <div role="group" aria-label="Sort quotes" className="flex border border-line">
@@ -123,9 +123,9 @@ export function QuoteComparison({ projectId, version, outreach, shops, estimates
               </p>
 
               <dl>
-                <Row label="Tooling (one-time)" value={q.toolingUsd ? usdWhole(q.toolingUsd) : "None"} />
+                <Row label="One-time setup cost" value={q.toolingUsd ? usdWhole(q.toolingUsd) : "None"} />
                 <Row label="All-in per unit" value={usd(allInPerUnit(q))} />
-                <Row label="Lead time" value={`${q.leadTimeDays} days`} />
+                <Row label="How long it takes" value={`${q.leadTimeDays} days`} />
                 <Row label="Minimum order" value={`${q.moq.toLocaleString("en-US")} units`} />
               </dl>
               {estimate && <p className="text-xs text-muted">Analysis estimate for {processInSentence(q.process)}: {formatUnitCostRange(estimate)} per unit (est.)</p>}

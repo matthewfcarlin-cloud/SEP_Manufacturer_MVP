@@ -42,7 +42,7 @@ function TargetsCard({ targets }: { targets: NegotiationTargets }) {
         </div>
       </dl>
       <p className="text-xs text-muted">
-        From the AI analysis for {processInSentence(targets.process)} (tooling excluded; the AI estimated tooling at $
+        From the AI analysis for {processInSentence(targets.process)} (one-time setup cost excluded; the AI estimated it at $
         {targets.tooling.low.toLocaleString("en-US")}–${targets.tooling.high.toLocaleString("en-US")}). Overseas quotes often come in lower.{" "}
         {targets.walkAway === null
           ? "At your current retail price no per-part price leaves a healthy margin, so the AI will push on terms and ask what brings the price down."

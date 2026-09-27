@@ -39,7 +39,12 @@ test("landing page opens a pre-analyzed example with paths and shop matches", as
   await page.getByRole("region", { name: "See an example product" }).getByRole("link", { name: /Fuzz pedal enclosure/ }).click();
   await expect(page).toHaveURL(`/project/${PEDAL.id}`);
 
-  await expect(page.locator("canvas")).toBeVisible();
+  const glance = page.getByRole("region", { name: "Fuzz pedal enclosure at a glance" });
+  await expect(glance.locator("canvas")).toBeVisible();
+  await expect(glance).toContainText("122 × 66 × 39.5 mm");
+  await openDetails(page, "Your part");
+  await openDetails(page, "How it could be made");
+  await openDetails(page, "Who can make it");
   const geometry = page.getByRole("region", { name: "Part geometry" });
   await expect(geometry).toContainText("122 × 66 × 39.5 mm");
   await expect(geometry).toContainText("Watertight mesh");
@@ -196,8 +201,21 @@ test("comparing the seeded bracket versions shows real deltas", async ({ page })
   await expect(page.locator("canvas")).toHaveCount(2);
 });
 
+test("the product page leads with a plain summary, a spotlight whose callouts open their details, and one next step", async ({ page }) => {
+  await page.goto(`/project/${PEDAL.id}`);
+  await expect(page.getByRole("heading", { level: 1, name: "Fuzz pedal enclosure" })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Compare your 5 quotes/ })).toHaveAttribute("href", `/project/${PEDAL.id}/make`);
+  await expect(page.getByText(/^At \$32 you'd lose money on each one\./).first()).toBeVisible();
+  const money = page.locator("details#details-money");
+  await expect(money).not.toHaveAttribute("open", "");
+  await page.getByRole("region", { name: /at a glance/ }).getByRole("link", { name: /Price & profit/ }).click();
+  await expect(money).toHaveAttribute("open", "");
+  await expect(page.getByRole("region", { name: "Business case" })).toBeVisible();
+});
+
 test("business case recomputes the verdict as the price changes", async ({ page }) => {
   await page.goto(`/project/${PEDAL.id}`);
+  await openDetails(page, "Price, profit and break-even");
   const section = page.getByRole("region", { name: "Business case" });
   const price = section.getByLabel("Retail price (USD)");
   const original = await price.inputValue();
@@ -217,6 +235,7 @@ test("business case recomputes the verdict as the price changes", async ({ page 
 
 test("a low price on the molded bracket names the tooling problem", async ({ page }) => {
   await page.goto(`/project/${BRACKET.id}?v=1`);
+  await openDetails(page, "Price, profit and break-even");
   const section = page.getByRole("region", { name: "Business case" });
   const price = section.getByLabel("Retail price (USD)");
   const original = await price.inputValue();
@@ -235,7 +254,7 @@ test("uploading a STEP file converts it and measures it in millimeters", async (
 
   await expect(page).toHaveURL(/\/project\/[A-Za-z0-9_-]{10}$/);
   await expect(page.getByRole("region", { name: "Part geometry" })).toContainText("10 × 10 × 10 mm");
-  await expect(page.locator("canvas")).toBeVisible();
+  await expect(page.locator("#details-part canvas")).toBeVisible();
 });
 
 test("the Manufacturers directory filters to lathe shops that can start this week", async ({ page }) => {
@@ -337,6 +356,7 @@ test("the studio fits a phone without sideways scrolling", async ({ page }) => {
 
 test("cost-by-quantity chart shows a summary, legend, tooltip and table", async ({ page }) => {
   await page.goto(`/project/${PEDAL.id}`);
+  await openDetails(page, "How it could be made");
   const chart = page.getByRole("region", { name: "Cost per part by quantity" });
   await expect(chart).toBeVisible();
   await expect(chart).toContainText(/cheapest/);
@@ -362,7 +382,7 @@ test("thin-wall toggle paints thin areas on the model", async ({ page }) => {
 
   // Analyze a real screenshot: WebGL canvases can't be read back reliably.
   const redShare = async () => {
-    const png = (await page.locator("canvas").screenshot()).toString("base64");
+    const png = (await page.locator("#details-part canvas").screenshot()).toString("base64");
     return page.evaluate(async (b64) => {
       const img = new Image();
       img.src = `data:image/png;base64,${b64}`;
@@ -501,7 +521,7 @@ test("a share link works for anyone until it's turned off or revoked", async ({ 
 
 test("what the AI sees shows the brief and can hold back notes", async ({ page }) => {
   await createProjectIn(page, "E2E ai inputs");
-  const panel = page.locator("details", { hasText: "What the AI sees" });
+  const panel = page.locator("details", { hasText: "What the AI sees" }).last();
   await expect(panel.locator("pre")).toContainText("Geometry measured from the STL");
   await expect(panel).toContainText("Your CAD file itself is never sent");
   await panel.getByLabel("Send my notes").uncheck();
@@ -572,6 +592,7 @@ test("an over-budget browser is refused before any AI call", async ({ page }) =>
     expect(res.status()).toBe(429);
     expect((await res.json()).error).toMatch(/AI budget/);
     await page.goto(`/project/${PEDAL.id}`);
+    await openDetails(page, "How it could be made");
     await expect(page.getByText(/Demo AI budget for this browser: \$0\.00 of/)).toBeVisible();
   } finally {
     await rm(ledger, { force: true });
@@ -688,7 +709,7 @@ test("the Make screen compares demo quotes and saves the chosen one", async ({ p
   await expect(quotes.getByText("Best value", { exact: true }).first()).toBeVisible();
   await expect(cards.first()).toContainText("Best value"); // sorted by best value
 
-  await quotes.getByRole("button", { name: "Lead time" }).click();
+  await quotes.getByRole("button", { name: "How long it takes" }).click();
   await expect(cards.first()).toContainText("Fastest");
 
   // Ordering needs a choice first; then the chosen quote is saved on the version.
@@ -739,7 +760,7 @@ test("choosing a different quote re-dates the launch plan", async ({ page }) => 
   // Choose the slowest quote on Make, then come back: production is re-dated from it.
   await page.goto(`/project/${BRACKET.id}/make`);
   const quotes = page.getByRole("region", { name: "Compare quotes" });
-  await quotes.getByRole("button", { name: "Lead time" }).click();
+  await quotes.getByRole("button", { name: "How long it takes" }).click();
   const slowest = quotes.locator("ul > li").last();
   const slowestName = await slowest.locator("h3").innerText();
   if (await slowest.getByRole("button", { name: "Choose this quote" }).count()) {
@@ -752,6 +773,12 @@ test("choosing a different quote re-dates the launch plan", async ({ page }) => 
   expect(after >= before).toBe(true);
   expect(after).not.toBe(before);
 });
+
+/** Opens a product page's "Show details" section by its title. */
+async function openDetails(page: Page, title: string): Promise<void> {
+  const details = page.locator("details", { has: page.locator(":scope > summary", { hasText: title }) }).first();
+  if ((await details.getAttribute("open")) === null) await details.locator(":scope > summary").click();
+}
 
 async function overBudget(page: Page): Promise<string> {
   await page.goto("/shops");

@@ -130,8 +130,8 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft, isBe
             [
               ["Quoted per part", supplier.quote?.unitUsd !== undefined ? `$${supplier.quote.unitUsd.toFixed(2)}` : "—"],
               ["MOQ", supplier.quote?.moq?.toLocaleString("en-US") ?? "—"],
-              ["Tooling", supplier.quote?.toolingUsd !== undefined ? `$${supplier.quote.toolingUsd.toLocaleString("en-US")}` : "—"],
-              ["Lead time", supplier.quote?.leadDays !== undefined ? `${supplier.quote.leadDays} days` : "—"],
+              ["One-time setup", supplier.quote?.toolingUsd !== undefined ? `$${supplier.quote.toolingUsd.toLocaleString("en-US")}` : "—"],
+              ["How long it takes", supplier.quote?.leadDays !== undefined ? `${supplier.quote.leadDays} days` : "—"],
             ] as const
           ).map(([k, v]) => (
             <div key={k}>

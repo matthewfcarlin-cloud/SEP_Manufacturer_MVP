@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AiBudgetNote } from "@/components/AiBudgetNote";
-import { PageHeader } from "@/components/PageHeader";
+import { TabIntro } from "@/components/product/TabIntro";
+import { tabSummary } from "@/lib/studio/plainSummary";
 import { ListingField } from "@/components/sell/ListingField";
 import { WriteListingButton } from "@/components/sell/WriteListingButton";
 import { getAccessibleProject } from "@/lib/access";
@@ -32,25 +33,19 @@ export default async function SellPage(props: PageProps<"/project/[id]/sell">) {
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
-      <PageHeader
-        eyebrow={
-          <>
-            <span>Stage 6 · Sell</span>
-            <span aria-hidden>·</span>
-            <span>v{version.number}</span>
-          </>
-        }
+      <TabIntro
+        eyebrow={<><span>Stage 6 · Sell</span><span aria-hidden>·</span><span>v{version.number}</span></>}
         title="Sell"
-        description="An Etsy-ready listing: copy each field into Etsy's listing form. Direct publishing comes later."
+        lines={tabSummary(version, "sell")}
         actions={
-          <div className="flex flex-wrap gap-2">
+          <>
             {["Connect Etsy shop", "Shopify"].map((label) => (
               <button key={label} type="button" disabled title="Coming soon" className="flex items-center gap-2 border border-line px-3 py-2 text-sm text-muted">
                 {label}
                 <span className="eyebrow border border-line px-1.5 py-0.5 text-[9px]">Coming soon</span>
               </button>
             ))}
-          </div>
+          </>
         }
       />
 
