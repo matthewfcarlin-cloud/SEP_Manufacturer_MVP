@@ -11,11 +11,11 @@ export function Title({ beat }: { beat: Beat }) {
     <>
       <Show on={on} delay={0.5} className="inset-x-0 top-[660px] text-center">
         <Display size={80} className="text-[#efeeec]">
-          From idea to your first sale.
+          Find who can make it.
         </Display>
       </Show>
       <Show on={on} delay={0.9} className="inset-x-0 top-[790px] text-center">
-        <p className="text-[36px] text-[#8f8b83]">The all-in-one studio for first-time product creators.</p>
+        <p className="text-[36px] text-[#8f8b83]">From a product idea to the right manufacturer, and the first email to them.</p>
       </Show>
     </>
   );
@@ -57,7 +57,7 @@ export function Problem({ beat }: { beat: Beat }) {
       </Show>
       <Show on={beat === "died"} delay={0.3} className="left-[120px] top-[170px]">
         <Display size={92} className="text-[#efeeec]">
-          They died on manufacturing cost.
+          They died on manufacturing.
           <br />
           <span className="text-[#ff4a00]">Not design.</span>
         </Display>
@@ -66,19 +66,19 @@ export function Problem({ beat }: { beat: Beat }) {
   );
 }
 
-const QUESTIONS = ["Can this be made?", "What will it cost?", "Who makes it?", "Will it make money?", "How do I sell it?"];
+const QUESTIONS = ["Can this be made?", "Who can make it?", "What do I ask them?", "Is the quote fair?", "Will it make money?"];
 
-// Scattered on purpose: the tools a first-timer ends up juggling, none connected.
+// Scattered on purpose: where a first-timer ends up looking for a manufacturer, none connected.
 const TOOLS = [
-  { name: "AdamCAD", x: 1330, y: 130, r: -6 },
-  { name: "Fusion", x: 1600, y: 190, r: 5 },
-  { name: "Zoo", x: 1420, y: 270, r: 3 },
-  { name: "MakerWorld", x: 1300, y: 380, r: 4 },
+  { name: "Google", x: 1330, y: 130, r: -6 },
+  { name: "Alibaba", x: 1600, y: 190, r: 5 },
+  { name: "Thomasnet", x: 1400, y: 270, r: 3 },
+  { name: "Reddit", x: 1300, y: 380, r: 4 },
   { name: "Xometry", x: 1590, y: 360, r: -5 },
   { name: "Craftcloud", x: 1440, y: 480, r: -3 },
-  { name: "Shopify", x: 1310, y: 600, r: 6 },
-  { name: "Etsy", x: 1640, y: 560, r: -7 },
-  { name: "Kickstarter", x: 1500, y: 680, r: 2 },
+  { name: "Cold emails", x: 1290, y: 600, r: 6 },
+  { name: "Fusion", x: 1640, y: 560, r: -7 },
+  { name: "Etsy", x: 1500, y: 680, r: 2 },
 ];
 
 export function Questions({ beat }: { beat: Beat }) {
@@ -110,8 +110,8 @@ export function Questions({ beat }: { beat: Beat }) {
       ))}
       <Show on={tools} delay={1.1} className="left-[120px] top-[800px] max-w-[1700px]">
         <Display size={56} className="leading-[1.05] text-[#efeeec]">
-          First-timers juggle 6+ tools{" "}
-          <span className="text-[#ff4a00]">and still don&apos;t know if the idea is makeable or profitable.</span>
+          First-timers cold-email factories with a vague ask{" "}
+          <span className="text-[#ff4a00]">and can&apos;t tell who&apos;s right, what to ask, or if the price is fair.</span>
         </Display>
       </Show>
     </>

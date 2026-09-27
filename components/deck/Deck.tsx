@@ -9,10 +9,9 @@ import { Logo, Ring } from "./scenes/Brand";
 import { Journey, Pedal, Rail } from "./scenes/Journey";
 import { Market } from "./scenes/Market";
 import { Problem, Questions, Title } from "./scenes/Opening";
-import { Printify } from "./scenes/Printify";
-import { Appendix, Business, Close, Demo, Field, WhyNow } from "./scenes/Story";
+import { Appendix, Business, Close, Field } from "./scenes/Story";
 import { Tech } from "./scenes/Tech";
-import { notes, outline, slides } from "./script";
+import { notes, outline, sections, slides } from "./script";
 import { Stage } from "./Stage";
 import { advance, last, progress, retreat, start, toSearch, type Position } from "./timeline";
 import { useDeckControls } from "./useDeckControls";
@@ -52,6 +51,7 @@ export function Deck({ initial, facts }: { initial: Position; facts: DeckFacts }
   }, []);
 
   const beat = slides[position.slide].beats[position.beat];
+  const section = sections[slides[position.slide].id];
 
   return (
     <MotionConfig reducedMotion="user">
@@ -67,14 +67,11 @@ export function Deck({ initial, facts }: { initial: Position; facts: DeckFacts }
           <Title beat={beat} />
           <Problem beat={beat} />
           <Questions beat={beat} />
-          <Printify beat={beat} />
           <Journey beat={beat} facts={facts} />
-          <Demo beat={beat} />
           <Tech beat={beat} />
           <Market beat={beat} />
           <Field beat={beat} />
-          <WhyNow beat={beat} />
-          <Business beat={beat} />
+          <Business beat={beat} facts={facts} />
           <Close beat={beat} />
           <Appendix beat={beat} />
           <Logo beat={beat} />
@@ -87,6 +84,20 @@ export function Deck({ initial, facts }: { initial: Position; facts: DeckFacts }
             animate={{ scaleX: progress(position, outline) }}
             transition={{ duration: 0.8, ease }}
           />
+          <AnimatePresence mode="wait" initial={false}>
+            {section && (
+              <motion.p
+                key={section}
+                className="absolute bottom-6 right-[190px] font-mono text-[18px] uppercase tracking-[0.14em] text-[#8f8b83]"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={fade}
+              >
+                {section}
+              </motion.p>
+            )}
+          </AnimatePresence>
           <p className="absolute bottom-6 right-10 font-mono text-[18px] tabular-nums tracking-[0.14em] text-[#5a5852]">
             {String(position.slide + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
           </p>

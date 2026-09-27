@@ -2,11 +2,6 @@
 
 import { motion } from "motion/react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
-import render0 from "@/demo/renders/pedal-render-0.png";
-import render1 from "@/demo/renders/pedal-render-1.png";
-import render2 from "@/demo/renders/pedal-render-2.png";
-import render3 from "@/demo/renders/pedal-render-3.png";
 import type { DeckFacts } from "@/lib/deckFacts";
 import { color, ease, fade, move, pick } from "../motion";
 import { rail, STAGES, stageX } from "../layout";
@@ -16,15 +11,13 @@ import type { Beat } from "../script";
 // The landing page's anodized pedal, turning live. WebGL only exists in the browser.
 const HeroScene = dynamic(() => import("@/components/home/HeroScene"), { ssr: false });
 
-const RENDERS = [render0, render1, render2, render3];
-
 /** Which stage of the creator journey each beat is on; -1 shows the rail with no stage active. */
 const activeStage: Partial<Record<Beat, number>> = {
   idea: 0,
   design: 1,
   make: 2,
+  outreach: 2,
   money: 3,
-  launch: 4,
   sell: 5,
   field: -1,
   whole: -1,
@@ -114,20 +107,20 @@ export function Pedal({ beat, facts }: { beat: Beat; facts: DeckFacts }) {
 
 const headlines: Partial<Record<Beat, string>> = {
   design: "Every way to make it, priced.",
-  make: "Matched to a local shop.",
+  make: "Who can make it.",
+  outreach: "Reach out. Compare quotes.",
   money: "Does it make money?",
-  launch: "A plan and a pitch.",
-  sell: "Ready to sell.",
+  sell: "Then launch and sell.",
 };
 
 /** What's live in the app today for each stage, said out loud rather than implied. */
 const status: Partial<Record<Beat, { label: string }>> = {
-  idea: { label: "Built · brief from text: today" },
+  idea: { label: "Built" },
   design: { label: "Built" },
-  make: { label: "Built · demo quotes" },
+  make: { label: "Built · demo shops" },
+  outreach: { label: "Built · simulated quotes" },
   money: { label: "Built" },
-  launch: { label: "Built · landing page: today" },
-  sell: { label: "Listing built · waitlist page: today" },
+  sell: { label: "Built · copy-paste to Etsy" },
 };
 
 export function Journey({ beat, facts }: { beat: Beat; facts: DeckFacts }) {
@@ -139,7 +132,7 @@ export function Journey({ beat, facts }: { beat: Beat; facts: DeckFacts }) {
           Bring an idea.
         </Display>
         <p className="mt-8 font-mono text-[26px] uppercase tracking-[0.14em] text-[#8f8b83]">CAD · photos · a sketch · notes</p>
-        <p className="mt-3 text-[28px] text-[#b9b5ac]">Text or sketch → AI product brief: building today</p>
+        <p className="mt-3 text-[28px] text-[#b9b5ac]">Private by default: the CAD file itself never goes to the AI</p>
         <div className="mt-14 inline-flex flex-col gap-2 border border-[#3a3936] bg-[#111110] px-7 py-5">
           <span className="font-mono text-[20px] uppercase tracking-[0.14em] text-[#8f8b83]">Real example</span>
           <span className="text-[34px] font-medium text-[#efeeec]">{pedal.name}</span>
@@ -164,8 +157,8 @@ export function Journey({ beat, facts }: { beat: Beat; facts: DeckFacts }) {
 
       <Paths on={beat === "design"} facts={facts} />
       <Match on={beat === "make"} facts={facts} />
+      <Outreach on={beat === "outreach"} facts={facts} />
       <Money on={beat === "money"} facts={facts} />
-      <Launch on={beat === "launch"} facts={facts} />
       <Listing on={beat === "sell"} facts={facts} />
     </>
   );
@@ -214,7 +207,7 @@ function Match({ on, facts }: { on: boolean; facts: DeckFacts }) {
     <Show on={on} delay={0.25} className={panel}>
       <div className="border border-[#3a3936] bg-[#111110] p-10">
         <div className="flex items-center justify-between">
-          <Eyebrow className="text-[#8f8b83]">Top shop match</Eyebrow>
+          <Eyebrow className="text-[#8f8b83]">Top local match</Eyebrow>
           <DemoTag>Demo data</DemoTag>
         </div>
         <p className="mt-6 text-[56px] font-semibold leading-tight text-[#efeeec]">{m.shop}</p>
@@ -234,7 +227,7 @@ function Match({ on, facts }: { on: boolean; facts: DeckFacts }) {
           )}
         </div>
         <ul className="mt-7 flex flex-col gap-3">
-          {[...m.reasons.slice(0, 2), "One click requests quotes from the top matches"].map((r, i) => (
+          {[...m.reasons.slice(0, 2), "Overseas too: an AI-planned Alibaba search and supplier shortlist"].map((r, i) => (
             <motion.li
               key={r}
               className="flex gap-4 text-[26px] text-[#b9b5ac]"
@@ -335,58 +328,77 @@ function Money({ on, facts }: { on: boolean; facts: DeckFacts }) {
   );
 }
 
-function Launch({ on, facts }: { on: boolean; facts: DeckFacts }) {
-  const plan = facts.pedal.plan;
+function Outreach({ on, facts }: { on: boolean; facts: DeckFacts }) {
+  const o = facts.pedal.outreach;
+  if (!o) return null;
+  const spec = [
+    ["Process", o.spec.process],
+    ["Size", o.spec.dims],
+    ["Material", o.spec.material],
+    ["Quantities", o.spec.tiers],
+    ...(o.spec.target ? [["Target price", `${o.spec.target} / unit`]] : []),
+    ["Quote by", o.spec.quoteBy],
+  ];
   return (
     <>
-      {RENDERS.map((src, i) => (
-        <motion.div
-          key={src.src}
-          className="absolute overflow-hidden bg-[#f3f2ee]"
-          style={{ left: 120 + i * 430, top: 350, width: 400, height: 300 }}
-          initial={false}
-          animate={{ opacity: on ? 1 : 0, y: on ? 0 : 40, rotate: on ? 0 : (i - 1.5) * 4, scale: on ? 1 : 0.9 }}
-          transition={{ duration: 0.9, ease, delay: on ? 0.2 + i * 0.12 : 0 }}
-        >
-          <Image src={src} alt="" fill sizes="400px" className="object-cover" />
-        </motion.div>
-      ))}
-      <Show on={on} delay={0.3} className="left-[120px] top-[676px]">
-        <Eyebrow className="text-[#8f8b83]">Studio renders · pitch kit · 30-second storyboard · dated launch plan with budget</Eyebrow>
-      </Show>
-      {plan && (
-        <Show on={on} delay={0.5} className="left-[120px] top-[760px] w-[1690px]">
-          <div className="relative h-[150px]">
-            {plan.milestones.map((m, i) => (
-              <motion.div
-                key={m.title}
-                className="absolute top-0 h-11 origin-left"
-                style={{
-                  left: `${(m.from / plan.totalDays) * 100}%`,
-                  width: `${(Math.max(m.days, 1) / plan.totalDays) * 100}%`,
-                  backgroundColor: i % 2 ? "#3a3936" : "#5a5852",
-                }}
-                initial={false}
-                animate={{ scaleX: on ? 1 : 0 }}
-                transition={{ duration: 0.5, ease, delay: on ? 0.8 + i * 0.12 : 0 }}
-              />
+      <Show on={on} delay={0.25} className="left-[120px] top-[340px] w-[600px]">
+        <div className="border border-[#3a3936] bg-[#111110] p-8">
+          <Eyebrow className="text-[#8f8b83]">Spec sheet · what shops see</Eyebrow>
+          <dl className="mt-5 flex flex-col">
+            {spec.map(([k, v]) => (
+              <div key={k} className="flex items-baseline justify-between gap-6 border-t border-[#262624] py-3">
+                <dt className="shrink-0 font-mono text-[17px] uppercase tracking-[0.12em] text-[#8f8b83]">{k}</dt>
+                <dd className="text-right text-[25px] leading-snug text-[#efeeec]">{v}</dd>
+              </div>
             ))}
-            <div className="absolute right-0 top-0 flex h-11 items-center gap-3 translate-x-full pl-4">
-              <span className="size-4 rotate-45 bg-[#ff4a00]" />
-            </div>
-            <div className="absolute inset-x-0 top-16 flex justify-between font-mono text-[22px] uppercase tracking-[0.12em]">
-              <span className="text-[#8f8b83]">Today · {plan.milestones.length} milestones</span>
-              <span className="text-[#ff4a00]">Launch {plan.launchDate}</span>
-            </div>
-          </div>
-        </Show>
-      )}
+          </dl>
+          <p className="mt-4 text-[22px] leading-snug text-[#8f8b83]">No name, notes or CAD file until you choose to share more.</p>
+        </div>
+      </Show>
+      <Show on={on} delay={0.45} className="left-[780px] top-[340px] w-[1020px]">
+        <div className="flex items-center justify-between">
+          <Eyebrow className="text-[#8f8b83]">{o.quotes.length} quotes · all-in per unit · tooling · lead</Eyebrow>
+          <DemoTag>Demo quotes</DemoTag>
+        </div>
+        <div className="mt-6 flex flex-col">
+          {o.quotes.map((q, i) => (
+            <motion.div
+              key={q.shop}
+              className="grid grid-cols-[1fr_170px_150px_120px] items-baseline gap-4 border-t px-5 py-4"
+              initial={false}
+              animate={{
+                opacity: on ? 1 : 0,
+                x: on ? 0 : 24,
+                borderColor: q.best ? color.orange : "#262624",
+                backgroundColor: q.best ? "#1f130c" : "rgba(0,0,0,0)",
+              }}
+              transition={{ ...fade, delay: on ? 0.7 + i * 0.12 : 0 }}
+            >
+              <span className="flex flex-col">
+                <span className="text-[28px] font-medium text-[#efeeec]">{q.shop}</span>
+                <span className="font-mono text-[17px] uppercase tracking-[0.1em] text-[#8f8b83]">
+                  {q.process} · MOQ {q.moq}
+                  {q.best && <span className="text-[#ff4a00]"> · best value</span>}
+                  {q.fastest && <span className="text-[#5fd39a]"> · fastest</span>}
+                </span>
+              </span>
+              <span className="text-right font-mono text-[26px] tabular-nums text-[#efeeec]">{q.allIn}</span>
+              <span className="text-right font-mono text-[22px] tabular-nums text-[#b9b5ac]">{q.tooling}</span>
+              <span className="text-right font-mono text-[22px] tabular-nums text-[#b9b5ac]">{q.lead} days</span>
+            </motion.div>
+          ))}
+        </div>
+        <p className="mt-6 text-[26px] leading-snug text-[#b9b5ac]">
+          Overseas, Moko drafts each supplier email with negotiation targets. You send it; the app never contacts anyone for you.
+        </p>
+      </Show>
     </>
   );
 }
 
 function Listing({ on, facts }: { on: boolean; facts: DeckFacts }) {
   const l = facts.pedal.listing;
+  const plan = facts.pedal.plan;
   if (!l) return null;
   return (
     <Show on={on} delay={0.25} className={panel}>
@@ -400,6 +412,11 @@ function Listing({ on, facts }: { on: boolean; facts: DeckFacts }) {
           <span className="display-type text-[72px] text-[#efeeec]">{l.price}</span>
           <span className="font-mono text-[22px] text-[#8f8b83]">{l.afterFees} after Etsy fees</span>
         </div>
+        {plan && (
+          <p className="mt-4 font-mono text-[22px] uppercase tracking-[0.12em] text-[#ff4a00]">
+            Launch plan · {plan.milestones} dated milestones · launch {plan.launchDate}
+          </p>
+        )}
         <div className="mt-7 flex flex-wrap gap-2.5">
           {l.tags.map((tag, i) => (
             <motion.span
