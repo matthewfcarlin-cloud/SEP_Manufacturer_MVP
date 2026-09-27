@@ -51,6 +51,7 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `PUT /api/sourcing` `{ projectId, version, op }` – shortlist edits: add/update/remove supplier, paste a reply, save/discard a draft, mark a draft sent
 - `POST /api/agent` – build agent, streams NDJSON answer events (Phase 10)
 - `GET/POST/DELETE /api/settings/ai-key`, `POST /api/settings/ai-key/test`, `GET /api/usage` – bring your own key (see "Backend API contract")
+- `POST /api/events`, `POST/GET /api/outcomes` – feedback events and real-world outcomes for learning (see "Backend API contract")
 
 ## Data models
 ```ts
@@ -106,6 +107,16 @@ type AiErrorCode = "invalid_key" | "quota_exceeded" | "budget_exhausted" | "prov
 type AiErrorKind = Exclude<AiErrorCode, "budget_exhausted">;                                // provider failures (AiError.kind)
 type AiKeyInfo = { provider: "anthropic"; maskedKey: string; createdAt: string };           // maskedKey like "sk-ant-…7Q2f"
 type UsageSummary = { keySource: KeySource; maskedKey?: string; demoBudgetRemainingUsd: number };
+
+// Learning pipeline (BACKEND.md B1): structured fields only, source decided server-side
+type LearningSource = "demo" | "real";
+type ProductEventType = "analysis_run" | "tweak_applied" | "tweak_rated" | "quote_requested" | "quote_chosen"
+  | "plan_generated" | "listing_generated" | "listing_copied" | "agent_question" | "agent_rated";
+type ProductEvent = { id: string; workspaceId: string; projectId: string; version?: number; type: ProductEventType;
+  payload: Record<string, string | number | boolean>; source: LearningSource; createdAt: string };
+type OutcomeKind = "real_quote" | "actual_unit_cost" | "units_sold" | "tweak_cost_delta";
+type Outcome = { id: string; projectId: string; version: number; kind: OutcomeKind; process?: Process; material?: string;
+  quantity?: number; estimateUsd?: { low: number; high: number }; actualUsd?: number; value?: number; source: LearningSource; createdAt: string };
 type UsageRecord = { at: string; workspaceId: string; task: AiTask; provider: "anthropic"; model: string;
   inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number;
   estCostUsd: number; keySource: KeySource; latencyMs: number; ok: boolean; errorKind?: AiErrorKind };
@@ -516,6 +527,35 @@ For the frontend agent (BACKEND.md A2). All routes use the `ApiResponse<T>` enve
 - 200 → `UsageSummary`: `{ keySource: "house", demoBudgetRemainingUsd: 2.55 }` or `{ keySource: "user", maskedKey: "sk-ant-…7Q2f", demoBudgetRemainingUsd: 2.55 }`.
 - `demoBudgetRemainingUsd` is this browser's demo budget left today, capped by the site's daily budget, rounded down to cents. It's reported even when the creator uses their own key.
 
+### `POST /api/events`: feedback from the browser (BACKEND.md B1)
+- Request: JSON (anything else → 415), `{ events: ClientEvent[] }` with 1–50 events. Payloads are strict: unknown keys or other values → 400.
+  ```ts
+  type ClientEvent =
+    | { projectId: string; version: number; type: "tweak_rated"; payload: { tweak: string /* "pathIndex.tweakIndex", as in ?tweak= */; rating: "up" | "down" } }
+    | { projectId: string; version: number; type: "agent_rated"; payload: { turnIndex: number /* index in the conversation */; rating: "up" | "down" } }
+    | { projectId: string; version: number; type: "listing_copied"; payload: { field: "title" | "description" | "tags" | "price" } };
+  ```
+- 200 → `{ accepted: number; dropped: number }`. Events for a project this browser can't see, a missing version, or a tweak that isn't in that version's analysis are dropped silently, never an error. Fire and forget: the UI shouldn't block on or show failures.
+- 429: more than 600 events per browser per 10 minutes.
+- Ratings are append-only. A later rating of the same tweak or answer supersedes an earlier one (the learning jobs take the latest), so the UI can just send the new state on every click.
+- Every other event type is logged by the server where it happens, and clients can't send it: `analysis_run` (analyze), `tweak_applied` (new version from a tweak), `quote_requested` and `quote_chosen` (always `demo`, since the quotes are simulated), and `agent_question` (the conversation's length only, never the text). `plan_generated` and `listing_generated` will be logged by builds 4 and 5.
+
+### `POST /api/outcomes`: real-world results, typed in by the creator
+- Request: JSON, one of:
+  ```ts
+  { projectId: string; version: number; kind: "real_quote"; process: Process; quantity: number; actualUsd: number /* per unit */; material?: string }
+  { projectId: string; version: number; kind: "actual_unit_cost"; process: Process; quantity: number; actualUsd: number }
+  { projectId: string; version: number; kind: "units_sold"; value: number /* whole units */ }
+  ```
+  `quantity` is 1–10,000,000, `actualUsd` is > 0 and ≤ 1,000,000, and `value` is an integer. `material`, if sent, must be one of that path's `materials` (case-insensitive; stored as listed). This keeps free text out.
+- 201 → the stored `Outcome`. `estimateUsd` is the analysis's unit-cost range for that process at that quantity, computed by the server; the UI can show it next to the real number. `source` is `"demo"` on shared examples. Suggested UI copy for that case: "Saved. Examples don't count toward learning."
+- Errors: 400 bad body, or a material not on the list (the message lists the allowed ones) · 404 project or version not found · 422 the version isn't analyzed, or the process isn't one of its paths · 429 more than 60 per browser per 10 minutes.
+
+### `GET /api/outcomes?projectId=…&version=N`
+- 200 → `{ outcomes: Outcome[] }` for that version, oldest first. 404 if this browser can't see the project.
+
+Events and outcomes are stored in the project's folder. Deleting the project deletes them, and deleting a version deletes that version's rows. Only the creator's own projects give `source: "real"`, and only real rows will ever be learned from (B2+, which also adds the opt-in).
+
 ### AI error codes (every AI route: analyze, price, pitch, sourcing, agent)
 JSON routes return the code in the envelope. `POST /api/agent` streams it as `{ "type": "error", "message": string, "code"?: AiErrorCode }`. The `error` or `message` text is already written for the creator. Use `code` to choose the banner's action.
 
@@ -567,7 +607,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Pitch (Phase 8): `/project/[id]/pitch` pitches the newest analyzed version. `components/pitch/PitchDocument.tsx` is the read-only document (server component, `isOwnerView` toggles gap hints) that Phase 9's share page will reuse; owner controls live only in `PitchToolbar` (hidden in print). Renders are captured once from the 3D model and saved; the pitch then shows stills, no WebGL. Stored render URLs carry `?v=<timestamp>` because `/api/files` caches for a year. PDF = the browser's print: each `.pitch-page` section starts a new landscape Letter page (`app/globals.css`); sections are laid out to fit one page each (checked in E2E by page count). The iteration story comes from `buildIterationStory()` (analyzed versions only). The video slot is `PitchVideoSlot`; wiring a video API means setting `version.pitchVideo` to `{ status: "ready", url, provider }`.
 - Small AI calls (price, pitch, sourcing) share `runStructured()` (`lib/analysis/structured.ts`, one retry naming the failures) and `textCaller(task, workspaceId)` in `callers.ts`. Word limits gate AI answers; user edits get character limits.
 - Business case (Phase 7): all math and the verdict live in `lib/businessCase.ts` (pure, client-safe, tested); the panel recomputes it on every keystroke and auto-saves inputs. Only inputs are stored. Costs between the AI's priced volumes are interpolated log-log; outside 10–10k they're clamped and flagged. The low-volume diagnosis ("tooling makes this unprofitable…") is made on the process that becomes profitable, and an alternative process is only suggested if it covers its own cost at the smallest run.
-- Bring your own key (BACKEND.md A2): a creator's Anthropic key is tested with a one-token call (`verifyAnthropicKey`, `claude-haiku-4-5`), then sealed with AES-256-GCM (`lib/ai/keyCrypto.ts`, `KEY_ENCRYPTION_SECRET`, workspace id bound as associated data) and stored at `.data/keys/<workspaceId>.json` (mode 600) by `lib/ai/keyStore.ts`. Only the gateway's `userProviderFor` decrypts it, straight into the SDK client. `instrumentation.ts` exits the server at startup if `KEY_ENCRYPTION_SECRET` is missing or isn't 32 base64 bytes. Changing the secret makes saved keys unreadable, which surfaces as `invalid_key` until the creator re-adds theirs. Key routes share `lib/ai/keySettings.ts` (JSON-only bodies, shape check, a 10-per-10-minutes in-memory limit per browser). Logs never include a key or a provider's error message, only status and error type. `lib/ai/keyRoutes.test.ts` checks every response body and console call for the key. User-facing messages for each code are in `lib/ai/errors.ts`.
+- Bring your own key (BACKEND.md A2): a creator's Anthropic key is tested with a one-token call (`verifyAnthropicKey`, `claude-haiku-4-5`), then sealed with AES-256-GCM (`lib/ai/keyCrypto.ts`, `KEY_ENCRYPTION_SECRET`, workspace id bound as associated data) and stored at `.data/keys/<workspaceId>.json` (mode 600) by `lib/ai/keyStore.ts`. Only the gateway's `userProviderFor` decrypts it, straight into the SDK client. `instrumentation.ts` (via the Node-only `lib/ai/startupCheck.ts`) exits the server at startup if `KEY_ENCRYPTION_SECRET` is missing or isn't 32 base64 bytes. Changing the secret makes saved keys unreadable, which surfaces as `invalid_key` until the creator re-adds theirs. Key routes share `lib/ai/keySettings.ts` (JSON-only bodies, shape check, a 10-per-10-minutes in-memory limit per browser). Logs never include a key or a provider's error message, only status and error type. `lib/ai/keyRoutes.test.ts` checks every response body and console call for the key. User-facing messages for each code are in `lib/ai/errors.ts`.
+- Learning events (BACKEND.md B1): event rules in `lib/learning/events.ts` (one strict schema per type in `EVENT_PAYLOADS`; `sourceFor(access)` is `real` only for `owner`), outcomes in `lib/learning/outcomes.ts` (the estimate comes from `unitCostAt`, never the client), storage in `lib/db/learningStore.ts` (`events.jsonl` and `outcomes.jsonl` in the project folder; writes never create the folder; `removeVersionRecords` is called by the version DELETE route). Routes log server-side events through `recordEvent()` (`lib/learning/record.ts`), which never throws. Pass `simulated: true` for anything built on demo quotes. `findVersion()` now also returns `access`. Rate limits use `createRateLimiter` (`lib/rateLimit.ts`); cookie-authenticated JSON routes check `isJsonRequest()` (`lib/api.ts`).
 - AI gateway (BACKEND.md A1): `lib/ai/`. `gateway.generate({ task, workspaceId, system, messages, schema })` makes one structured call; `gateway.stream(...)` streams text. It picks the key (the workspace's own key when saved, else the house `ANTHROPIC_API_KEY`), takes model/effort/maxTokens/thinking from `TASK_ROUTES` (`routing.ts`), and meters each call: one `UsageRecord` row in `.data/usage/calls/<UTC day>.jsonl` (`usageLog.ts`; tokens, cost, latency, ok, no content) plus the house demo budget. Metering failures are logged, never thrown into the request. `workspaceId` is the owner-cookie hash. Provider adapters (`providers/anthropic.ts`) are the only SDK users (pinned by `lib/ai/boundary.test.ts`); they map SDK errors to `AiError { kind, keySource }` with fixed messages (`kind` is an `AiErrorKind`), and turn an unparseable structured answer into an empty turn so the caller's one retry runs. Callers (`lib/analysis/callers.ts`: `analysisCaller`, `textCaller`, `streamAgentReply`, `isAiConfigured`) pair prompts and schemas with a task. Route error mapping is shared: `aiFailure()` / `describeAiError()` in `lib/analysis/errors.ts`, which read only `AiError` kinds. Price briefs (`lib/analysis/price.ts`) deliberately omit costs and the analysis summary, so the price comes from the market, not cost-plus.
 - Stored data vs. AI rules: stored `priceSuggestion` is validated structurally only; the business rules (`priceSuggestionSchema`) gate new AI answers. Tightening a rule must never make saved projects unreadable.
 - Route lookups: API routes load `{ project, version }` with `findVersion()` from `lib/versionLookup.ts`.

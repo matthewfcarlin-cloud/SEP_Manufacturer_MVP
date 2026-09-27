@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { getAccessibleProject } from "@/lib/access";
+import { currentOwnerHash, getAccessibleProject } from "@/lib/access";
 import { fail, ok } from "@/lib/api";
+import { recordEvent } from "@/lib/learning/record";
 import { matchVersion } from "@/lib/match";
 import { buildSpecSheet } from "@/lib/outreach/specSheet";
 import { simulateQuotes } from "@/lib/outreach/simulate";
@@ -37,5 +38,15 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
     quotes: simulateQuotes(id, version, matches, requestedAt),
   };
   const saved = await updateVersion(id, version.number, (v) => ({ ...v, outreach }));
-  return saved ? ok(outreach, 201) : fail("Version not found.", 404);
+  if (!saved) return fail("Version not found.", 404);
+  await recordEvent({
+    workspaceId: await currentOwnerHash(),
+    projectId: id,
+    version: version.number,
+    access: found.access,
+    type: "quote_requested",
+    payload: { quoteCount: outreach.quotes.length, shareLevel: body.data.shareLevel },
+    simulated: true,
+  });
+  return ok(outreach, 201);
 }

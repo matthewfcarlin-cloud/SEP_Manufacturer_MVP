@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { currentOwnerHash } from "@/lib/access";
-import { fail } from "../api";
+import { fail, isJsonRequest } from "../api";
 import { keyTestErrorInfo, MALFORMED_KEY } from "./errors";
 import { allowKeyAttempt } from "./keyAttempts";
 import { verifyAnthropicKey } from "./providers/anthropic";
@@ -23,14 +23,9 @@ export async function workspaceOrFail(): Promise<string | Response> {
   return (await currentOwnerHash()) ?? fail("Enable cookies for this site to manage an AI key.", 400);
 }
 
-/**
- * Parses a JSON key request. JSON only: a cross-site HTML form can't send it
- * without a CORS preflight, which this app never grants.
- */
+/** Parses a JSON key request (JSON only; see isJsonRequest). */
 export async function readKeyBody(request: Request): Promise<{ apiKey: string } | Response> {
-  if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
-    return fail("Send the key as JSON.", 415);
-  }
+  if (!isJsonRequest(request)) return fail("Send the key as JSON.", 415);
   const body = keyBodySchema.safeParse(await request.json().catch(() => null));
   if (!body.success) return fail('Send JSON like { "provider": "anthropic", "apiKey": "sk-ant-..." }.', 400);
   return { apiKey: body.data.apiKey };

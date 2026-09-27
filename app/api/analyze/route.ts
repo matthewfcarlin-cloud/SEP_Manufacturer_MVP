@@ -4,6 +4,8 @@ import { analysisCaller, isAiConfigured } from "@/lib/analysis/callers";
 import { buildProjectBrief } from "@/lib/analysis/prompt";
 import { imagesToSend } from "@/lib/aiInputs";
 import { aiFailure } from "@/lib/analysis/errors";
+import { getKeyInfo } from "@/lib/ai/keyStore";
+import { recordEvent } from "@/lib/learning/record";
 import { runAnalysis } from "@/lib/analysis/run";
 import { getVersionImages, updateVersion } from "@/lib/projectStore";
 import type { Analysis } from "@/lib/types";
@@ -22,7 +24,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const found = await findVersion(body.data.projectId, body.data.version);
   if (found instanceof Response) return found;
-  const { project, version } = found;
+  const { project, version, access } = found;
 
   const ownerHash = await aiBudgetGate("analysis");
   if (ownerHash instanceof Response) return ownerHash;
@@ -39,6 +41,14 @@ export async function POST(request: Request): Promise<Response> {
     // Re-reads the project before saving, so versions added meanwhile survive.
     const saved = await updateVersion(project.id, version.number, (v) => ({ ...v, analysis }));
     if (!saved) return fail("This version was removed while it was being analyzed.", 404);
+    await recordEvent({
+      workspaceId: ownerHash,
+      projectId: project.id,
+      version: version.number,
+      access,
+      type: "analysis_run",
+      payload: { pathCount: analysis.paths.length, topProcess: analysis.paths[0].process, keySource: (await getKeyInfo(ownerHash)) ? "user" : "house" },
+    });
     return ok(analysis);
   } catch (err) {
     return aiFailure(err, "api/analyze");

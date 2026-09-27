@@ -4,6 +4,7 @@ import { encodeAgentEvent, type AgentEvent } from "@/lib/agent/protocol";
 import { agentRequestSchema } from "@/lib/agent/request";
 import { isAiConfigured, streamAgentReply } from "@/lib/analysis/callers";
 import { describeAiError } from "@/lib/analysis/errors";
+import { recordEvent } from "@/lib/learning/record";
 import { aiBudgetGate } from "@/lib/usage/gate";
 import { findVersion } from "@/lib/versionLookup";
 
@@ -25,6 +26,16 @@ export async function POST(request: Request): Promise<Response> {
   if (!(await isAiConfigured(ownerHash))) {
     return fail("The build agent isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
   }
+
+  // Only the conversation's length is logged, never what was asked.
+  await recordEvent({
+    workspaceId: ownerHash,
+    projectId: found.project.id,
+    version: found.version.number,
+    access: found.access,
+    type: "agent_question",
+    payload: { turnCount: body.data.messages.length },
+  });
 
   const context = buildAgentContext(found.project, found.version);
   const encoder = new TextEncoder();
