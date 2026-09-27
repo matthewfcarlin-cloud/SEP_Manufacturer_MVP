@@ -167,6 +167,9 @@ export function BomPanel({ projectId, projectName, version, targetQuantity, proc
           </ul>
 
           <div className="flex flex-wrap gap-3">
+            <a href="#sourcing-heading" className="bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:opacity-90">
+              Find suppliers for this BOM ↓
+            </a>
             <button type="button" onClick={() => setEditing(true)} className="bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90">
               Edit lines
             </button>
