@@ -1,8 +1,8 @@
-# Idlefit: From Idea to First Sale
+# Moko: From Idea to First Sale
 
 > Working name. Alternatives under review: **Firstrun** (top pick), **Madeby**. See [Naming](#naming).
 
-Idlefit is the all-in-one studio for **first-time product creators**. Bring an idea (CAD file, photos, sketch, or just a description). Leave with a design that can actually be made, real manufacturer quotes, a price that makes money, a launch plan, and a listing ready to sell.
+Moko is the all-in-one studio for **first-time product creators**. Bring an idea (CAD file, photos, sketch, or just a description). Leave with a design that can actually be made, real manufacturer quotes, a price that makes money, a launch plan, and a listing ready to sell.
 
 **The bet:** Printify made selling custom merch easy by hiding the factory. We do the same for *original* physical products, where the factory is the hard part.
 
@@ -157,7 +157,7 @@ Upload ─▶ Design assist ─▶ Manufacturer match ─▶ Outreach & quotes �
 
 ## Design system
 
-Keep the existing Idlefit look. Don't restyle what's built.
+Keep the existing Moko look. Don't restyle what's built.
 
 - **Header:** dark bar, wordmark, live "N machines idle in LA" status.
 - **Type:** huge uppercase wide display headings; small monospace uppercase labels with letter-spacing; clean sans body.
@@ -211,9 +211,10 @@ Keep the existing Idlefit look. Don't restyle what's built.
 
 | Name | Why |
 |---|---|
+| **Moko** ✅ | Chosen name (2026-09-27). Logo in `public/brand/`, ring icon in `app/icon.png`. |
 | **Firstrun** ⭐ | Every creator is chasing their first production run. Easy to post. |
 | **Madeby** | Share cards write themselves: "made with Madeby." |
-| **Idlefit** | Current name, strongest if we lead with idle machines. |
+| **Idlefit** | Previous working name, strongest if we lead with idle machines. |
 | Kilnworks · Partwise · Shopfloor | Alternatives. |
 
 Domains and trademarks not checked yet.

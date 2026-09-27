@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AiErrorBanner } from "@/components/AiErrorBanner";
 import type { ApiResponse } from "@/lib/api";
+import { AiCallError } from "@/lib/client/aiError";
 import type { Analysis } from "@/lib/types";
 
 // Shown in turn while the request runs. They describe what the analysis is
@@ -24,7 +26,7 @@ export function RunAnalysisButton({ projectId, version, variant = "primary" }: P
   const router = useRouter();
   const [running, setRunning] = useState(false);
   const [stage, setStage] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; status: number } | null>(null);
 
   useEffect(() => {
     if (!running) return;
@@ -43,10 +45,10 @@ export function RunAnalysisButton({ projectId, version, variant = "primary" }: P
         body: JSON.stringify({ projectId, version }),
       });
       const json = (await res.json()) as ApiResponse<Analysis>;
-      if (!json.success) throw new Error(json.error);
+      if (!json.success) throw new AiCallError(json.error, res.status);
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "The analysis failed. Please try again.");
+      setError({ message: err instanceof Error ? err.message : "The analysis failed. Please try again.", status: err instanceof AiCallError ? err.status : 0 });
     } finally {
       setRunning(false);
     }
@@ -70,11 +72,7 @@ export function RunAnalysisButton({ projectId, version, variant = "primary" }: P
           </p>
         )}
       </div>
-      {error && (
-        <p role="alert" className="rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm">
-          {error}
-        </p>
-      )}
+      {error && <AiErrorBanner message={error.message} status={error.status} />}
     </div>
   );
 }

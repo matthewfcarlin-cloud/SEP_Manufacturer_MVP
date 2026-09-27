@@ -569,3 +569,102 @@ test("the Make screen compares demo quotes and saves the chosen one", async ({ p
   await expect(page.getByRole("region", { name: "Compare quotes" }).locator("li", { hasText: "Chosen" }).locator("h3")).toHaveText(chosenName);
   await expect(page.getByRole("region", { name: "Spec sheet as sent" }).or(page.getByText("Spec sheet as sent"))).toBeVisible();
 });
+
+test("choosing a different quote re-dates the launch plan", async ({ page }) => {
+  await page.goto(`/project/${BRACKET.id}/plan`);
+  await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();
+  await expect(page.getByRole("figure", { name: /Launch plan timeline/ }).locator("ol > li")).toHaveCount(8);
+  const launch = page.locator("dl div", { hasText: /^Launch/ }).locator("dd");
+  const before = await launch.innerText();
+
+  // Choose the slowest quote on Make, then come back: production is re-dated from it.
+  await page.goto(`/project/${BRACKET.id}/make`);
+  const quotes = page.getByRole("region", { name: "Compare quotes" });
+  await quotes.getByRole("button", { name: "Lead time" }).click();
+  const slowest = quotes.locator("ul > li").last();
+  const slowestName = await slowest.locator("h3").innerText();
+  if (await slowest.getByRole("button", { name: "Choose this quote" }).count()) {
+    await slowest.getByRole("button", { name: "Choose this quote" }).click();
+    await expect(slowest.getByText("Chosen", { exact: true })).toBeVisible();
+  }
+  await page.goto(`/project/${BRACKET.id}/plan`);
+  await expect(page.getByText(`chosen demo quote: ${slowestName}`)).toBeVisible();
+  const after = await page.locator("dl div", { hasText: /^Launch/ }).locator("dd").innerText();
+  expect(after >= before).toBe(true);
+  expect(after).not.toBe(before);
+});
+
+async function overBudget(page: Page): Promise<string> {
+  await page.goto("/shops");
+  const cookie = (await page.context().cookies()).find((c) => c.name === "idlefit_owner")!;
+  const { createHash } = await import("node:crypto");
+  const ledger = path.join(".data", "usage", "browsers", `${createHash("sha256").update(cookie.value).digest("hex")}.json`);
+  await mkdir(path.dirname(ledger), { recursive: true });
+  await writeFile(ledger, JSON.stringify({ spentUsd: 99 }));
+  return ledger;
+}
+
+test("settings checks a key with the backend and never fakes a saved one", async ({ page }) => {
+  await page.goto("/settings");
+  await expect(page.getByRole("heading", { level: 1, name: "AI provider" })).toBeVisible();
+  await expect(page.getByLabel("Anthropic (Claude)")).toBeChecked();
+  await expect(page.getByLabel("OpenAI")).toBeDisabled();
+  await expect(page.getByText("Your key is encrypted and only used for your projects. Calls are billed to your provider account.")).toBeVisible();
+  // A malformed key is refused by the key route itself (no provider call), for Test and for Save.
+  await page.getByLabel("API key").fill("not-a-real-key");
+  await page.getByRole("button", { name: "Test key", exact: true }).click();
+  await expect(page.getByText("That doesn't look like an Anthropic API key. Keys start with sk-ant-.")).toBeVisible();
+  await page.getByRole("button", { name: "Save key" }).click();
+  await expect(page.getByText("That doesn't look like an Anthropic API key. Keys start with sk-ant-.")).toBeVisible();
+  await expect(page.getByText(/Saved key ·/)).toHaveCount(0);
+  await expect(page.getByText(/Demo AI budget · this browser/)).toBeVisible();
+});
+
+test("the header pill shows the demo budget and links to settings", async ({ page }) => {
+  await page.goto("/studio");
+  const pill = page.getByRole("link", { name: /Demo AI budget: \$\d+\.\d\d left/ });
+  await expect(pill).toBeVisible();
+  await pill.click();
+  await expect(page).toHaveURL(/\/settings$/);
+});
+
+test("a spent demo budget explains itself on the screen that made the call", async ({ page }) => {
+  const ledger = await overBudget(page);
+  try {
+    await page.goto(`/project/${BRACKET.id}/plan`);
+    page.once("dialog", (d) => d.accept());
+    await page.getByRole("button", { name: "Redraft with AI" }).click();
+    const banner = page.getByRole("alert").filter({ hasText: "Demo AI budget used up" });
+    await expect(banner).toBeVisible();
+    await expect(banner.getByRole("link", { name: "Use your own API key →" })).toHaveAttribute("href", "/settings");
+    await expect(page.getByRole("link", { name: /Demo AI budget: \$0\.00 left/ })).toBeVisible();
+  } finally {
+    await rm(ledger, { force: true });
+  }
+});
+
+test("the studio's own-key prompt can be dismissed for good", async ({ page }) => {
+  await page.goto("/studio");
+  const prompt = page.getByRole("complementary", { name: "Use your own API key" });
+  await expect(prompt).toBeVisible();
+  await prompt.getByRole("button", { name: "Not now" }).click();
+  await expect(prompt).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1, name: "Studio" })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Use your own API key" })).toHaveCount(0);
+});
+
+test("the Sell screen shows a copy-ready Etsy listing within Etsy's limits", async ({ page }) => {
+  await page.goto(`/project/${BRACKET.id}/sell`);
+  await expect(page.getByRole("link", { name: "Sell", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByText(/^\d+\/140$/)).toBeVisible();
+  const title = page.locator("section", { hasText: "Copy title" }).locator("p");
+  expect((await title.innerText()).length).toBeLessThanOrEqual(140);
+  await expect(page.locator("section", { hasText: "Copy tags" }).locator("li")).toHaveCount(13);
+  await expect(page.getByText("13/13")).toBeVisible();
+  await expect(page.getByText("$19.00")).toBeVisible(); // price from the business case
+  for (const label of ["Copy title", "Copy description", "Copy tags", "Copy price"]) await expect(page.getByRole("button", { name: label })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Connect Etsy shop/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: /Shopify/ })).toBeDisabled();
+  await expect(page.getByRole("img", { name: /listing photo/ })).toHaveCount(4);
+});

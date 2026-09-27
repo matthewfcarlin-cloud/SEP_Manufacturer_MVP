@@ -5,6 +5,7 @@ import { agentRequestSchema } from "@/lib/agent/request";
 import { isAiConfigured, streamAgentReply } from "@/lib/analysis/callers";
 import { describeAiError } from "@/lib/analysis/errors";
 import { recordEvent } from "@/lib/learning/record";
+import { similarProductsFor } from "@/lib/learning/retrieval";
 import { aiBudgetGate } from "@/lib/usage/gate";
 import { findVersion } from "@/lib/versionLookup";
 
@@ -37,7 +38,7 @@ export async function POST(request: Request): Promise<Response> {
     payload: { turnCount: body.data.messages.length },
   });
 
-  const context = buildAgentContext(found.project, found.version);
+  const context = buildAgentContext(found.project, found.version, await similarProductsFor(found.project, found.version));
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({

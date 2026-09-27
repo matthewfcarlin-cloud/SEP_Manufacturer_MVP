@@ -1,4 +1,6 @@
-# Idlefit — Build Spec (working name)
+# Moko — Build Spec
+
+> Renamed from Idlefit on 2026-09-27. User-facing text says Moko. Internal identifiers keep the old name on purpose, because renaming them would break live data: the `idlefit_owner` cookie (every browser would lose its projects), the `IDLEFIT_*` env vars (Railway config), the `idlefit-ai-key:v1:` encryption context in `lib/ai/keyCrypto.ts` (stored AI keys would stop decrypting), and the npm package name.
 
 ## What we're building
 > The product direction is now the creator studio (idea → design → make → money → launch → sell). `PRODUCT.md` is the product spec; the build plan is under "Phase 10+: Creator studio" below.
@@ -54,6 +56,7 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `POST /api/orders/draft` `{ projectId, version, to, purpose }` – AI drafts a purchase order (only after sign-off) or an assembly quote request, saved as that recipient's unsent draft
 - `GET/POST/DELETE /api/settings/ai-key`, `POST /api/settings/ai-key/test`, `GET /api/usage` – bring your own key (see "Backend API contract")
 - `POST /api/events`, `POST/GET /api/outcomes` – feedback events and real-world outcomes for learning (see "Backend API contract")
+- `PUT /api/projects/[id]/learning` `{ contribute }` – opt a product in or out of similar-product sharing (owner only); `POST /api/learning/recompute` – dev: run the learning jobs, counts only
 
 ## Data models
 ```ts
@@ -116,7 +119,7 @@ type AgentMessage = { role: "user" | "assistant"; content: string };
 type AppliedTweak = { fromVersion: number; process: Process; change: string; why: string; impact: string };
 
 // AI gateway (BACKEND.md A1): one metered row per AI call, never any prompt or response content
-type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "order_draft";
+type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "plan" | "listing" | "order_draft";
 type KeySource = "user" | "house";
 type AiErrorCode = "invalid_key" | "quota_exceeded" | "budget_exhausted" | "provider_down"; // `code` on AI error responses
 type AiErrorKind = Exclude<AiErrorCode, "budget_exhausted">;                                // provider failures (AiError.kind)
@@ -132,6 +135,18 @@ type ProductEvent = { id: string; workspaceId: string; projectId: string; versio
 type OutcomeKind = "real_quote" | "actual_unit_cost" | "units_sold" | "tweak_cost_delta";
 type Outcome = { id: string; projectId: string; version: number; kind: OutcomeKind; process?: Process; material?: string;
   quantity?: number; estimateUsd?: { low: number; high: number }; actualUsd?: number; value?: number; source: LearningSource; createdAt: string };
+
+// Similar-product retrieval (BACKEND.md B2): fixed vocabularies and numbers only
+// Project gains: learning?: LearningConsent (absent = off). Analysis gains: category?: ProductCategory (absent before B2).
+type LearningConsent = { contribute: boolean; updatedAt: string };
+type ProductCategory = "enclosure" | "bracket_mount" | "holder_stand" | "case_cover" | "knob_handle" | "clip_fastener" | "gear_mechanism"
+  | "container" | "organizer" | "kitchen_tool" | "lighting" | "wearable" | "toy_game" | "decor" | "tool_part" | "other";
+type MaterialFamily = "aluminum" | "stainless" | "steel" | "brass_copper" | "titanium" | "nylon" | "polycarbonate" | "abs"
+  | "acetal" | "pla_petg" | "resin" | "rubber_tpu" | "acrylic" | "wood" | "other";
+type SizeBucket = "xs" | "s" | "m" | "l" | "xl"; // largest side: <50, <150, <400, <1000 mm, beyond
+type ProductFeatures = { projectId: string /* internal, never in a prompt */; version: number; category?: ProductCategory; process: Process;
+  material: MaterialFamily; sizeBucket: SizeBucket; volumeCm3: number; wallMm?: number; quantity: number; unitCostEst: { low: number; high: number };
+  realQuotes?: { count: number; medianUnitUsd: number; medianQuantity: number }; revision?: { tweakProcess: Process; unitCostChangePct: number } };
 type UsageRecord = { at: string; workspaceId: string; task: AiTask; provider: "anthropic"; model: string;
   inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheWriteTokens: number;
   estCostUsd: number; keySource: KeySource; latencyMs: number; ok: boolean; errorKind?: AiErrorKind };
@@ -422,15 +437,15 @@ aiInputs: { includePhotos: boolean; includeNotes: boolean };   // default both t
 
 ## Phase 10+: Creator studio
 
-Idlefit is repositioned as the all-in-one studio for first-time product creators: **idea → design → make → money → launch → sell**. `PRODUCT.md` is the product spec (why and what); this file stays the build reference (how). Build in this order, one commit each, stopping after each for testing:
+Moko is repositioned as the all-in-one studio for first-time product creators: **idea → design → make → money → launch → sell**. `PRODUCT.md` is the product spec (why and what); this file stays the build reference (how). Build in this order, one commit each, stopping after each for testing:
 
 | # | Build | Done when | Status |
 |---|---|---|---|
 | 1 | Studio dashboard `/studio` | Opening the studio shows every product, its stage, key numbers and next step at a glance | Built |
 | 2 | Agent assist on every product screen | "How do I make this cheaper?" answers with this part's features and numbers | Built (quotes and plan join its context in builds 3–4) |
 | 3 | Manufacturer outreach | Five labeled demo quotes appear, sort by price and lead time, and one can be chosen | Built |
-| 4 | Plan and timeline | Choosing a quote re-dates the launch | Planned |
-| 5 | Selling (Etsy listing) | A full listing copies into Etsy in under a minute | Planned |
+| 4 | Plan and timeline | Choosing a quote re-dates the launch | Built |
+| 5 | Selling (Etsy listing) | A full listing copies into Etsy in under a minute | Built |
 
 **Rules for every build**
 - Keep the design system exactly: dark header, huge uppercase `display-type` headings, mono `eyebrow` labels, orange `accent`, sharp corners, `night-*` tokens on dark bands. Extend, don't restyle. Check light, dark and phone widths.
@@ -445,8 +460,8 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 - `/studio` (built): the creators' home (header link "Studio"); `/projects` redirects there. `/` stays the marketing landing.
 - Product screens share a tab bar and the agent panel: `/project/[id]` (design + money, built), `/project/[id]/make` (outreach + quotes, built), `/project/[id]/plan`, `/project/[id]/pitch` (built), `/project/[id]/sell`.
 - `POST /api/projects/[id]/versions/[n]/quotes` (built): request quotes (spec sheet + simulated demo quotes). `PATCH .../quotes/[quoteId]` `{ status }`, `POST .../quotes/[quoteId]/choose` (built).
-- `POST /api/plan` `{ projectId, version }`: Claude drafts milestones as zod-validated JSON; choosing a quote re-dates the plan without an AI call.
-- `POST /api/listing` `{ projectId, version }`: generates the Etsy listing.
+- `POST /api/plan` `{ projectId, version? }` (built): Claude drafts milestones as zod-validated JSON; choosing a quote re-dates the plan without an AI call.
+- `POST /api/listing` `{ projectId, version? }` (built): generates the Etsy listing.
 - `POST /api/agent` (built): the agent's streamed answers.
 
 **New types (added to `lib/types.ts` by the build that uses them)**
@@ -470,16 +485,16 @@ type SpecSheet = {
 };
 type Outreach = { requestedAt: string; specSheet: SpecSheet; quotes: DemoQuote[]; chosenQuoteId?: string };
 
-// Build 4, on ProjectVersion.plan
+// Build 4 (in lib/types.ts), on ProjectVersion.plan
 type MilestoneKey = "finalize_design" | "prototype" | "sample_approval" | "tooling" | "production" | "photos" | "listing" | "launch";
-type Milestone = { key: MilestoneKey; title: string; startDate: string; endDate: string; budgetUsd: { low: number; high: number }; note?: string };
+type Milestone = { key: MilestoneKey; title: string; startDate: string; endDate: string; durationDays: number; budgetUsd: { low: number; high: number }; note?: string };
 type LaunchPlan = {
   generatedAt: string; startDate: string; launchDate: string;
   basedOn: { kind: "quote"; quoteId: string } | { kind: "analysis" };
   milestones: Milestone[]; warnings: string[];
 };
 
-// Build 5, on ProjectVersion.listing
+// Build 5 (in lib/types.ts), on ProjectVersion.listing
 type EtsyListing = { title: string; description: string; tags: string[]; priceUsd: number; photos: string[]; generatedAt: string }; // title ≤ 140 chars, exactly 13 tags
 ```
 
@@ -488,6 +503,27 @@ type EtsyListing = { title: string; description: string; tags: string[]; priceUs
 - Derived, pure, tested (`lib/studio/`): `stageProgress()` (a stage is done when its data exists on the latest version; the current stage is the first gap, so later stages can be done out of order), `nextStep()` (ordered rules: wrong units → analyze → set a price → rework if unprofitable at every volume → talk to a shop → write pitch → share; each links to the screen that does it), `keyNumbers()` (best-path unit cost at target qty, retail, margin at target qty) and `unitCostTrend()` (best-path unit cost per analyzed version). Make/Launch/Sell rules gain quotes, plan and listing in builds 3–5.
 - `StudioModel` mounts the WebGL viewer only while the card is on screen (browsers cap live contexts), shows the saved render or a skeleton until `onReady`, spins slowly (`rotateSpeed` 0.5, zoom off) and not at all under reduced motion. `ModelViewer` gained `rotateSpeed`, `enableZoom`, `onReady`, `showLoading` (defaults unchanged).
 - Grid children need `min-w-0` or a long title widens the page on phones (E2E checks no horizontal scroll at 390 px).
+
+### Build 5 – Selling (built)
+- `/project/[id]/sell` (tab "Sell"): title (with n/140), description, 13 tag chips, price, photos, each with a copy button (reuses `components/sourcing/CopyButton`); photo downloads; "Connect Etsy shop" and "Shopify" disabled and marked Coming soon; an honest note on Etsy's commercial review for publishing to other sellers' shops.
+- `POST /api/listing` `{ projectId, version? }` (budget action `listing`, $0.08 est.): Claude writes title/description/tags (`lib/analysis/listing.ts`, `callClaudeListing`, low effort), validated by `listingDraftSchema` against Etsy's limits (title ≤ 140, exactly 13 tags, each ≤ 20 chars, distinct). The **code** sets the price (business case retail) and the photos (studio renders). Requires an analysis and a business case.
+- `etsySale()` (`lib/sell/fees.ts`): what one sale leaves after Etsy's approximate US fees ($0.20 listing, 6.5% transaction, 3% + $0.25 payment processing), and profit per sale after the chosen quote's price or the analysis unit cost (a range). Update the constants if Etsy's fees change.
+- Sell stage is done when a listing exists; next step "Create your listing" follows a plan; the agent's context mentions the listing. Both examples are seeded with real listings.
+
+### Own API key – frontend (built; backend pending)
+- The key storage and AI gateway are the backend's (BACKEND.md A1/A2, merged). **Don't build encryption, key storage or provider routing in the frontend.** Every call to them goes through `lib/client/aiKey.ts`, which follows the contract under "Backend API contract" below. If a key route is missing (Next's HTML 404), the settings page shows "Coming soon" instead of pretending a key was saved. Only Anthropic is supported; OpenAI is listed, disabled, as Coming soon.
+- Every call goes through `lib/client/aiKey.ts`. A route that doesn't exist yet (Next's HTML 404) means "not available": `/settings` shows Save and Test as "Coming soon" and never shows a saved key the server didn't return. The trust sentence is shown as-is only once saving is live.
+- `/settings` (`components/settings/AiKeySettings.tsx`): provider picker (Anthropic; OpenAI disabled, Coming soon), password-type key field, Test key, Save, masked saved key + Remove key, and the demo budget. `HeaderAiPill` (in `SiteHeader`) shows "Your key" or "Demo budget: $X left" from `GET /api/usage` (`UsageSummary.keySource`, `demoBudgetRemainingUsd`), re-checked on each navigation. `OwnKeyPrompt` on the studio is dismissible (localStorage, try/catch). The agent panel footer links to `/settings`.
+- AI failures: callers throw `AiCallError(message, status)` (`lib/client/aiError.ts`) and render `AiErrorBanner` on the same screen; `classifyAiError()` spots a spent budget by its message (works mid-stream), key problems (401/402 or "API key"), and busy (429/502/503). Wired into analysis, price, pitch, plan, the agent and Alibaba sourcing.
+- `/privacy` explains key handling, stating plainly that saving arrives with the backend update.
+
+### Build 4 – Plan and timeline (built)
+- `/project/[id]/plan` (tab "Plan"): timeline (`components/plan/PlanTimeline.tsx`: one row per milestone on a shared date axis, month ticks, Today and Launch markers, production in accent, zero-day steps as diamonds), key figures, AI warnings, and a budget table with running totals (all est.).
+- `POST /api/plan` `{ projectId, version? }` (budget action `plan`, $0.15 est.): Claude drafts the 8 milestones (`MILESTONE_KEYS` order) as `planDraftSchema`-validated JSON via `runStructured` (`lib/analysis/plan.ts`, `callClaudePlan`). The **code** owns what must be exact (`lib/plan/schedule.ts`): `productionFacts()` = chosen quote's lead time and cost (else the analysis best path's high lead time and cost range), zero-day tooling when there's none, and every date (`buildPlan`, back to back from today).
+- Choosing a quote re-dates an existing plan with `redatePlan()` inside the choose route (no AI call; keeps the AI's titles, notes and other durations, and the start date).
+- Launch stage is done when a plan exists; next step "Plan your launch" follows a chosen quote; the studio card's "Next deadline" = `nextDeadline(plan, today)`; the agent's context lists the plan.
+- `AiErrorBanner` + `classifyAiError()` (`lib/client/aiError.ts`): every AI call's failure is shown on the screen that made it, distinguishing a spent demo budget and a failed key (both link to `/settings`) from a busy service.
+- Seeded: both examples have real AI-drafted plans (bracket dated from its chosen quote, pedal from the analysis).
 
 ### Build 3 – Manufacturer outreach (built)
 - `/project/[id]/make` is the Make stage screen (latest version): **Local shops · demo** (request panel → comparison → spec sheet as sent) and **Overseas · Alibaba** (the teammate-built `SourcingPanel`, moved here from the overview; the overview links to Make). Product screens share a tab bar (`components/product/ProductNav.tsx`, in the product layout): Design & money · Make · Launch.
@@ -571,6 +607,15 @@ For the frontend agent (BACKEND.md A2). All routes use the `ApiResponse<T>` enve
 
 Events and outcomes are stored in the project's folder. Deleting the project deletes them, and deleting a version deletes that version's rows. Only the creator's own projects give `source: "real"`, and only real rows will ever be learned from (B2+, which also adds the opt-in).
 
+### `PUT /api/projects/[id]/learning`: "Help improve estimates" toggle (BACKEND.md B2)
+- Request: JSON `{ contribute: boolean }`. Owner only: other creators' products and examples → 404. Not JSON → 415, bad body → 400.
+- 200 → `{ learning: LearningConsent }`. It's off by default (`project.learning` absent). The current value is `project.learning?.contribute ?? false` on the project the page already loads.
+- What it means (suggested toggle copy, and what `/privacy` should say): "Share this product's numbers, never its files, name or notes, so other creators get better estimates. When on, other creators' AI analysis can see its category, process, material type, size range, quantity, cost estimate and a summary of any real quotes you enter, with no name attached. Turning it off or deleting the product removes it straight away."
+- It takes effect on the very next AI call: features are computed from current data on every call, never cached.
+
+### `POST /api/learning/recompute`: dev button
+- 200 → `{ projects: number; contributingProjects: number; featureRows: number }`. Counts only, never any product's data.
+
 ### AI error codes (every AI route: analyze, price, pitch, sourcing, agent)
 JSON routes return the code in the envelope. `POST /api/agent` streams it as `{ "type": "error", "message": string, "code"?: AiErrorCode }`. The `error` or `message` text is already written for the creator. Use `code` to choose the banner's action.
 
@@ -624,6 +669,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Business case (Phase 7): all math and the verdict live in `lib/businessCase.ts` (pure, client-safe, tested); the panel recomputes it on every keystroke and auto-saves inputs. Only inputs are stored. Costs between the AI's priced volumes are interpolated log-log; outside 10–10k they're clamped and flagged. The low-volume diagnosis ("tooling makes this unprofitable…") is made on the process that becomes profitable, and an alternative process is only suggested if it covers its own cost at the smallest run.
 - Bring your own key (BACKEND.md A2): a creator's Anthropic key is tested with a one-token call (`verifyAnthropicKey`, `claude-haiku-4-5`), then sealed with AES-256-GCM (`lib/ai/keyCrypto.ts`, `KEY_ENCRYPTION_SECRET`, workspace id bound as associated data) and stored at `.data/keys/<workspaceId>.json` (mode 600) by `lib/ai/keyStore.ts`. Only the gateway's `userProviderFor` decrypts it, straight into the SDK client. `instrumentation.ts` (via the Node-only `lib/ai/startupCheck.ts`) exits the server at startup if `KEY_ENCRYPTION_SECRET` is missing or isn't 32 base64 bytes. Changing the secret makes saved keys unreadable, which surfaces as `invalid_key` until the creator re-adds theirs. Key routes share `lib/ai/keySettings.ts` (JSON-only bodies, shape check, a 10-per-10-minutes in-memory limit per browser). Logs never include a key or a provider's error message, only status and error type. `lib/ai/keyRoutes.test.ts` checks every response body and console call for the key. User-facing messages for each code are in `lib/ai/errors.ts`.
 - Learning events (BACKEND.md B1): event rules in `lib/learning/events.ts` (one strict schema per type in `EVENT_PAYLOADS`; `sourceFor(access)` is `real` only for `owner`), outcomes in `lib/learning/outcomes.ts` (the estimate comes from `unitCostAt`, never the client), storage in `lib/db/learningStore.ts` (`events.jsonl` and `outcomes.jsonl` in the project folder; writes never create the folder; `removeVersionRecords` is called by the version DELETE route). Routes log server-side events through `recordEvent()` (`lib/learning/record.ts`), which never throws. Pass `simulated: true` for anything built on demo quotes. `findVersion()` now also returns `access`. Rate limits use `createRateLimiter` (`lib/rateLimit.ts`); cookie-authenticated JSON routes check `isJsonRequest()` (`lib/api.ts`).
+- Similar products (BACKEND.md B2): `lib/learning/vocabulary.ts` (fixed categories, `materialFamily()` normalizes the AI's free-text materials, `sizeBucket()`), `features.ts` (the features job: `isContributing` = owned, not an example, and `learning.contribute`; `featuresForVersion` including real-quote summaries and a tweak's unit-cost change; `queryFeatures` for the asking version, which works before its first analysis too), `similar.ts` (weighted nearest neighbors: category 3, process 3, material 2, size 2, log-quantity 2; share of what the query knows, minimum 0.5; one row per product; never the asker's own; `similarProductsBlock` says where every number came from), and `retrieval.ts` (`similarProductsFor`, uncached and never throws). Analysis sends the block as a separate `context` text part after the brief, so `buildProjectBrief` (and the "What the AI sees" panel) stay exactly what's sent about your own product. The agent gets it at the end of `buildAgentContext`. The analysis output now includes `category` from the fixed list; the stored schema keeps it optional.
 - AI gateway (BACKEND.md A1): `lib/ai/`. `gateway.generate({ task, workspaceId, system, messages, schema })` makes one structured call; `gateway.stream(...)` streams text. It picks the key (the workspace's own key when saved, else the house `ANTHROPIC_API_KEY`), takes model/effort/maxTokens/thinking from `TASK_ROUTES` (`routing.ts`), and meters each call: one `UsageRecord` row in `.data/usage/calls/<UTC day>.jsonl` (`usageLog.ts`; tokens, cost, latency, ok, no content) plus the house demo budget. Metering failures are logged, never thrown into the request. `workspaceId` is the owner-cookie hash. Provider adapters (`providers/anthropic.ts`) are the only SDK users (pinned by `lib/ai/boundary.test.ts`); they map SDK errors to `AiError { kind, keySource }` with fixed messages (`kind` is an `AiErrorKind`), and turn an unparseable structured answer into an empty turn so the caller's one retry runs. Callers (`lib/analysis/callers.ts`: `analysisCaller`, `textCaller`, `streamAgentReply`, `isAiConfigured`) pair prompts and schemas with a task. Route error mapping is shared: `aiFailure()` / `describeAiError()` in `lib/analysis/errors.ts`, which read only `AiError` kinds. Price briefs (`lib/analysis/price.ts`) deliberately omit costs and the analysis summary, so the price comes from the market, not cost-plus.
 - Stored data vs. AI rules: stored `priceSuggestion` is validated structurally only; the business rules (`priceSuggestionSchema`) gate new AI answers. Tightening a rule must never make saved projects unreadable.
 - Route lookups: API routes load `{ project, version }` with `findVersion()` from `lib/versionLookup.ts`.

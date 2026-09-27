@@ -23,7 +23,7 @@ type Props = {
 const PURPOSE: Record<OrderMessagePurpose, string> = { purchase_order: "Purchase order", assembly_rfq: "Assembly quote request" };
 const time = (iso: string) => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-/** One recipient's email: AI draft, edit, copy or open in the user's email app, then mark sent. Idlefit sends nothing. */
+/** One recipient's email: AI draft, edit, copy or open in the user's email app, then mark sent. Moko sends nothing. */
 export function OrderMessageCard({ to, purpose, label, isDemo, draft, sent, busy, run, edit, askAi }: Props) {
   const key = `${purpose}:${JSON.stringify(to)}`;
   const [subject, setSubject] = useState(draft?.subject ?? "");

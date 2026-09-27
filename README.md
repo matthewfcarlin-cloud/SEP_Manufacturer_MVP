@@ -1,11 +1,11 @@
-# Idlefit
+# Moko
 
 **The all-in-one studio for first-time product creators: from an idea to a design that can be made, real quotes, a price that makes money, a launch plan, and a listing ready to sell.**
 
-*Printify made selling custom merch easy by hiding the factory. Idlefit does the same for original physical products, where the factory is the hard part.*
+*Printify made selling custom merch easy by hiding the factory. Moko does the same for original physical products, where the factory is the hard part.*
 
 <!-- Hero screenshot: replace with a capture of /studio at 1600×900 (docs/hero.png). -->
-![Idlefit studio](docs/hero.png)
+![Moko studio](docs/hero.png)
 
 > Club MVP. Every shop is fictional demo data, and every cost, margin and price is an AI estimate shown as a range. Product spec: [PRODUCT.md](PRODUCT.md). How to use the app, step by step: [docs/USING.md](docs/USING.md).
 
@@ -21,8 +21,8 @@ Every product moves through six stages, and the app always shows the next step.
 | 2 | **Design** | Measured geometry, AI analysis and design tweaks, versions and compare, agent assist | ✅ Built |
 | 3 | **Make** | Manufacturing paths, shop matches, outreach and quotes, Alibaba sourcing | ✅ Built |
 | 4 | **Money** | Business case: price, margin, tooling break-even | ✅ Built |
-| 5 | **Launch** | Plan and timeline, pitch kit, marketing | ✅ Pitch kit · 🔨 Timeline |
-| 6 | **Sell** | Etsy-ready listing | 🔨 Building |
+| 5 | **Launch** | Plan and timeline, pitch kit, marketing | ✅ Built |
+| 6 | **Sell** | Etsy-ready listing | ✅ Built |
 
 ## The eight components
 
@@ -91,7 +91,8 @@ app/                  Pages and API routes (App Router)
   p/[token]/          Public shared pitch
 components/           UI, grouped by feature (analysis, agent, businessCase, pitch, privacy, home, viewer…)
 lib/                  Domain logic, pure and tested
-  analysis/           Prompts and the only file that calls the Claude SDK (claude.ts)
+  ai/                 AI gateway, task routing, encrypted key store; providers/ is the only SDK user
+  analysis/           Prompts, schemas and callers for each AI task
   agent/  usage/      Agent context/protocol; AI budget and metering
 data/shops.json       The 25 fictional demo shops
 demo/                 Example products, STL parts and saved renders
@@ -108,10 +109,11 @@ PRODUCT.md            Product spec
 | Design assist | `app/project/[id]/page.tsx`, `components/analysis/`, `lib/analysis/`, `lib/geometry.ts`, `lib/versions.ts`, `lib/compare.ts` |
 | Manufacturer match | `lib/match.ts`, `components/ShopMatches.tsx`, `lib/specSummary.ts`, `data/shops.json` |
 | Manufacturer outreach | `app/project/[id]/make/`, `components/make/`, `lib/outreach/` (spec sheet, simulated quotes, compare, pipeline); Alibaba sourcing: `components/sourcing/`, `lib/sourcing/`, `lib/analysis/sourcing.ts` |
-| Plan and timeline | *(building)* |
+| Plan and timeline | `app/project/[id]/plan/`, `components/plan/`, `lib/plan/schedule.ts`, `lib/analysis/plan.ts` |
 | Marketing (pitch kit) | `app/project/[id]/pitch/`, `components/pitch/`, `lib/analysis/pitch.ts`, `lib/iterationStory.ts` |
-| Selling | *(building)* |
+| Selling | `app/project/[id]/sell/`, `components/sell/`, `lib/analysis/listing.ts`, `lib/sell/fees.ts` |
 | Agent assist | `components/agent/BuildAgent.tsx`, `app/api/agent/`, `lib/agent/` |
 | Money (business case) | `lib/businessCase.ts`, `components/businessCase/`, `lib/analysis/price.ts` |
+| Your own API key | UI: `app/settings/`, `components/settings/`, `lib/client/aiKey.ts`, `components/HeaderAiPill.tsx`, `components/AiErrorBanner.tsx`. Backend: `lib/ai/` (gateway, encrypted key store), `app/api/settings/ai-key/`, `app/api/usage/` |
 | Privacy, sharing, AI budget | `lib/access.ts`, `proxy.ts`, `lib/shareStore.ts`, `lib/aiInputs.ts`, `lib/usage/`, `app/privacy/` |
 | Data model | `lib/types.ts` (the contract), `lib/schemas.ts`, `lib/projectStore.ts` |

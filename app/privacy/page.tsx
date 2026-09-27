@@ -24,8 +24,12 @@ const POINTS: { title: string; body: React.ReactNode }[] = [
     body: "A quote request carries a spec summary: process, size, material, finish, quantities, a target price and a quote-by date. Renders and your notes are added only if you choose \"Share more\" (and notes only if the AI may see them). Every shop listed is fictional demo data, so nothing is sent to anyone and the quotes are simulated.",
   },
   {
-    title: "Idlefit never contacts overseas suppliers",
+    title: "Moko never contacts overseas suppliers",
     body: "Alibaba sourcing only plans your search and drafts messages. Drafting sends your part's spec, notes (unless you hold them back), the supplier details you enter and the conversation you paste in to Anthropic's API. Nothing goes to a supplier unless you copy it and send it yourself on Alibaba.",
+  },
+  {
+    title: "Your own AI key",
+    body: "You can use your own Anthropic key instead of the demo budget (Settings). It's tested with the provider before it's saved, then stored encrypted (AES-256-GCM) on this server, tied to your browser, and used only for your projects' AI calls. It's never shown back in full, only a masked form like sk-ant-…7Q2f, and it's never written to logs. Remove key deletes it for good. Calls made with your key are billed to your Anthropic account. OpenAI keys are coming soon.",
   },
   {
     title: "Deleting is real, with one limit",

@@ -2,12 +2,14 @@ import type { z } from "zod";
 import { gateway } from "../ai/gateway";
 import { AGENT_SYSTEM_PROMPT } from "../agent/prompt";
 import type { AgentMessage, AiTask } from "../types";
-import { analysisOutputSchema, pitchOutputSchema, priceSuggestionOutputSchema } from "../schemas";
+import { analysisOutputSchema, listingDraftOutputSchema, pitchOutputSchema, planDraftOutputSchema, priceSuggestionOutputSchema } from "../schemas";
 import { getShops } from "../shops";
 import { orderDraftOutputSchema } from "../orders/schemas";
 import { sourcingPlanOutputSchema, supplierDraftOutputSchema } from "../sourcing/schemas";
 import { summarizeCapacity } from "./capacity";
+import { LISTING_SYSTEM_PROMPT } from "./listing";
 import { PITCH_SYSTEM_PROMPT } from "./pitch";
+import { PLAN_SYSTEM_PROMPT } from "./plan";
 import { PRICE_SYSTEM_PROMPT } from "./price";
 import { buildSystemPrompt } from "./prompt";
 import type { CallModel } from "./run";
@@ -30,17 +32,26 @@ export function isAiConfigured(workspaceId: string): Promise<boolean> {
 
 /** The manufacturing analysis: images plus the brief, one structured answer. */
 export function analysisCaller(workspaceId: string): CallModel {
-  return ({ images, text }) =>
+  return ({ images, text, context }) =>
     gateway.generate({
       task: "analyze",
       workspaceId,
       schema: analysisOutputSchema,
       system: [{ text: analysisSystemPrompt, cache: true }],
-      messages: [{ role: "user", content: [...images.map((img) => ({ type: "image" as const, ...img })), { type: "text" as const, text }] }],
+      messages: [
+        {
+          role: "user",
+          content: [
+            ...images.map((img) => ({ type: "image" as const, ...img })),
+            { type: "text" as const, text },
+            ...(context ? [{ type: "text" as const, text: context }] : []),
+          ],
+        },
+      ],
     });
 }
 
-type TextTask = Extract<AiTask, "price" | "pitch" | "sourcing_plan" | "negotiation" | "order_draft">;
+type TextTask = Extract<AiTask, "price" | "pitch" | "sourcing_plan" | "negotiation" | "plan" | "listing" | "order_draft">;
 
 const TEXT_TASKS: Record<TextTask, { system: string; schema: z.ZodType }> = {
   price: { system: PRICE_SYSTEM_PROMPT, schema: priceSuggestionOutputSchema },
@@ -48,9 +59,11 @@ const TEXT_TASKS: Record<TextTask, { system: string; schema: z.ZodType }> = {
   sourcing_plan: { system: SOURCING_PLAN_SYSTEM_PROMPT, schema: sourcingPlanOutputSchema },
   negotiation: { system: NEGOTIATION_SYSTEM_PROMPT, schema: supplierDraftOutputSchema },
   order_draft: { system: ORDER_DRAFT_SYSTEM_PROMPT, schema: orderDraftOutputSchema },
+  plan: { system: PLAN_SYSTEM_PROMPT, schema: planDraftOutputSchema },
+  listing: { system: LISTING_SYSTEM_PROMPT, schema: listingDraftOutputSchema },
 };
 
-/** A text-only structured call (price, pitch, sourcing plan, negotiation draft, order email). */
+/** A text-only structured call (price, pitch, sourcing plan, negotiation draft, launch plan, Etsy listing, order email). */
 export function textCaller(task: TextTask, workspaceId: string): CallTextModel {
   const { system, schema } = TEXT_TASKS[task];
   return (text) => gateway.generate({ task, workspaceId, schema, system: [{ text: system }], messages: [{ role: "user", content: text }] });

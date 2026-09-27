@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import Link from "next/link";
 import {
   useEffect,
   useRef,
@@ -8,7 +9,9 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import { AiErrorBanner } from "@/components/AiErrorBanner";
 import { decodeAgentEvents } from "@/lib/agent/protocol";
+import { AiCallError } from "@/lib/client/aiError";
 import { MAX_AGENT_MESSAGE_CHARS, MAX_AGENT_TURNS } from "@/lib/agent/request";
 import type { ApiResponse } from "@/lib/api";
 import type { AgentMessage } from "@/lib/types";
@@ -37,8 +40,9 @@ async function streamAnswer(
     const json = (await res
       .json()
       .catch(() => null)) as ApiResponse<never> | null;
-    throw new Error(
+    throw new AiCallError(
       json?.error ?? "The build agent couldn't answer. Please try again.",
+      res.status,
     );
   }
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
@@ -50,7 +54,7 @@ async function streamAnswer(
     buffer = rest;
     for (const event of events) {
       if (event.type === "text") onText(event.text);
-      if (event.type === "error") throw new Error(event.message);
+      if (event.type === "error") throw new AiCallError(event.message, 0);
     }
   }
 }
@@ -90,7 +94,7 @@ export function BuildAgent({
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; status: number } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -134,8 +138,12 @@ export function BuildAgent({
           ]),
       );
     } catch (err) {
-      if (!controller.signal.aborted)
-        setError(err instanceof Error ? err.message : "Something went wrong.");
+      if (!controller.signal.aborted) {
+        setError({
+          message: err instanceof Error ? err.message : "Something went wrong.",
+          status: err instanceof AiCallError ? err.status : 0,
+        });
+      }
     } finally {
       // Drop an empty answer so the conversation still alternates for the next question.
       setMessages((ms) => (ms[ms.length - 1]?.content ? ms : ms.slice(0, -2)));
@@ -240,12 +248,9 @@ export function BuildAgent({
                 </ol>
               )}
               {error && (
-                <p
-                  role="alert"
-                  className="mt-3 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm"
-                >
-                  {error}
-                </p>
+                <div className="mt-3">
+                  <AiErrorBanner message={error.message} status={error.status} />
+                </div>
               )}
               {isFull && (
                 <p className="mt-3 text-xs text-muted">
@@ -277,7 +282,10 @@ export function BuildAgent({
               <div className="flex items-center justify-between gap-2">
                 <p className="text-[11px] text-muted">
                   Uses this project&apos;s AI estimates. Shops are demo data.
-                  Counts toward your AI budget.
+                  Counts toward your AI budget ·{" "}
+                  <Link href="/settings" className="underline hover:text-ink">
+                    use your own key
+                  </Link>
                 </p>
                 {isStreaming ? (
                   <button

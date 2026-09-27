@@ -11,6 +11,12 @@ export type Project = {
   owner?: { keyHash: string };
   /** A shared demo anyone can open and edit, but not delete. */
   isExample?: true;
+  /**
+   * B2: whether this product's structured features may be shown to other
+   * creators' AI prompts as a "similar product". Absent = off (the default).
+   * Owner-only; examples never contribute.
+   */
+  learning?: LearningConsent;
   /** Public pitch link. Off by default; the owner can turn it off or rotate the token. */
   share?: ShareLink;
 };
@@ -54,6 +60,44 @@ export type ProjectVersion = {
   outreach?: Outreach;
   /** Order coordination: which source supplies each BOM line, the assembler, drafted orders and the user's sign-off. */
   order?: OrderCoordination;
+  /** Launch plan: AI-drafted milestones, dated from the chosen quote or the analysis (build 4). */
+  plan?: LaunchPlan;
+  /** Etsy-ready listing: AI-written copy; price from the business case; photos from the renders (build 5). */
+  listing?: EtsyListing;
+};
+
+export type EtsyListing = {
+  /** At most 140 characters (Etsy's limit). */
+  title: string;
+  description: string;
+  /** Exactly 13 tags, each at most 20 characters (Etsy's limits). */
+  tags: string[];
+  /** From the business case's retail price. */
+  priceUsd: number;
+  photos: string[];
+  generatedAt: string;
+};
+
+export type MilestoneKey = "finalize_design" | "prototype" | "sample_approval" | "tooling" | "production" | "photos" | "listing" | "launch";
+
+export type Milestone = {
+  key: MilestoneKey;
+  title: string;
+  /** YYYY-MM-DD, inclusive. A zero-day milestone (e.g. no tooling) has start = end. */
+  startDate: string;
+  endDate: string;
+  durationDays: number;
+  budgetUsd: { low: number; high: number };
+  note?: string;
+};
+
+export type LaunchPlan = {
+  generatedAt: string;
+  startDate: string;
+  launchDate: string;
+  basedOn: { kind: "quote"; quoteId: string } | { kind: "analysis" };
+  milestones: Milestone[];
+  warnings: string[];
 };
 
 /** How far a quote request goes. Private by default: a spec summary, no renders or notes. */
@@ -104,7 +148,7 @@ export type Outreach = {
 
 /**
  * Alibaba sourcing for one version. Alibaba has no buyer API and forbids
- * automated access, so Idlefit never contacts a supplier: the AI plans the
+ * automated access, so Moko never contacts a supplier: the AI plans the
  * search and drafts messages, and the user sends each one themselves.
  */
 export type Sourcing = { plan?: SourcingPlan; suppliers: Supplier[] };
@@ -233,6 +277,8 @@ export type Analysis = {
   topRecommendation: string;
   risks: string[];
   storyboard: { shot: number; visual: string; voiceover: string; seconds: number }[];
+  /** B2: the product's category, from a fixed list. Absent on analyses made before B2. */
+  category?: ProductCategory;
 };
 
 export type Machine = {
@@ -273,7 +319,7 @@ export type AgentMessage = { role: "user" | "assistant"; content: string };
 export type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell";
 
 /** What an AI call is for (BACKEND.md A1). The gateway routes model, effort and budget by task. */
-export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "order_draft";
+export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "plan" | "listing" | "order_draft";
 
 /** Whose API key paid for a call: the creator's own (A2) or the house demo key. */
 export type KeySource = "user" | "house";
@@ -439,4 +485,42 @@ export type AssemblyPartner = {
   leadDays: number;
   idleThisMonth: boolean;
   isDemoData: true;
+};
+
+// Similar-product retrieval (BACKEND.md B2). Every field comes from a fixed
+// vocabulary or is a number, so no free text from one creator's product can
+// reach another creator's prompt.
+export type LearningConsent = { contribute: boolean; updatedAt: string };
+
+export type ProductCategory =
+  | "enclosure" | "bracket_mount" | "holder_stand" | "case_cover" | "knob_handle" | "clip_fastener"
+  | "gear_mechanism" | "container" | "organizer" | "kitchen_tool" | "lighting" | "wearable"
+  | "toy_game" | "decor" | "tool_part" | "other";
+
+export type MaterialFamily =
+  | "aluminum" | "stainless" | "steel" | "brass_copper" | "titanium" | "nylon" | "polycarbonate" | "abs"
+  | "acetal" | "pla_petg" | "resin" | "rubber_tpu" | "acrylic" | "wood" | "other";
+
+/** Largest bounding-box side: xs < 50 mm ≤ s < 150 ≤ m < 400 ≤ l < 1000 ≤ xl. */
+export type SizeBucket = "xs" | "s" | "m" | "l" | "xl";
+
+/**
+ * One analyzed version of a contributing product, reduced to structured
+ * features. Computed on demand from current data (never cached), so opting
+ * out or deleting takes effect at once. `projectId` is internal: it's used to
+ * exclude a creator's own product and is never put into a prompt.
+ */
+export type ProductFeatures = {
+  projectId: string;
+  version: number;
+  category?: ProductCategory;
+  process: Process; // the analysis's top path
+  material: MaterialFamily; // the top path's first material, normalized
+  sizeBucket: SizeBucket;
+  volumeCm3: number;
+  wallMm?: number;
+  quantity: number;
+  unitCostEst: { low: number; high: number }; // top path at `quantity`
+  realQuotes?: { count: number; medianUnitUsd: number; medianQuantity: number }; // real_quote outcomes with source "real"
+  revision?: { tweakProcess: Process; unitCostChangePct: number }; // this version applied a tweak; change vs the version it revised
 };

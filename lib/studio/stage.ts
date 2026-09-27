@@ -22,8 +22,8 @@ const IS_DONE: Record<Stage, (v: ProjectVersion) => boolean> = {
   // A chosen local demo quote, or an Alibaba supplier the creator agreed terms with.
   make: (v) => Boolean(v.outreach?.chosenQuoteId) || Boolean(v.sourcing?.suppliers.some((s) => s.status === "agreed")),
   money: (v) => Boolean(v.businessCase),
-  launch: (v) => Boolean(v.pitch), // plus the launch plan (build 4)
-  sell: () => false, // done once a listing exists (build 5)
+  launch: (v) => Boolean(v.plan),
+  sell: (v) => Boolean(v.listing),
 };
 
 export function stageProgress(project: Project): { current: Stage; statuses: Record<Stage, StageStatus> } {

@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import { CostByVolumeChart } from "@/components/analysis/CostByVolumeChart";
 import { FormError, inputClass } from "@/components/upload/UploadPickers";
+import { AiErrorBanner } from "@/components/AiErrorBanner";
 import type { ApiResponse } from "@/lib/api";
+import { AiCallError } from "@/lib/client/aiError";
 import { buildBusinessCase, MAX_QUANTITY_TIERS } from "@/lib/businessCase";
 import { effectiveCostCurve, type CostCurve } from "@/lib/costCurve";
 import { formatUsd } from "@/lib/format";
@@ -25,7 +27,7 @@ const SAVE_LABEL: Record<SaveState, string> = { idle: "", saving: "Saving…", s
 
 function useSuggestPrice(projectId: string, version: number, onDone: (inputs: BusinessCaseInputs) => void) {
   const [isAsking, setIsAsking] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; status: number } | null>(null);
   const ask = async () => {
     setIsAsking(true);
     setError(null);
@@ -36,10 +38,10 @@ function useSuggestPrice(projectId: string, version: number, onDone: (inputs: Bu
         body: JSON.stringify({ projectId, version }),
       });
       const json = (await res.json()) as ApiResponse<BusinessCaseInputs>;
-      if (!json.success) throw new Error(json.error);
+      if (!json.success) throw new AiCallError(json.error, res.status);
       onDone(json.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't get a price suggestion.");
+      setError({ message: err instanceof Error ? err.message : "Couldn't get a price suggestion.", status: err instanceof AiCallError ? err.status : 0 });
     } finally {
       setIsAsking(false);
     }
@@ -93,7 +95,7 @@ export function BusinessCasePanel({ projectId, version, paths, targetQuantity, i
           >
             {priceAi.isAsking ? "Looking at similar products…" : suggestion ? "Ask the AI again" : "Suggest a price from similar products"}
           </button>
-          <FormError message={priceAi.error} />
+          {priceAi.error && <AiErrorBanner message={priceAi.error.message} status={priceAi.error.status} />}
         </div>
 
         <fieldset className="flex flex-col gap-1.5">

@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { FormError, inputClass } from "@/components/upload/UploadPickers";
+import { inputClass } from "@/components/upload/UploadPickers";
+import { AiErrorBanner } from "@/components/AiErrorBanner";
 import type { ApiResponse } from "@/lib/api";
+import { AiCallError } from "@/lib/client/aiError";
 import { MAX_PITCH_FIELD_CHARS } from "@/lib/schemas";
 import type { PitchContent } from "@/lib/types";
 import { RenderCapture } from "./RenderCapture";
@@ -30,7 +32,7 @@ const buttonClass = "rounded-lg border border-line bg-surface px-3 py-2 text-sm 
 async function send(method: "POST" | "PUT", body: object): Promise<void> {
   const res = await fetch("/api/pitch", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const json = (await res.json()) as ApiResponse<PitchContent>;
-  if (!json.success) throw new Error(json.error);
+  if (!json.success) throw new AiCallError(json.error, res.status);
 }
 
 function EditForm({ pitch, onSave, onCancel }: { pitch: PitchContent; onSave: (p: Omit<PitchContent, "editedByUser">) => Promise<void>; onCancel: () => void }) {
@@ -67,7 +69,7 @@ export function PitchToolbar({ projectId, projectName, version, pitch, cadFileUr
   const [isWriting, setIsWriting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isRendering, setIsRendering] = useState(!hasRenders && Boolean(cadFileUrl));
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; status: number } | null>(null);
 
   const run = async (action: () => Promise<void>) => {
     setError(null);
@@ -75,7 +77,7 @@ export function PitchToolbar({ projectId, projectName, version, pitch, cadFileUr
       await action();
       router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError({ message: err instanceof Error ? err.message : "Something went wrong.", status: err instanceof AiCallError ? err.status : 0 });
     }
   };
 
@@ -111,7 +113,7 @@ export function PitchToolbar({ projectId, projectName, version, pitch, cadFileUr
         </button>
         {pitch?.editedByUser && <span className="text-xs text-muted">Text edited by you</span>}
       </div>
-      <FormError message={error} />
+      {error && <AiErrorBanner message={error.message} status={error.status} />}
       {isEditing && pitch && (
         <EditForm
           pitch={pitch}

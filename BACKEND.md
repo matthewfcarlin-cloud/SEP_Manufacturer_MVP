@@ -1,4 +1,4 @@
-# Idlefit Backend: Learning Pipeline + Bring Your Own Key
+# Moko Backend: Learning Pipeline + Bring Your Own Key
 
 Spec for the backend agent. Read `CLAUDE.md` and `PRODUCT.md` first. This doc covers two features:
 

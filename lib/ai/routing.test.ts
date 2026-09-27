@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { AiTask } from "../types";
 import { STRONGEST_MODEL, TASK_ROUTES } from "./routing";
 
-const TASKS: AiTask[] = ["analyze", "agent_chat", "price", "pitch", "sourcing_plan", "negotiation", "order_draft"];
+const TASKS: AiTask[] = ["analyze", "agent_chat", "price", "pitch", "sourcing_plan", "negotiation", "plan", "listing", "order_draft"];
 
 describe("routing table", () => {
   test("every task has a route with a model, token limit and budget action", () => {

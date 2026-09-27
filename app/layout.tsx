@@ -22,7 +22,7 @@ const archivo = Archivo({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Idlefit", template: "%s · Idlefit" },
+  title: { default: "Moko", template: "%s · Moko" },
   description:
     "Design your product around the machines local shops already have running. Manufacturing paths, idle-capacity shop matches, and a pitch kit.",
 };

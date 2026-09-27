@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { PRODUCT_CATEGORIES } from "./learning/vocabulary";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AiInputs, AssemblyPartner, DemoQuote, OrderCoordination, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
+import type { AiInputs, AssemblyPartner, OrderCoordination, DemoQuote, EtsyListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -266,6 +267,95 @@ export const outreachSchema = z.object({
 }) satisfies z.ZodType<Outreach>;
 
 // ---------------------------------------------------------------------------
+// Launch plan (build 4). The AI drafts durations, budgets and notes per
+// milestone in a fixed order; dates and the production numbers are computed.
+// ---------------------------------------------------------------------------
+
+export const MILESTONE_KEYS = ["finalize_design", "prototype", "sample_approval", "tooling", "production", "photos", "listing", "launch"] as const;
+const milestoneKeySchema = z.enum(MILESTONE_KEYS);
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+export const milestoneSchema = z.object({
+  key: milestoneKeySchema,
+  title: z.string().min(1),
+  startDate: isoDate,
+  endDate: isoDate,
+  durationDays: z.number().int().nonnegative(),
+  budgetUsd: z.object({ low: z.number().nonnegative(), high: z.number().nonnegative() }),
+  note: z.string().optional(),
+});
+
+export const launchPlanSchema = z.object({
+  generatedAt: z.iso.datetime(),
+  startDate: isoDate,
+  launchDate: isoDate,
+  basedOn: z.discriminatedUnion("kind", [z.object({ kind: z.literal("quote"), quoteId: z.string() }), z.object({ kind: z.literal("analysis") })]),
+  milestones: z.array(milestoneSchema),
+  warnings: z.array(z.string()),
+}) satisfies z.ZodType<LaunchPlan>;
+
+/** What the model returns: one entry per milestone, in MILESTONE_KEYS order. */
+export const planDraftOutputSchema = z.object({
+  milestones: z
+    .array(
+      z.object({
+        key: milestoneKeySchema,
+        title: z.string().describe("Short, specific to this product, under 6 words."),
+        durationDays: z.number().describe("Calendar days for this step. Use 0 only for tooling when there is no tooling."),
+        budgetLowUsd: z.number().describe("Low end of this step's cost in USD (estimate)."),
+        budgetHighUsd: z.number().describe("High end of this step's cost in USD (estimate)."),
+        note: z.string().describe("One sentence, under 25 words: what to do and what to watch for."),
+      }),
+    )
+    .describe("Exactly 8 milestones in this order: finalize_design, prototype, sample_approval, tooling, production, photos, listing, launch."),
+  warnings: z.array(z.string()).describe("0-3 one-sentence warnings about timing or budget risks specific to this plan."),
+});
+
+export const planDraftSchema = planDraftOutputSchema.superRefine((d, ctx) => {
+  const keys = d.milestones.map((m) => m.key).join(",");
+  if (keys !== MILESTONE_KEYS.join(",")) ctx.addIssue({ code: "custom", path: ["milestones"], message: `must be exactly ${MILESTONE_KEYS.join(", ")} in that order` });
+  d.milestones.forEach((m, i) => {
+    if (m.durationDays < 0 || m.durationDays > 365) ctx.addIssue({ code: "custom", path: ["milestones", i, "durationDays"], message: "must be 0-365" });
+    if (m.budgetLowUsd < 0 || m.budgetHighUsd < m.budgetLowUsd) ctx.addIssue({ code: "custom", path: ["milestones", i], message: "budget high must be >= low >= 0" });
+  });
+  if (d.warnings.length > 3) ctx.addIssue({ code: "custom", path: ["warnings"], message: "at most 3 warnings" });
+});
+
+// ---------------------------------------------------------------------------
+// Etsy listing (build 5). Etsy's limits: title <= 140 chars, 13 tags, each
+// tag <= 20 chars.
+// ---------------------------------------------------------------------------
+
+export const ETSY_TITLE_MAX = 140;
+export const ETSY_TAG_COUNT = 13;
+export const ETSY_TAG_MAX = 20;
+
+export const etsyListingSchema = z.object({
+  title: z.string().min(1).max(ETSY_TITLE_MAX),
+  description: z.string().min(1),
+  tags: z.array(z.string().min(1).max(ETSY_TAG_MAX)).length(ETSY_TAG_COUNT),
+  priceUsd: z.number().positive(),
+  photos: z.array(z.string()),
+  generatedAt: z.iso.datetime(),
+}) satisfies z.ZodType<EtsyListing>;
+
+export const listingDraftOutputSchema = z.object({
+  title: z.string().describe(`Etsy title, at most ${ETSY_TITLE_MAX} characters: what it is first, then key buyer search words. No ALL CAPS, no emoji.`),
+  description: z.string().describe("Etsy description, 120-220 words, plain text with short paragraphs and '- ' bullets: what it is, who it's for, key features and dimensions, materials, what's in the box. No claims the brief doesn't support."),
+  tags: z.array(z.string()).describe(`Exactly ${ETSY_TAG_COUNT} Etsy tags, each at most ${ETSY_TAG_MAX} characters, lowercase, distinct phrases buyers search for.`),
+});
+
+export const listingDraftSchema = listingDraftOutputSchema.superRefine((d, ctx) => {
+  if (d.title.length > ETSY_TITLE_MAX) ctx.addIssue({ code: "custom", path: ["title"], message: `must be at most ${ETSY_TITLE_MAX} characters (got ${d.title.length})` });
+  if (d.tags.length !== ETSY_TAG_COUNT) ctx.addIssue({ code: "custom", path: ["tags"], message: `need exactly ${ETSY_TAG_COUNT} tags, got ${d.tags.length}` });
+  d.tags.forEach((t, i) => {
+    if (t.trim().length === 0 || t.length > ETSY_TAG_MAX) ctx.addIssue({ code: "custom", path: ["tags", i], message: `"${t}" must be 1-${ETSY_TAG_MAX} characters` });
+  });
+  if (new Set(d.tags.map((t) => t.trim().toLowerCase())).size !== d.tags.length) ctx.addIssue({ code: "custom", path: ["tags"], message: "tags must be distinct" });
+  if (d.description.trim().split(/\s+/).length < 60) ctx.addIssue({ code: "custom", path: ["description"], message: "write a fuller description (at least 60 words)" });
+});
+
+// ---------------------------------------------------------------------------
 // Order coordination: the user's choices only (the plan is computed).
 // ---------------------------------------------------------------------------
 
@@ -360,6 +450,8 @@ export const projectVersionSchema = z.object({
   aiInputs: aiInputsSchema.optional(),
   sourcing: sourcingSchema.optional(),
   outreach: outreachSchema.optional(),
+  plan: launchPlanSchema.optional(),
+  listing: etsyListingSchema.optional(),
   order: orderCoordinationSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
@@ -376,6 +468,7 @@ export const projectSchema = z.object({
   owner: z.object({ keyHash: z.string().regex(/^[0-9a-f]{64}$/) }).optional(),
   isExample: z.literal(true).optional(),
   share: shareLinkSchema.optional(),
+  learning: z.object({ contribute: z.boolean(), updatedAt: z.string() }).optional(),
 }) satisfies z.ZodType<Project>;
 
 // ---------------------------------------------------------------------------
@@ -437,6 +530,7 @@ export const analysisOutputSchema = z.object({
   topRecommendation: z.string().describe("2-3 sentences, under 70 words: the path to take now, and the quantity where that changes."),
   risks: z.array(z.string()).describe("3-5 one-sentence risks, most important first."),
   storyboard: z.array(storyboardShotSchema).describe("Exactly 6 shots of a 30-second commercial, seconds summing to 30."),
+  category: z.enum(PRODUCT_CATEGORIES).describe("What kind of product this is, from the fixed list; \"other\" if none fits."),
 });
 
 export const MIN_PATHS = 2;
@@ -459,7 +553,8 @@ function checkRange(
 }
 
 /** Structure of a stored analysis (curve optional), before the business rules. */
-export const storedAnalysisShape = analysisOutputSchema.extend({ paths: z.array(manufacturingPathSchema) });
+// category is optional here: analyses saved before B2 don't have one.
+export const storedAnalysisShape = analysisOutputSchema.extend({ paths: z.array(manufacturingPathSchema), category: z.enum(PRODUCT_CATEGORIES).optional() });
 
 export const analysisSchema = storedAnalysisShape.superRefine((a, ctx) => {
   if (a.paths.length < MIN_PATHS || a.paths.length > MAX_PATHS) {

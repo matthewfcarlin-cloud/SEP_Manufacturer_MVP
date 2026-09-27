@@ -13,7 +13,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-7xl flex-col gap-10 px-4 pb-8 pt-16 sm:px-6">
         <div className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
           <p className="max-w-md text-night-muted">
-            Design around the machines that are already running. Idlefit turns a CAD file into
+            Design around the machines that are already running. Moko turns a CAD file into
             manufacturing paths, idle-capacity shop matches, and a pitch kit.
           </p>
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
@@ -25,7 +25,7 @@ export function SiteFooter() {
           </nav>
         </div>
         <p aria-hidden className="display-type select-none text-[22vw] leading-[0.8] text-night-line md:text-[18vw]">
-          Idlefit
+          Moko
         </p>
         <p className="eyebrow text-night-muted">
           Club MVP · Private by default · Costs are AI estimates · Every shop listed is fictional demo data

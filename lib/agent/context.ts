@@ -91,7 +91,19 @@ function quoteLines(version: ProjectVersion): string[] {
   return lines;
 }
 
-export function buildAgentContext(project: Project, version: ProjectVersion): string {
+function planLines(version: ProjectVersion): string[] {
+  const plan = version.plan;
+  if (!plan) return ["Launch plan: none yet."];
+  const basis = plan.basedOn.kind === "quote" ? "the chosen demo quote" : "the analysis lead time";
+  return [
+    `Launch plan (production dated from ${basis}; budgets are estimates): launch ${plan.launchDate}.`,
+    ...plan.milestones.map((m) => `- ${m.title} (${m.key}): ${m.startDate} → ${m.endDate}, $${m.budgetUsd.low.toLocaleString("en-US")}–$${m.budgetUsd.high.toLocaleString("en-US")}.`),
+    ...plan.warnings.map((w) => `Warning: ${w}`),
+  ];
+}
+
+/** `similarProducts` is the B2 block from lib/learning/retrieval.ts, when there is one. */
+export function buildAgentContext(project: Project, version: ProjectVersion, similarProducts?: string | null): string {
   const story = buildIterationStory(project).filter((s) => s.to <= version.number);
   const { current } = stageProgress(project);
   const step = nextStep(project);
@@ -109,6 +121,10 @@ export function buildAgentContext(project: Project, version: ProjectVersion): st
     ...shopLines(version),
     "",
     ...quoteLines(version),
+    "",
+    ...planLines(version),
+    version.listing ? `Etsy listing drafted: "${version.listing.title}" at $${version.listing.priceUsd}.` : "Etsy listing: not drafted yet.",
     ...(story.length ? ["", "Version history:", ...story.map((s) => `- v${s.from} → v${s.to}: ${s.summary}`)] : []),
+    ...(similarProducts ? ["", similarProducts] : []),
   ].join("\n");
 }

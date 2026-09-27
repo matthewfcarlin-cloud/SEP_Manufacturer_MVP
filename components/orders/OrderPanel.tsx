@@ -83,7 +83,7 @@ export function OrderPanel({ projectId, version, initial }: Props) {
         </h2>
         <p className="max-w-3xl text-sm text-muted">
           Who supplies each part, how many to buy, where it all ships, who puts it together, and what the run costs landed. You approve the plan here;
-          Idlefit never places an order, pays or sends anything.
+          Moko never places an order, pays or sends anything.
         </p>
       </div>
 
@@ -158,7 +158,7 @@ export function OrderPanel({ projectId, version, initial }: Props) {
                   )}
                   <div className="flex flex-wrap gap-1.5">
                     {p.suggested && <span className="eyebrow border border-accent px-1.5 py-0.5 text-[10px] text-accent">Suggested</span>}
-                    {p.terms?.isDemo && <DemoBadge label="Demo quote" title="Simulated by Idlefit from a fictional demo shop" />}
+                    {p.terms?.isDemo && <DemoBadge label="Demo quote" title="Simulated by Moko from a fictional demo shop" />}
                   </div>
                   {catalogFor === p.line.id && <CatalogForm onCancel={() => setCatalogFor(null)} onSave={(source) => run(`src:${p.line.id}`, async () => { await edit({ op: "assign", lineId: p.line.id, source }); setCatalogFor(null); })} />}
                 </div>

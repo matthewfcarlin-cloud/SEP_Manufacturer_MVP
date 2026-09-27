@@ -60,6 +60,12 @@ export function nextStep(project: Project): NextStep {
       cta: "Go to Make",
     };
   }
+  if (isMade && !v.plan) {
+    return { title: "Plan your launch", detail: "Turn your chosen quote into dated milestones and a budget, from sample to launch day.", href: `${base}/plan`, cta: "Open the plan" };
+  }
+  if (v.plan && !v.listing) {
+    return { title: "Create your listing", detail: "An Etsy-ready title, description, 13 tags and photos, priced from your business case.", href: `${base}/sell`, cta: "Open Sell" };
+  }
   if (!v.pitch) {
     return { title: "Write your pitch", detail: "Turn the analysis and numbers into a pitch for a company.", href: `${base}/pitch`, cta: "Open the pitch kit" };
   }

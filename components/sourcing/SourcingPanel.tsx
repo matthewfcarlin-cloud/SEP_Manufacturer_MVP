@@ -1,5 +1,6 @@
 "use client";
 
+import { AiErrorBanner } from "@/components/AiErrorBanner";
 import { useMemo, useState } from "react";
 import { FormError } from "@/components/upload/UploadPickers";
 import { PROCESS_LABELS, processInSentence } from "@/lib/processes";
@@ -50,7 +51,7 @@ function TargetsCard({ targets }: { targets: NegotiationTargets }) {
 
 export function SourcingPanel({ projectId, version }: Props) {
   const { sourcing, edit, plan: requestPlan, draft } = useSourcing(projectId, version.number, version.sourcing);
-  const { busy, error, run } = useBusy();
+  const { busy, error, errorStatus, run } = useBusy();
   const paths = version.analysis?.paths ?? [];
   const [process, setProcess] = useState<Process>(sourcing.plan?.process ?? paths[0]?.process);
   const [fields, setFields] = useState(EMPTY_FIELDS);
@@ -80,7 +81,7 @@ export function SourcingPanel({ projectId, version }: Props) {
       </div>
 
       <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-muted">
-        <span className="font-semibold text-ink">Idlefit never contacts suppliers.</span> Alibaba has no public API for buyers to message
+        <span className="font-semibold text-ink">Moko never contacts suppliers.</span> Alibaba has no public API for buyers to message
         suppliers and its terms don&apos;t allow automated access, so you search and chat on alibaba.com and paste replies back here.
         Drafts carry only spec-level facts (size, material, process, quantity), never your product name, notes, budget or price.
       </p>
@@ -102,7 +103,7 @@ export function SourcingPanel({ projectId, version }: Props) {
             {busy === "plan" ? "Planning the search…" : plan ? "Re-plan the search" : "Plan my Alibaba search"}
           </button>
         </div>
-        <FormError message={error} />
+        {error && <AiErrorBanner message={error} status={errorStatus} />}
         {targets && <TargetsCard targets={targets} />}
       </div>
 
@@ -161,7 +162,7 @@ export function SourcingPanel({ projectId, version }: Props) {
         </details>
       </div>
       <p className="text-xs text-muted">
-        All prices are estimates from the AI analysis. Supplier names, links and quotes are what you enter; Idlefit doesn&apos;t check them.
+        All prices are estimates from the AI analysis. Supplier names, links and quotes are what you enter; Moko doesn&apos;t check them.
       </p>
     </section>
   );

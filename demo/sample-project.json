@@ -510,6 +510,144 @@
             "isDemo": true
           }
         ]
+      },
+      "plan": {
+        "generatedAt": "2026-09-27T20:13:28.602Z",
+        "startDate": "2026-09-27",
+        "launchDate": "2026-12-08",
+        "basedOn": {
+          "kind": "analysis"
+        },
+        "milestones": [
+          {
+            "key": "finalize_design",
+            "title": "Lock 125B hole pattern",
+            "startDate": "2026-09-27",
+            "endDate": "2026-10-03",
+            "durationDays": 7,
+            "budgetUsd": {
+              "low": 0,
+              "high": 600
+            },
+            "note": "Freeze wall thickness, boss depth and the 12 mm, 7.5 mm and jack hole positions against real hardware datasheets before quoting."
+          },
+          {
+            "key": "prototype",
+            "title": "Machine two test enclosures",
+            "startDate": "2026-10-04",
+            "endDate": "2026-10-13",
+            "durationDays": 10,
+            "budgetUsd": {
+              "low": 250,
+              "high": 700
+            },
+            "note": "Order two one-off CNC bodies plus a bottom plate and dry-fit the 3PDT, pots and jacks for clearance."
+          },
+          {
+            "key": "sample_approval",
+            "title": "Fit and finish sign-off",
+            "startDate": "2026-10-14",
+            "endDate": "2026-10-22",
+            "durationDays": 9,
+            "budgetUsd": {
+              "low": 150,
+              "high": 600
+            },
+            "note": "Stuff a working build, stomp-test it, and approve the anodize or powder finish colour against a physical swatch, not a screen."
+          },
+          {
+            "key": "tooling",
+            "title": "Fixtures and work-holding",
+            "startDate": "2026-10-23",
+            "endDate": "2026-10-30",
+            "durationDays": 8,
+            "budgetUsd": {
+              "low": 300,
+              "high": 900
+            },
+            "note": "Pay for soft jaws and the drill fixture so all 250 tops index identically; watch for shops folding this into unit price twice."
+          },
+          {
+            "key": "production",
+            "title": "CNC run of 250 bodies",
+            "startDate": "2026-10-31",
+            "endDate": "2026-11-17",
+            "durationDays": 18,
+            "budgetUsd": {
+              "low": 7300,
+              "high": 12900
+            },
+            "note": "Release the run only after a first-article check, and inspect a random 10 units for thread depth and finish blemishes."
+          },
+          {
+            "key": "photos",
+            "title": "Boutique pedal product shots",
+            "startDate": "2026-11-18",
+            "endDate": "2026-11-23",
+            "durationDays": 6,
+            "budgetUsd": {
+              "low": 400,
+              "high": 1500
+            },
+            "note": "Shoot the finish with angled light and a pedalboard scene, since anodized texture is what sells this at a premium."
+          },
+          {
+            "key": "listing",
+            "title": "Store page and specs",
+            "startDate": "2026-11-24",
+            "endDate": "2026-11-28",
+            "durationDays": 5,
+            "budgetUsd": {
+              "low": 50,
+              "high": 400
+            },
+            "note": "Publish drill-pattern drawings and hardware compatibility notes; vague specs drive returns from builders with odd pots."
+          },
+          {
+            "key": "launch",
+            "title": "Builder-community launch push",
+            "startDate": "2026-11-29",
+            "endDate": "2026-12-08",
+            "durationDays": 10,
+            "budgetUsd": {
+              "low": 500,
+              "high": 2500
+            },
+            "note": "Seed units with pedal builders and forums ahead of paid ads, and hold stock back for early review demand."
+          }
+        ],
+        "warnings": [
+          "The brief states a retail target around $180 but the listed retail price is $32, which is below the $28-$48 unit cost plus tooling and will lose money on every sale.",
+          "Total non-production spend of roughly $1,650-$7,200 sits on top of the $7,300-$12,900 build, so budget at least $9,000 before any revenue arrives.",
+          "The sequential plan runs about 73 days, putting launch in mid-December and risking the holiday gift window if prototype or finish approval slips."
+        ]
+      },
+      "listing": {
+        "title": "125B Guitar Pedal Enclosure, Drilled Aluminum Fuzz Pedal Box, 3PDT and 2 Pot Holes, Anodized DIY Stompbox Case",
+        "description": "A ready-to-build 125B pedal enclosure for boutique fuzz and overdrive circuits. Machined from 6061 aluminum and anodized, it is made to be stomped on night after night while still looking like a premium build on a pedalboard.\n\nThe box arrives pre-drilled, so you can go straight to wiring instead of measuring and filing.\n\n- Outside dimensions: 122 x 66 x 39.5 mm, with an open bottom and roughly 36 mm of internal depth\n- Nominal wall thickness 2.5 mm for solid, dent-resistant feel\n- One 12 mm hole on the top face for a 3PDT footswitch\n- Two 7.5 mm pot holes on the top face\n- Two 1/4 inch jack holes, one on each long side\n- One 9 V DC jack hole on the top end wall\n- Four internal corner bosses tapped for M3 screws to take a flat bottom plate\n\nGood for small-batch pedal brands, repair and contract shops, enclosure suppliers and DIY builders who want a clean, repeatable shell.\n\nIn the box: one anodized 125B aluminum enclosure shell. Bottom plate, screws, hardware and electronics are not included.\n\nMade in small runs, so slight variation in anodized tone between batches is normal.",
+        "tags": [
+          "125b enclosure",
+          "pedal enclosure",
+          "fuzz pedal box",
+          "guitar pedal case",
+          "diy pedal enclosure",
+          "stompbox enclosure",
+          "aluminum pedal box",
+          "drilled enclosure",
+          "3pdt enclosure",
+          "anodized enclosure",
+          "pedal builder parts",
+          "effects pedal case",
+          "boutique pedal parts"
+        ],
+        "priceUsd": 32,
+        "photos": [
+          "/api/files/yAeM9-RDOE/render-0.png?v=1790459855327",
+          "/api/files/yAeM9-RDOE/render-1.png?v=1790459855327",
+          "/api/files/yAeM9-RDOE/render-2.png?v=1790459855327",
+          "/api/files/yAeM9-RDOE/render-3.png?v=1790459855327"
+        ],
+        "generatedAt": "2026-09-27T20:36:50.368Z"
       }
     }
   ],
