@@ -2,7 +2,7 @@ import { z } from "zod";
 import { PRODUCT_CATEGORIES } from "./learning/vocabulary";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AiInputs, Bom, DemoQuote, EtsyListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
+import type { AiInputs, AssemblyPartner, Bom, OrderCoordination, DemoQuote, EtsyListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -396,6 +396,80 @@ export const bomSchema = z.object({
   editedByUser: z.boolean(),
 }) satisfies z.ZodType<Bom>;
 
+// ---------------------------------------------------------------------------
+// Order coordination: the user's choices only (the plan is computed).
+// ---------------------------------------------------------------------------
+
+export const ORDER_ID_PATTERN = /^[A-Za-z0-9_-]{8,16}$/;
+export const MAX_ORDER_LINES = 40;
+export const MAX_ORDER_MESSAGES = 120;
+export const MAX_RUN_QUANTITY = 100_000;
+
+export const assemblyCapabilitySchema = z.enum(["mechanical", "electronics", "adhesive_bonding", "finishing", "testing", "kitting", "packaging", "fulfillment"]);
+
+export const orderSourceSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("local_quote"), quoteId: z.string().min(1).max(40) }),
+  z.object({ kind: z.literal("alibaba"), supplierId: z.string().regex(ORDER_ID_PATTERN) }),
+  z.object({
+    kind: z.literal("catalog"),
+    vendor: z.string().trim().min(1, "Name the vendor.").max(120, "Keep the vendor name under 120 characters."),
+    unitUsd: z.number().positive("Enter a price above $0.").max(100_000),
+    leadDays: z.number().int().min(0).max(365),
+    moq: z.number().int().positive().max(1_000_000).optional(),
+    overseas: z.boolean(),
+  }),
+]);
+
+export const orderRecipientSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("local_quote"), quoteId: z.string().min(1).max(40) }),
+  z.object({ kind: z.literal("alibaba"), supplierId: z.string().regex(ORDER_ID_PATTERN) }),
+  z.object({ kind: z.literal("assembler"), assemblerId: z.string().regex(/^[a-z0-9-]+$/) }),
+]);
+
+export const orderMessagePurposeSchema = z.enum(["purchase_order", "assembly_rfq"]);
+
+export const orderCoordinationSchema = z.object({
+  runQuantity: z.number().int().positive().max(MAX_RUN_QUANTITY),
+  assignments: z.array(z.object({ lineId: z.string().min(1).max(64), source: orderSourceSchema })).max(MAX_ORDER_LINES),
+  assemblerId: z.string().optional(),
+  messages: z
+    .array(
+      z.object({
+        id: z.string().regex(ORDER_ID_PATTERN),
+        to: orderRecipientSchema,
+        purpose: orderMessagePurposeSchema,
+        subject: z.string(),
+        text: z.string(),
+        state: z.enum(["draft", "sent"]),
+        at: z.iso.datetime(),
+        aiDrafted: z.boolean().optional(),
+      }),
+    )
+    .max(MAX_ORDER_MESSAGES),
+  signOff: z.object({ at: z.iso.datetime(), fingerprint: z.string(), landedTotalUsd: z.object({ low: z.number().nonnegative(), high: z.number().nonnegative() }) }).optional(),
+}) satisfies z.ZodType<OrderCoordination>;
+
+export const assemblyPartnerSchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9-]+$/),
+    name: z.string().min(1),
+    neighborhood: z.string().min(1),
+    description: z.string().min(1),
+    capabilities: z.array(assemblyCapabilitySchema).min(1),
+    minUnits: z.number().int().positive(),
+    maxUnits: z.number().int().positive(),
+    setupUsd: z.number().nonnegative(),
+    laborUsdPerMinute: z.number().positive(),
+    leadDays: z.number().int().positive(),
+    idleThisMonth: z.boolean(),
+    isDemoData: z.literal(true),
+  })
+  .refine((a) => a.minUnits <= a.maxUnits, { message: "minUnits must be <= maxUnits" }) satisfies z.ZodType<AssemblyPartner>;
+
+export const assemblyPartnersSchema = z.array(assemblyPartnerSchema).refine((list) => new Set(list.map((a) => a.id)).size === list.length, {
+  message: "assembler ids must be unique",
+});
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -420,6 +494,9 @@ export const projectVersionSchema = z.object({
   plan: launchPlanSchema.optional(),
   listing: etsyListingSchema.optional(),
   bom: bomSchema.optional(),
+
+// ---------------------------------------------------------------------------
+  order: orderCoordinationSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({

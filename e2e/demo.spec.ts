@@ -618,6 +618,16 @@ test("the Make screen shows the bill of materials and exports a supplier CSV wit
   expect(csv).not.toContain("hole-to-bend distance");
 });
 
+test("the order plan lists every BOM line and says when its total is only partial", async ({ page }) => {
+  await page.goto(`/project/${BRACKET.id}/make`);
+  const order = page.locator("section").filter({ has: page.locator("#order-heading") });
+  await expect(order.getByText("Landed cost so far · est.")).toBeVisible();
+  await expect(order.getByText(/9 of 10 parts not priced yet · assembly not chosen/)).toBeVisible();
+  await expect(order.getByText("Pick a source for Wall screw.")).toBeVisible();
+  // Nothing is approvable while parts are unpriced, and the button doesn't quote a partial total.
+  await expect(order.getByRole("button", { name: "Approve plan", exact: true })).toBeDisabled();
+});
+
 test("choosing a different quote re-dates the launch plan", async ({ page }) => {
   await page.goto(`/project/${BRACKET.id}/plan`);
   await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();

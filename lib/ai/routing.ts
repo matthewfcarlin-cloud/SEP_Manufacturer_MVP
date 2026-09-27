@@ -39,4 +39,6 @@ export const TASK_ROUTES: Record<AiTask, TaskRoute> = {
   listing: { model: STRONGEST_MODEL, effort: "low", maxTokens: 8_000, thinking: false, budgetAction: "listing" },
   // Bill of materials: a list of 5-25 lines; engineering judgment on what the product needs.
   bom: { model: STRONGEST_MODEL, effort: "medium", maxTokens: 12_000, thinking: false, budgetAction: "bom" },
+  // One order or assembly email; it restates signed-off numbers, so low effort.
+  order_draft: { model: STRONGEST_MODEL, effort: "low", maxTokens: 8_000, thinking: false, budgetAction: "order" },
 };

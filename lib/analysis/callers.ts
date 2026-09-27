@@ -5,6 +5,7 @@ import type { AgentMessage, AiTask } from "../types";
 import { bomOutputSchema } from "../bom/schemas";
 import { analysisOutputSchema, listingDraftOutputSchema, pitchOutputSchema, planDraftOutputSchema, priceSuggestionOutputSchema } from "../schemas";
 import { getShops } from "../shops";
+import { orderDraftOutputSchema } from "../orders/schemas";
 import { sourcingPlanOutputSchemaWithSubject, supplierDraftOutputSchema } from "../sourcing/schemas";
 import { BOM_SYSTEM_PROMPT } from "./bom";
 import { summarizeCapacity } from "./capacity";
@@ -14,6 +15,7 @@ import { PLAN_SYSTEM_PROMPT } from "./plan";
 import { PRICE_SYSTEM_PROMPT } from "./price";
 import { buildSystemPrompt } from "./prompt";
 import type { CallModel, ImageInput } from "./run";
+import { ORDER_DRAFT_SYSTEM_PROMPT } from "./orders";
 import { NEGOTIATION_SYSTEM_PROMPT, SOURCING_PLAN_SYSTEM_PROMPT } from "./sourcing";
 import type { CallTextModel } from "./structured";
 
@@ -51,18 +53,19 @@ export function analysisCaller(workspaceId: string): CallModel {
     });
 }
 
-type TextTask = Extract<AiTask, "price" | "pitch" | "sourcing_plan" | "negotiation" | "plan" | "listing">;
+type TextTask = Extract<AiTask, "price" | "pitch" | "sourcing_plan" | "negotiation" | "plan" | "listing" | "order_draft">;
 
 const TEXT_TASKS: Record<TextTask, { system: string; schema: z.ZodType }> = {
   price: { system: PRICE_SYSTEM_PROMPT, schema: priceSuggestionOutputSchema },
   pitch: { system: PITCH_SYSTEM_PROMPT, schema: pitchOutputSchema },
   sourcing_plan: { system: SOURCING_PLAN_SYSTEM_PROMPT, schema: sourcingPlanOutputSchemaWithSubject },
   negotiation: { system: NEGOTIATION_SYSTEM_PROMPT, schema: supplierDraftOutputSchema },
+  order_draft: { system: ORDER_DRAFT_SYSTEM_PROMPT, schema: orderDraftOutputSchema },
   plan: { system: PLAN_SYSTEM_PROMPT, schema: planDraftOutputSchema },
   listing: { system: LISTING_SYSTEM_PROMPT, schema: listingDraftOutputSchema },
 };
 
-/** A text-only structured call (price, pitch, sourcing plan, negotiation draft, launch plan, Etsy listing). */
+/** A text-only structured call (price, pitch, sourcing plan, negotiation draft, launch plan, Etsy listing, order email). */
 export function textCaller(task: TextTask, workspaceId: string): CallTextModel {
   const { system, schema } = TEXT_TASKS[task];
   return (text) => gateway.generate({ task, workspaceId, schema, system: [{ text: system }], messages: [{ role: "user", content: text }] });

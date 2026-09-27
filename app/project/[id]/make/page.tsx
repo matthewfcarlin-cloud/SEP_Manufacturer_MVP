@@ -5,10 +5,12 @@ import { BomPanel } from "@/components/bom/BomPanel";
 import { QuoteComparison } from "@/components/make/QuoteComparison";
 import { QuoteRequestPanel, type MatchSummary } from "@/components/make/QuoteRequestPanel";
 import { SpecSheetCard } from "@/components/make/SpecSheetCard";
+import { OrderPanel } from "@/components/orders/OrderPanel";
 import { PageHeader } from "@/components/PageHeader";
 import { SourcingPanel } from "@/components/sourcing/SourcingPanel";
 import { getAccessibleProject } from "@/lib/access";
 import { matchVersion } from "@/lib/match";
+import { orderView } from "@/lib/orders/view";
 import { buildSpecSheet } from "@/lib/outreach/specSheet";
 import { getShopById } from "@/lib/shops";
 import type { Process } from "@/lib/types";
@@ -37,7 +39,7 @@ export default async function MakePage(props: PageProps<"/project/[id]/make">) {
         </>
       }
       title="Make"
-      description="Get quotes from shops that can make this version, compare them, and choose one to plan around."
+      description="Get quotes from shops that can make this version, compare them, then plan the order: who supplies each part, who assembles it, and what the run costs landed."
     />
   );
 
@@ -112,6 +114,10 @@ export default async function MakePage(props: PageProps<"/project/[id]/make">) {
       <div className="flex flex-col gap-2 border-t border-line pt-10">
         <p className="eyebrow text-accent">Overseas · Alibaba</p>
         <SourcingPanel key={`sourcing-v${version.number}`} projectId={project.id} version={version} />
+      </div>
+
+      <div className="border-t border-line pt-10">
+        <OrderPanel key={`order-v${version.number}`} projectId={project.id} version={version.number} initial={orderView(version)} />
       </div>
     </div>
   );
