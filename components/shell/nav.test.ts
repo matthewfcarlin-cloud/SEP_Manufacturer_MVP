@@ -20,5 +20,6 @@ describe("app shell nav", () => {
     expect(titleFor("/studio", names)).toBe("My products");
     expect(titleFor("/new", names)).toBe("New product");
     expect(titleFor("/settings", names)).toBe("Settings");
+    expect(titleFor("/ask", names)).toBe("Ask Moko");
   });
 });

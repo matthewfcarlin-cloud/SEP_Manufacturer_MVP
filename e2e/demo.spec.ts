@@ -600,41 +600,81 @@ test("a part that looks the wrong size gets a units warning", async ({ page }) =
   await expect(page.getByRole("region", { name: "Part geometry" })).toContainText("Check the units");
 });
 
-test("the build agent opens with product-specific starters and respects the AI budget", async ({ page }) => {
-  await page.goto(`/project/${PEDAL.id}`);
-  const cookie = (await page.context().cookies()).find((c) => c.name === "idlefit_owner")!;
-  const { createHash } = await import("node:crypto");
-  const ledger = path.join(".data", "usage", "browsers", `${createHash("sha256").update(cookie.value).digest("hex")}.json`);
-  await mkdir(path.dirname(ledger), { recursive: true });
-  await writeFile(ledger, JSON.stringify({ spentUsd: 99 })); // over budget: no real AI call is made
+test("Ask Moko is docked on product pages, knows the page, and respects the AI budget", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const ledger = await overBudget(page); // over budget: no real AI call is made
   try {
-    await page.getByRole("button", { name: "Ask the build agent" }).click();
-    const panel = page.getByRole("complementary", { name: "Build agent" });
-    await expect(panel.getByRole("heading", { name: "Ask about Fuzz pedal enclosure" })).toBeVisible();
-    await expect(panel).toContainText("Stage: Make");
-    const starters = panel.locator("button.text-left");
-    await expect(starters).toHaveCount(3);
-    await expect(starters.first()).toContainText("5 demo quotes");
-    await expect(starters.nth(2)).toContainText("250 units");
+    await page.goto(`/project/${PEDAL.id}/make`);
+    const panel = page.getByRole("complementary", { name: "Ask Moko" });
+    await expect(panel).toBeVisible(); // docked by default on wide screens
+    await expect(panel).toContainText("Fuzz pedal enclosure");
+    await expect(panel).toContainText("you're on the Make page");
+    const starters = panel.getByRole("button", { name: "Which quote should I pick?" });
+    await expect(starters).toBeVisible();
 
-    await starters.first().click();
+    await starters.click();
     await expect(panel.getByRole("alert")).toContainText("AI budget");
-    await expect(starters).toHaveCount(3); // the failed question doesn't leave a half conversation
+    await expect(panel.getByRole("button", { name: "Which quote should I pick?" })).toBeVisible(); // no half conversation left
 
-    await page.keyboard.press("Escape");
-    await expect(panel).toHaveCount(0);
+    // Other pages suggest other questions.
+    await page.getByRole("link", { name: "Sell", exact: true }).click();
+    await expect(panel.getByRole("button", { name: "What price should I list it at?" })).toBeVisible();
+
+    // Collapses to a floating button, and stays collapsed.
+    await panel.getByRole("button", { name: "Close Ask Moko" }).click();
+    await expect(panel).toBeHidden();
+    await page.reload();
+    await expect(page.getByRole("complementary", { name: "Ask Moko" })).toBeHidden();
+    await page.getByRole("button", { name: "Ask Moko", exact: true }).click();
+    await expect(page.getByRole("complementary", { name: "Ask Moko" })).toBeVisible();
   } finally {
     await rm(ledger, { force: true });
   }
 });
 
-test("the build agent is on every product screen", async ({ page }) => {
+test("on phones Ask Moko opens over the page from a floating button, on every product screen", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   for (const url of [`/project/${PEDAL.id}/pitch`, `/project/${BRACKET.id}/compare?a=1&b=2`, `/project/${BRACKET.id}/versions/new`]) {
     await page.goto(url);
-    await page.getByRole("button", { name: "Ask the build agent" }).click();
-    await expect(page.getByRole("complementary", { name: "Build agent" }).locator("button.text-left")).toHaveCount(3);
-    await page.getByRole("button", { name: "Close build agent" }).click();
-    await expect(page.getByRole("complementary", { name: "Build agent" })).toHaveCount(0);
+    const panel = page.getByRole("complementary", { name: "Ask Moko" });
+    await expect(panel).toBeHidden();
+    await page.getByRole("button", { name: "Ask Moko", exact: true }).click();
+    await expect(panel.getByText("Try asking")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(panel).toBeHidden();
+  }
+});
+
+test("Ask Moko streams a short answer, then offers 'Tell me more' and 'Start a new product'", async ({ page }) => {
+  const asked: string[][] = [];
+  await page.route("**/api/ask", async (route) => {
+    const body = route.request().postDataJSON() as { messages: { content: string }[] };
+    asked.push(body.messages.map((m) => m.content));
+    const text = asked.length === 1 ? "Start by deciding which phones it should fit." : "Here is more detail.";
+    await route.fulfill({ contentType: "application/x-ndjson", body: `${JSON.stringify({ type: "text", text })}\n${JSON.stringify({ type: "done" })}\n` });
+  });
+  await page.goto("/ask");
+  const chat = page.getByRole("region", { name: "Ask Moko" });
+  await chat.getByRole("button", { name: "I have an idea for a phone stand. Where do I start?" }).click();
+  await expect(chat).toContainText("Start by deciding which phones it should fit.");
+  await expect(chat.getByRole("link", { name: "Start a new product →" })).toHaveAttribute("href", "/new");
+  await chat.getByRole("button", { name: "Tell me more" }).click();
+  await expect(chat).toContainText("Here is more detail.");
+  expect(asked[1]).toEqual(["I have an idea for a phone stand. Where do I start?", "Start by deciding which phones it should fit.", "Tell me more."]);
+});
+
+test("the full-page Ask Moko takes general questions and offers to start a product", async ({ page }) => {
+  const ledger = await overBudget(page);
+  try {
+    await page.goto("/ask");
+    await expect(page.getByRole("heading", { level: 1, name: "Ask Moko" })).toBeVisible();
+    await expect(page.getByRole("complementary", { name: "Main" }).getByRole("link", { name: "Ask Moko" })).toHaveAttribute("aria-current", "page");
+    const chat = page.getByRole("region", { name: "Ask Moko" });
+    await chat.getByRole("button", { name: "I have an idea for a phone stand. Where do I start?" }).click();
+    await expect(chat.getByRole("alert")).toContainText("AI budget");
+    await expect(page.getByRole("link", { name: "Start a new product" })).toHaveAttribute("href", "/new");
+  } finally {
+    await rm(ledger, { force: true });
   }
 });
 

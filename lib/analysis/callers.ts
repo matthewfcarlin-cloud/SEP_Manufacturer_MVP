@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import { gateway } from "../ai/gateway";
-import { AGENT_SYSTEM_PROMPT } from "../agent/prompt";
+import { AGENT_SYSTEM_PROMPT, GENERAL_AGENT_SYSTEM_PROMPT } from "../agent/prompt";
 import type { AgentMessage, AiTask } from "../types";
 import { bomOutputSchema } from "../bom/schemas";
 import { analysisOutputSchema, listingDraftOutputSchema, pitchOutputSchema, planDraftOutputSchema, priceSuggestionOutputSchema } from "../schemas";
@@ -87,6 +87,17 @@ export function bomCaller(workspaceId: string, images: ImageInput[]): CallTextMo
  * The build agent's streamed reply. The product context is a stable system
  * block marked for caching, so follow-up turns re-read it cheaply.
  */
+/** Ask Moko's full page: no product context. */
+export function streamGeneralReply(input: { workspaceId: string; messages: AgentMessage[]; signal: AbortSignal }) {
+  return gateway.stream({
+    task: "agent_chat",
+    workspaceId: input.workspaceId,
+    signal: input.signal,
+    system: [{ text: GENERAL_AGENT_SYSTEM_PROMPT, cache: true }],
+    messages: input.messages,
+  });
+}
+
 export function streamAgentReply(input: { workspaceId: string; context: string; messages: AgentMessage[]; signal: AbortSignal }) {
   return gateway.stream({
     task: "agent_chat",

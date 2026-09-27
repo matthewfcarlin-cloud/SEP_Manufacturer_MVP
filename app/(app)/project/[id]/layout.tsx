@@ -1,14 +1,13 @@
-import { BuildAgent } from "@/components/agent/BuildAgent";
+import { AskMokoPanel } from "@/components/agent/AskMokoPanel";
 import { ProductNav } from "@/components/product/ProductNav";
 import { getAccessibleProject } from "@/lib/access";
-import { starterQuestions } from "@/lib/agent/starters";
 import { STAGES, stageProgress } from "@/lib/studio/stage";
 import { latestVersion } from "@/lib/versions";
 
 /**
- * Every product screen (overview, compare, new version, pitch…) shares the
- * agent panel. Living in the layout, a conversation carries on as the
- * creator moves between screens. It works on the latest version.
+ * Every product screen shares the Ask Moko panel, docked on the right on wide
+ * screens. Living in the layout, a conversation carries on as the creator
+ * moves between screens. It works on the latest version.
  */
 export default async function ProductLayout({ children, params }: LayoutProps<"/project/[id]">) {
   const { id } = await params;
@@ -18,16 +17,17 @@ export default async function ProductLayout({ children, params }: LayoutProps<"/
   const { current } = stageProgress(project);
 
   return (
-    <>
-      <ProductNav projectId={project.id} projectName={project.name} />
-      {children}
-      <BuildAgent
+    <div className="xl:flex">
+      <div className="min-w-0 flex-1">
+        <ProductNav projectId={project.id} projectName={project.name} />
+        {children}
+      </div>
+      <AskMokoPanel
         projectId={project.id}
         projectName={project.name}
         version={latestVersion(project).number}
         stageLabel={STAGES.find((s) => s.key === current)?.label ?? ""}
-        starters={starterQuestions(project)}
       />
-    </>
+    </div>
   );
 }

@@ -1,9 +1,9 @@
 import { fail } from "@/lib/api";
 import { buildAgentContext } from "@/lib/agent/context";
-import { encodeAgentEvent, type AgentEvent } from "@/lib/agent/protocol";
+import { AGENT_PAGE_LABELS } from "@/lib/agent/pages";
 import { agentRequestSchema } from "@/lib/agent/request";
+import { agentStreamResponse } from "@/lib/agent/streamResponse";
 import { isAiConfigured, streamAgentReply } from "@/lib/analysis/callers";
-import { describeAiError } from "@/lib/analysis/errors";
 import { recordEvent } from "@/lib/learning/record";
 import { learningContextFor } from "@/lib/learning/retrieval";
 import { aiBudgetGate } from "@/lib/usage/gate";
@@ -25,7 +25,7 @@ export async function POST(request: Request): Promise<Response> {
   const ownerHash = await aiBudgetGate("chat");
   if (ownerHash instanceof Response) return ownerHash;
   if (!(await isAiConfigured(ownerHash))) {
-    return fail("The build agent isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
+    return fail("Ask Moko isn't set up yet: add ANTHROPIC_API_KEY to .env.local, or your own key in Settings.", 503);
   }
 
   // Only the conversation's length is logged, never what was asked.
@@ -38,47 +38,11 @@ export async function POST(request: Request): Promise<Response> {
     payload: { turnCount: body.data.messages.length },
   });
 
-  const context = buildAgentContext(found.project, found.version, await learningContextFor(found.project, found.version));
-  const encoder = new TextEncoder();
-
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const send = (event: AgentEvent) => {
-        try {
-          controller.enqueue(encoder.encode(encodeAgentEvent(event)));
-        } catch {
-          // The browser went away; nothing left to tell it.
-        }
-      };
-      try {
-        const reply = streamAgentReply({ workspaceId: ownerHash, context, messages: body.data.messages, signal: request.signal });
-        for await (const event of reply) {
-          if (event.type === "text") {
-            send(event);
-            continue;
-          }
-          send(
-            event.stopReason === "refusal"
-              ? { type: "error", message: "The AI declined to answer that. Try asking another way." }
-              : { type: "done" },
-          );
-        }
-      } catch (err) {
-        if (!request.signal.aborted) {
-          const { message, code } = describeAiError(err, "api/agent");
-          send({ type: "error", message, ...(code && { code }) });
-        }
-      } finally {
-        try {
-          controller.close();
-        } catch {
-          // Already closed by a disconnect.
-        }
-      }
-    },
-  });
-
-  return new Response(stream, {
-    headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
-  });
+  const base = buildAgentContext(found.project, found.version, await learningContextFor(found.project, found.version));
+  const page = body.data.page ? `\n\nThe creator is on the product's "${AGENT_PAGE_LABELS[body.data.page]}" page right now; start from what that page is for.` : "";
+  return agentStreamResponse(
+    () => streamAgentReply({ workspaceId: ownerHash, context: base + page, messages: body.data.messages, signal: request.signal }),
+    request.signal,
+    "api/agent",
+  );
 }

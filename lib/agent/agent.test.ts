@@ -6,7 +6,6 @@ import type { Project } from "../types";
 import { buildAgentContext } from "./context";
 import { decodeAgentEvents, encodeAgentEvent } from "./protocol";
 import { agentRequestSchema } from "./request";
-import { starterQuestions, starterQuestionsForStage } from "./starters";
 
 const pedal = sample as Project;
 const brackets = bracket as Project;
@@ -44,42 +43,6 @@ describe("buildAgentContext", () => {
   test("says plainly when the version isn't analyzed", () => {
     const bare = { ...pedal.versions[0], analysis: undefined, businessCase: undefined };
     expect(buildAgentContext({ ...pedal, versions: [bare] }, bare)).toContain("Not analyzed yet");
-  });
-});
-
-describe("starterQuestions", () => {
-  const unanalyzed = { ...pedal, versions: [{ ...pedal.versions[0], analysis: undefined, businessCase: undefined, pitch: undefined }] };
-
-  test("are three questions for the current stage, using the product's own numbers", () => {
-    // At Make with no quotes requested yet: analyzed and priced, nothing asked of shops.
-    const noQuotes = { ...pedal, versions: [{ ...pedal.versions[0], outreach: undefined }] };
-    const qs = starterQuestions(noQuotes);
-    expect(qs).toHaveLength(3);
-    expect(qs.every((q) => q.endsWith("?"))).toBe(true);
-    expect(qs.join(" ")).toContain("Breakwater Machine");
-    expect(qs.join(" ")).toContain("250 units");
-  });
-
-  test("with quotes waiting, they help choose one", () => {
-    const qs = starterQuestions(pedal); // the seeded pedal has 5 demo quotes, none chosen
-    expect(qs[0]).toBe("Which of my 5 demo quotes should I choose, and why?");
-  });
-
-  test("at Design (not analyzed) they help get a good analysis", () => {
-    const qs = starterQuestions(unanalyzed);
-    expect(qs[0]).toMatch(/notes/i);
-  });
-
-  test("at Money they're about price and margin, with the product's retail price", () => {
-    const qs = starterQuestionsForStage("money", pedal);
-    expect(qs.join(" ")).toContain("$32");
-    expect(qs.join(" ")).toMatch(/margin|price/i);
-  });
-
-  test("every stage has exactly three", () => {
-    for (const stage of ["idea", "design", "make", "money", "launch", "sell"] as const) {
-      expect(starterQuestionsForStage(stage, pedal)).toHaveLength(3);
-    }
   });
 });
 

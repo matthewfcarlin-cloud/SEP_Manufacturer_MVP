@@ -1,12 +1,13 @@
 // The app shell's navigation and page titles. Pure, so the sidebar, the
 // phone menu and the top bar agree, and it can be tested without a browser.
 
-export type NavIcon = "home" | "products" | "shops" | "settings";
+export type NavIcon = "home" | "products" | "chat" | "shops" | "settings";
 export type NavItem = { href: string; label: string; icon: NavIcon };
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/", label: "Home", icon: "home" },
   { href: "/studio", label: "My products", icon: "products" },
+  { href: "/ask", label: "Ask Moko", icon: "chat" },
   { href: "/shops", label: "Manufacturers", icon: "shops" },
   { href: "/settings", label: "Settings", icon: "settings" },
 ];
