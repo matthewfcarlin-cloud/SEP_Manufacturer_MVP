@@ -86,6 +86,7 @@ npm run dev                  # http://localhost:3000
 ```
 app/                  Pages and API routes (App Router)
   api/                JSON APIs: projects, versions, analyze, match, business-case, pitch, agent, share…
+  studio/             The creators' home: every product, its stage and next step
   project/[id]/       Product screens: overview, compare, new version, pitch
   p/[token]/          Public shared pitch
 components/           UI, grouped by feature (analysis, agent, businessCase, pitch, privacy, home, viewer…)
@@ -103,7 +104,7 @@ PRODUCT.md            Product spec
 
 | Component | Main files |
 |---|---|
-| Studio dashboard | `app/studio/` *(building)* |
+| Studio dashboard | `app/studio/`, `components/studio/`, `lib/studio/` (stage, next step, key numbers) |
 | Design assist | `app/project/[id]/page.tsx`, `components/analysis/`, `lib/analysis/`, `lib/geometry.ts`, `lib/versions.ts`, `lib/compare.ts` |
 | Manufacturer match | `lib/match.ts`, `components/ShopMatches.tsx`, `lib/specSummary.ts`, `data/shops.json` |
 | Manufacturer outreach | *(building)* |

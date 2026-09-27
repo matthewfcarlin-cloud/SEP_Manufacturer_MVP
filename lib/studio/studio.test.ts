@@ -1,0 +1,87 @@
+import { describe, expect, test } from "vitest";
+import bracket from "@/demo/bracket-project.json";
+import sample from "@/demo/sample-project.json";
+import type { Project, ProjectVersion } from "../types";
+import { keyNumbers, unitCostTrend } from "./summary";
+import { nextStep } from "./nextStep";
+import { STAGES, stageProgress } from "./stage";
+
+const pedal = sample as Project;
+const brackets = bracket as Project;
+const withLatest = (p: Project, patch: Partial<ProjectVersion>): Project => ({
+  ...p,
+  versions: [...p.versions.slice(0, -1), { ...p.versions[p.versions.length - 1], ...patch }],
+});
+
+describe("stageProgress", () => {
+  test("covers the six stages in journey order", () => {
+    expect(STAGES.map((s) => s.key)).toEqual(["idea", "design", "make", "money", "launch", "sell"]);
+  });
+
+  test("an unanalyzed upload is at Design", () => {
+    const p = withLatest(pedal, { analysis: undefined, businessCase: undefined, pitch: undefined });
+    const { current, statuses } = stageProgress(p);
+    expect(current).toBe("design");
+    expect(statuses.idea).toBe("done");
+    expect(statuses.design).toBe("current");
+    expect(statuses.money).toBe("todo");
+  });
+
+  test("later stages can be done out of order, and the current stage is the first gap", () => {
+    // The pedal has an analysis, a business case and pitch text, but no chosen quote yet.
+    const { current, statuses } = stageProgress(pedal);
+    expect(statuses.design).toBe("done");
+    expect(statuses.money).toBe("done");
+    expect(current).toBe("make");
+    expect(statuses.make).toBe("current");
+  });
+});
+
+describe("nextStep", () => {
+  test("asks to analyze first", () => {
+    const step = nextStep(withLatest(pedal, { analysis: undefined }));
+    expect(step.title).toMatch(/^Analyze/);
+    expect(step.href).toBe(`/project/${pedal.id}?v=1#analysis-heading`);
+  });
+
+  test("a part that looks the wrong size comes before anything else", () => {
+    const g = pedal.versions[0].geometry!;
+    const step = nextStep(withLatest(pedal, { analysis: undefined, geometry: { ...g, boundingBoxMm: { x: 1.9, y: 1.9, z: 1 } } }));
+    expect(step.title).toMatch(/units/i);
+    expect(step.href).toContain("/versions/new");
+  });
+
+  test("asks for a price once analyzed", () => {
+    const step = nextStep(withLatest(pedal, { businessCase: undefined }));
+    expect(step.title).toMatch(/price/i);
+    expect(step.href).toContain("#business-case-heading");
+  });
+
+  test("with a price set, points at the shops that can make it", () => {
+    const step = nextStep(pedal);
+    expect(step.title).toMatch(/shop/i);
+    expect(step.detail).toMatch(/idle/);
+  });
+});
+
+describe("keyNumbers", () => {
+  test("gives cost, retail and margin at the target quantity, all as ranges", () => {
+    const k = keyNumbers(pedal.versions[0]);
+    expect(k.unitCost).toEqual(pedal.versions[0].analysis!.paths[0].unitCostUsd);
+    expect(k.retailUsd).toBe(32);
+    expect(k.margin!.low).toBeLessThanOrEqual(k.margin!.high);
+  });
+
+  test("leaves numbers out rather than inventing them", () => {
+    const k = keyNumbers({ ...pedal.versions[0], analysis: undefined, businessCase: undefined });
+    expect(k).toEqual({ unitCost: undefined, retailUsd: undefined, margin: undefined });
+  });
+});
+
+describe("unitCostTrend", () => {
+  test("one point per analyzed version, oldest first", () => {
+    const trend = unitCostTrend(brackets);
+    expect(trend.map((p) => p.version)).toEqual([1, 2]);
+    expect(trend[1].mid).toBeLessThan(trend[0].mid); // the sheet-metal redesign got cheaper
+  });
+});

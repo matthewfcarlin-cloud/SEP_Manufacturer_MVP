@@ -232,12 +232,31 @@ test("shops page filters to idle lathes", async ({ page }) => {
   for (const card of await page.locator("article").all()) await expect(card).toContainText("Demo data");
 });
 
-test("projects page lists the examples and links to them", async ({ page }) => {
-  await page.goto("/projects");
-  const card = page.getByRole("link", { name: /Fuzz pedal enclosure[\s\S]*Example/ }).first();
-  await expect(card).toBeVisible();
-  await card.click();
-  await expect(page).toHaveURL(`/project/${PEDAL.id}`);
+test("the studio shows every product with its stage, numbers and next step", async ({ page }) => {
+  await page.goto("/projects"); // the old list redirects to the studio
+  await expect(page).toHaveURL(/\/studio$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Studio" })).toBeVisible();
+
+  const pedal = page.locator("article", { hasText: "Fuzz pedal enclosure" });
+  await expect(pedal.getByText("Demo data")).toBeVisible();
+  await expect(pedal.getByRole("list", { name: "Journey stages" }).locator("li")).toHaveCount(6);
+  await expect(pedal.getByRole("list", { name: "Journey stages" })).toContainText("Make (current stage)");
+  await expect(pedal).toContainText("$28.00–$48.00");
+  await expect(pedal).toContainText("$32");
+
+  const bracket = page.locator("article", { hasText: "E-bike charger wall bracket" });
+  await expect(bracket.getByRole("img", { name: /Unit cost went from/ })).toBeVisible();
+  await expect(bracket).toContainText("−14%");
+
+  await pedal.getByRole("link", { name: /Next step/ }).click();
+  await expect(page).toHaveURL(new RegExp(`/project/${PEDAL.id}\\?v=1#shop-matches-heading$`));
+});
+
+test("the studio fits a phone without sideways scrolling", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/studio");
+  await expect(page.locator("article").first()).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBe(0);
 });
 
 test("cost-by-quantity chart shows a summary, legend, tooltip and table", async ({ page }) => {
@@ -416,7 +435,7 @@ test("deleting a version and then the project removes their files", async ({ pag
   if (!(await nameInput.isVisible())) await page.getByText("Delete", { exact: true }).click();
   await nameInput.fill("E2E delete me");
   await page.getByRole("button", { name: "Delete project" }).click();
-  await expect(page).toHaveURL(/\/projects$/);
+  await expect(page).toHaveURL(/\/studio$/);
   await expect(readdir(dir)).rejects.toThrow();
   expect((await page.goto(`/project/${id}`))!.status()).toBe(404);
 });

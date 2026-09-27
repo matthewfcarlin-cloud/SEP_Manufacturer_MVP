@@ -379,7 +379,7 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 
 | # | Build | Done when | Status |
 |---|---|---|---|
-| 1 | Studio dashboard `/studio` | Opening the studio shows every product, its stage, key numbers and next step at a glance | Building |
+| 1 | Studio dashboard `/studio` | Opening the studio shows every product, its stage, key numbers and next step at a glance | Built |
 | 2 | Agent assist on every product screen | "How do I make this cheaper?" answers with this part's features and numbers | Chat built (below); extend to all product screens, stage-aware starters, quotes + plan in context |
 | 3 | Manufacturer outreach | Five labeled demo quotes appear, sort by price and lead time, and one can be chosen | Planned |
 | 4 | Plan and timeline | Choosing a quote re-dates the launch | Planned |
@@ -395,7 +395,7 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 - `lib/types.ts` stays the contract: each build adds its types there and in the data-model block above, in the same commit.
 
 **Routes (planned unless marked)**
-- `/studio`: the creators' home (header link "Studio"); `/projects` redirects there. `/` stays the marketing landing.
+- `/studio` (built): the creators' home (header link "Studio"); `/projects` redirects there. `/` stays the marketing landing.
 - Product screens share a stage sub-nav (Design · Make · Money · Launch · Sell) and the agent panel: `/project/[id]` (design + money), `/project/[id]/make` (outreach + quotes), `/project/[id]/plan`, `/project/[id]/pitch` (built), `/project/[id]/sell`.
 - `POST /api/projects/[id]/versions/[n]/quotes`: request quotes (spec sheet + simulated demo quotes). `PATCH .../quotes/[quoteId]` `{ status }`, `POST .../quotes/[quoteId]/choose`.
 - `POST /api/plan` `{ projectId, version }`: Claude drafts milestones as zod-validated JSON; choosing a quote re-dates the plan without an AI call.
@@ -404,7 +404,7 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 
 **New types (added to `lib/types.ts` by the build that uses them)**
 ```ts
-type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell"; // build 1, derived, never stored
+type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell"; // build 1 (in lib/types.ts), derived, never stored
 
 // Build 3, on ProjectVersion.outreach
 type QuoteStatus = "sent" | "quoted" | "sample" | "ordered";
@@ -433,6 +433,12 @@ type LaunchPlan = {
 // Build 5, on ProjectVersion.listing
 type EtsyListing = { title: string; description: string; tags: string[]; priceUsd: number; photos: string[]; generatedAt: string }; // title ≤ 140 chars, exactly 13 tags
 ```
+
+### Build 1 – Studio dashboard (built)
+- `/studio` (`app/studio/page.tsx`, skeleton in `loading.tsx`): dark header band (title + products/versions/idle-machine stats), then one `StudioCard` per product this browser can see (own products newest first, then examples), plus a "Start a product" card. Header and footer link "Studio"; `/projects` redirects to `/studio`; deletes land there.
+- Derived, pure, tested (`lib/studio/`): `stageProgress()` (a stage is done when its data exists on the latest version; the current stage is the first gap, so later stages can be done out of order), `nextStep()` (ordered rules: wrong units → analyze → set a price → rework if unprofitable at every volume → talk to a shop → write pitch → share; each links to the screen that does it), `keyNumbers()` (best-path unit cost at target qty, retail, margin at target qty) and `unitCostTrend()` (best-path unit cost per analyzed version). Make/Launch/Sell rules gain quotes, plan and listing in builds 3–5.
+- `StudioModel` mounts the WebGL viewer only while the card is on screen (browsers cap live contexts), shows the saved render or a skeleton until `onReady`, spins slowly (`rotateSpeed` 0.5, zoom off) and not at all under reduced motion. `ModelViewer` gained `rotateSpeed`, `enableZoom`, `onReady`, `showLoading` (defaults unchanged).
+- Grid children need `min-w-0` or a long title widens the page on phones (E2E checks no horizontal scroll at 390 px).
 
 ### Build 2 foundation – the agent chat (built)
 - `POST /api/agent` `{ projectId, version?, messages: AgentMessage[] }` streams newline-delimited JSON events (`lib/agent/protocol.ts`: `text` deltas, then `done` or `error`). Validated by `agentRequestSchema` (alternating turns starting and ending with the user, ≤24 turns, ≤4,000 chars each).

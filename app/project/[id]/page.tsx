@@ -80,7 +80,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
       <PageHeader
         eyebrow={
           <>
-            <Link href="/projects" className="hover:text-ink">Projects</Link>
+            <Link href="/studio" className="hover:text-ink">Studio</Link>
             <span aria-hidden>/</span>
             <span>v{version.number} · {created}</span>
             <span aria-hidden>·</span>

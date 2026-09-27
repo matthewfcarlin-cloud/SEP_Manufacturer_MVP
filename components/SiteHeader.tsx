@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getShops, summarizeShops } from "@/lib/shops";
 
 const NAV = [
-  { href: "/projects", label: "Projects" },
+  { href: "/studio", label: "Studio" },
   { href: "/shops", label: "Shops" },
 ];
 

@@ -49,7 +49,7 @@ export default function PrivacyPage() {
         ))}
       </ol>
       <p className="text-sm text-muted">
-        Questions or a deletion request? <Link href="/projects" className="underline">Open your project</Link> and use Delete, or contact the team running this demo.
+        Questions or a deletion request? <Link href="/studio" className="underline">Open your product</Link> and use Delete, or contact the team running this demo.
       </p>
     </div>
   );
