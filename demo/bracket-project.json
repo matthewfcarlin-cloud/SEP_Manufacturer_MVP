@@ -28,9 +28,9 @@
         "typicalWallMm": 3
       },
       "analysis": {
-        "productSummary": "A small wall bracket (80 × 60 × 50 mm, 28 cm³, 3 mm walls) that cantilevers a 600 g e-bike charger off the garage floor. Sold to e-bike OEMs and accessory retailers. At 500 units, injection mold tooling blows the $4,000 budget; a bent sheet-metal version ships for less.",
+        "productSummary": "A small wall bracket (80 \u00d7 60 \u00d7 50 mm, 28 cm\u00b3, 3 mm walls) that cantilevers a 600 g e-bike charger off the garage floor. Sold to e-bike OEMs and accessory retailers. At 500 units, injection mold tooling blows the $4,000 budget; a bent sheet-metal version ships for less.",
         "detectedFeatures": [
-          "80 × 60 × 50 mm L-shaped bracket body",
+          "80 \u00d7 60 \u00d7 50 mm L-shaped bracket body",
           "3 mm nominal wall throughout",
           "Two triangular support gussets",
           "Two wall-mount screw holes in base",
@@ -74,7 +74,7 @@
             ],
             "designTweaks": [
               {
-                "change": "Re-model as one 2 mm Aluminum 5052 flat blank ~140 × 60 mm with a single 90° bend and 4 mm bend-relief notches.",
+                "change": "Re-model as one 2 mm Aluminum 5052 flat blank ~140 \u00d7 60 mm with a single 90\u00b0 bend and 4 mm bend-relief notches.",
                 "why": "One bend on a brake replaces a mold cavity entirely and runs on idle local laser plus brake capacity.",
                 "impact": "Drops unit cost from ~$18 (SLS) to ~$6 and removes all tooling spend."
               },
@@ -135,7 +135,7 @@
             "pros": [
               "Cheapest part cost long-term: under $2 at volume",
               "Molded pocket can match the charger brick exactly",
-              "Four idle presses locally, 400 × 350 mm platen is ample"
+              "Four idle presses locally, 400 \u00d7 350 mm platen is ample"
             ],
             "cons": [
               "Tooling alone exceeds the entire $4,000 budget at 500 units",
@@ -145,7 +145,7 @@
             ],
             "designTweaks": [
               {
-                "change": "Thin the two gussets to 1.5 mm (60% of the 3 mm wall) and add a 1.5° draft on the 50 mm upright faces.",
+                "change": "Thin the two gussets to 1.5 mm (60% of the 3 mm wall) and add a 1.5\u00b0 draft on the 50 mm upright faces.",
                 "why": "Gussets at full wall thickness sink on the visible outer face and slow cooling; draft frees a straight-pull tool.",
                 "impact": "Removes sink marks and cuts cycle ~15%, avoiding any side-action (~$1,200 tooling saved)."
               },
@@ -397,7 +397,7 @@
     {
       "number": 2,
       "createdAt": "2026-09-26T21:29:00.124Z",
-      "notes": "Wall-mount bracket that holds our e-bike charger brick (about 600 g) off the garage floor. Redrawn as one 2 mm aluminum 5052 sheet with a single 90° bend and bend-relief notches; no gussets. Two screws into the wall through the base, two screws into the charger through the upright. First production run is 500 units.",
+      "notes": "Wall-mount bracket that holds our e-bike charger brick (about 600 g) off the garage floor. Redrawn as one 2 mm aluminum 5052 sheet with a single 90\u00b0 bend and bend-relief notches; no gussets. Two screws into the wall through the base, two screws into the charger through the upright. First production run is 500 units.",
       "targetQuantity": 500,
       "budgetUsd": 4000,
       "materialHints": [
@@ -419,15 +419,15 @@
         "typicalWallMm": 2
       },
       "analysis": {
-        "productSummary": "A 2 mm aluminum 5052 wall bracket that lifts a ~600 g e-bike charger brick off the garage floor: one flat blank, one 90° bend, four screw holes. It is now a pure laser-and-brake part, so 500 units need no tooling and land near $6 each.",
+        "productSummary": "A 2 mm aluminum 5052 wall bracket that lifts a ~600 g e-bike charger brick off the garage floor: one flat blank, one 90\u00b0 bend, four screw holes. It is now a pure laser-and-brake part, so 500 units need no tooling and land near $6 each.",
         "detectedFeatures": [
-          "Single 90° formed bend",
-          "~140 × 60 mm flat blank, 2 mm thick",
+          "Single 90\u00b0 formed bend",
+          "~140 \u00d7 60 mm flat blank, 2 mm thick",
           "Two wall-mount screw holes in base",
           "Two charger-mount holes in upright",
           "4 mm bend-relief notches at bend ends",
           "Uniform 2 mm wall, no gussets or ribs",
-          "80 × 60 × 50 mm folded envelope"
+          "80 \u00d7 60 \u00d7 50 mm folded envelope"
         ],
         "paths": [
           {
@@ -459,7 +459,7 @@
             "cons": [
               "Setup cost dominates below ~50 pieces",
               "2 mm unribbed upright may flex under a 600 g cantilever",
-              "Bend angle tolerance ±1° affects wall fit",
+              "Bend angle tolerance \u00b11\u00b0 affects wall fit",
               "Cosmetic finish needs a separate tumble or anodize step"
             ],
             "designTweaks": [
@@ -469,12 +469,12 @@
                 "impact": "Roughly triples upright stiffness for about $0.40/part and no new tooling."
               },
               {
-                "change": "Change the two wall holes to 5.5 × 11 mm slots and keep all holes ≥8 mm from the bend line.",
+                "change": "Change the two wall holes to 5.5 \u00d7 11 mm slots and keep all holes \u22658 mm from the bend line.",
                 "why": "Slots absorb stud-spacing error; holes too near the bend distort during forming.",
                 "impact": "Eliminates field drilling complaints and scrapped parts from oval holes."
               },
               {
-                "change": "Nest the ~140 × 60 mm blanks on common lines with 3 mm corner radii on a 1220 × 2440 sheet.",
+                "change": "Nest the ~140 \u00d7 60 mm blanks on common lines with 3 mm corner radii on a 1220 \u00d7 2440 sheet.",
                 "why": "Shared cut lines and radii cut pierce count and laser travel per blank.",
                 "impact": "~15-20% less cut time and about 10% better material yield."
               }
@@ -536,7 +536,7 @@
               {
                 "change": "Add two 3 mm tooling holes on the base centerline, 100 mm apart, outside the screw pattern.",
                 "why": "Gives the brake operator a hard locating datum instead of scribing the bend line.",
-                "impact": "Cuts bend setup time and holds leg length within ±0.3 mm."
+                "impact": "Cuts bend setup time and holds leg length within \u00b10.3 mm."
               },
               {
                 "change": "Etch the bend line and part revision as a 0.2 mm laser score on the inside face.",
@@ -593,7 +593,7 @@
               "Delrin (POM)"
             ],
             "pros": [
-              "No bend-angle variation; sharp repeatable 90°",
+              "No bend-angle variation; sharp repeatable 90\u00b0",
               "Can be cut as a solid angle for maximum stiffness",
               "Six idle mills locally, easy to source"
             ],
@@ -605,7 +605,7 @@
             "designTweaks": [
               {
                 "change": "Mill from 2 mm extruded 6061 angle stock instead of plate, machining only the holes and outline.",
-                "why": "Buying the 90° as stock removes most of the metal removal and one setup.",
+                "why": "Buying the 90\u00b0 as stock removes most of the metal removal and one setup.",
                 "impact": "Drops unit cost to roughly $9-14 and halves cycle time."
               },
               {
@@ -718,8 +718,8 @@
           "A 2 mm 5052 upright with no gussets may flex or fatigue under a 600 g charger cantilevered off the wall; load-test three parts before releasing 500.",
           "Mounting relies on two screws into the charger housing, whose plastic bosses may not be rated to carry the brick's weight.",
           "Holes placed closer than ~8 mm to the bend line will distort during forming and cause assembly fit problems.",
-          "The 80 × 60 × 50 mm folded envelope implies ~50 mm of upright; confirm it actually clears your charger body and cable exit.",
-          "Bend angle on 5052 typically varies ±1°, so a bracket that is square on the CAD may sit slightly off the wall."
+          "The 80 \u00d7 60 \u00d7 50 mm folded envelope implies ~50 mm of upright; confirm it actually clears your charger body and cable exit.",
+          "Bend angle on 5052 typically varies \u00b11\u00b0, so a bracket that is square on the CAD may sit slightly off the wall."
         ],
         "storyboard": [
           {
@@ -736,7 +736,7 @@
           },
           {
             "shot": 3,
-            "visual": "Close macro pan across the brushed 5052 surface and the clean 90° bend.",
+            "visual": "Close macro pan across the brushed 5052 surface and the clean 90\u00b0 bend.",
             "voiceover": "One piece of two-millimeter aluminum. One bend. Nothing to break.",
             "seconds": 5
           },
@@ -767,11 +767,11 @@
         "/api/files/Dr9z34I2mA/v2-render-3.png?v=1790459907250"
       ],
       "basedOn": 1,
-      "changeNote": "Applied the sheet metal tweak: Re-model as one 2 mm Aluminum 5052 flat blank ~140 × 60 mm with a single 90° bend and 4 mm bend-relief notches.",
+      "changeNote": "Applied the sheet metal tweak: Re-model as one 2 mm Aluminum 5052 flat blank ~140 \u00d7 60 mm with a single 90\u00b0 bend and 4 mm bend-relief notches.",
       "appliedTweak": {
         "fromVersion": 1,
         "process": "sheet_metal",
-        "change": "Re-model as one 2 mm Aluminum 5052 flat blank ~140 × 60 mm with a single 90° bend and 4 mm bend-relief notches.",
+        "change": "Re-model as one 2 mm Aluminum 5052 flat blank ~140 \u00d7 60 mm with a single 90\u00b0 bend and 4 mm bend-relief notches.",
         "why": "One bend on a brake replaces a mold cavity entirely and runs on idle local laser plus brake capacity.",
         "impact": "Drops unit cost from ~$18 (SLS) to ~$6 and removes all tooling spend."
       },
@@ -956,7 +956,7 @@
               "low": 10,
               "high": 10
             },
-            "note": "Pay the $10 setup for the single 90° bend and confirm the first-article part matches the approved sample."
+            "note": "Pay the $10 setup for the single 90\u00b0 bend and confirm the first-article part matches the approved sample."
           },
           {
             "key": "production",
@@ -1010,7 +1010,7 @@
         "warnings": [
           "At $19 retail and $4.62 landed unit cost, packaging, shipping and ad spend can erase margin fast on a 500-unit run.",
           "Total plan runs about 40 calendar days, putting launch in early-to-mid November; any prototype rework pushes you past peak holiday ordering.",
-          "Screws are not included in the quoted price — decide whether to bundle wall and charger hardware before locking the $19 price."
+          "Screws are not included in the quoted price \u2014 decide whether to bundle wall and charger hardware before locking the $19 price."
         ]
       },
       "listing": {
@@ -1039,6 +1039,158 @@
           "/api/files/Dr9z34I2mA/v2-render-3.png?v=1790459907250"
         ],
         "generatedAt": "2026-09-27T20:36:40.533Z"
+      },
+      "bom": {
+        "process": "sheet_metal",
+        "generatedAt": "2026-09-27T21:12:11.702Z",
+        "items": [
+          {
+            "id": "1HTrJlcIXo9k",
+            "category": "custom_part",
+            "name": "Bracket body",
+            "spec": "Aluminum 5052-H32, 2.0 mm sheet; ~140 \u00d7 60 mm flat blank, laser cut, one 90\u00b0 bend to 80 \u00d7 60 \u00d7 50 mm envelope; 4 mm bend-relief notches; 3 mm corner radii; 4 holes, deburred.",
+            "quantityPerProduct": 1,
+            "unit": "pc",
+            "process": "sheet_metal",
+            "costPerProductUsd": {
+              "low": 4.5,
+              "high": 7.5
+            },
+            "notes": "Confirm hole-to-bend distance is at least 8 mm so holes don't distort during forming.",
+            "source": "ai"
+          },
+          {
+            "id": "hpDwYbdFf0ui",
+            "category": "hardware",
+            "name": "Wall screw",
+            "spec": "Pan or flat head wood/construction screw, 5 \u00d7 50 mm, zinc plated steel, Pozi/Torx drive.",
+            "quantityPerProduct": 2,
+            "unit": "pc",
+            "costPerProductUsd": {
+              "low": 0.08,
+              "high": 0.18
+            },
+            "notes": "Size to the 5.5 mm wall holes or slots if you adopt the slotted version.",
+            "source": "ai"
+          },
+          {
+            "id": "-vcxMgnUQojk",
+            "category": "hardware",
+            "name": "Wall plug / anchor",
+            "spec": "Nylon expansion plug for masonry, 8 mm drill diameter, suits 5 mm screw, 40 mm length.",
+            "quantityPerProduct": 2,
+            "unit": "pc",
+            "costPerProductUsd": {
+              "low": 0.03,
+              "high": 0.08
+            },
+            "notes": "Include only if you ship a masonry-ready kit; drywall garages need toggles instead.",
+            "source": "ai"
+          },
+          {
+            "id": "kWmTTCXLJRJf",
+            "category": "hardware",
+            "name": "Charger mount screw",
+            "spec": "ISO 7380 button head M4 \u00d7 12, A2 stainless, hex socket.",
+            "quantityPerProduct": 2,
+            "unit": "pc",
+            "costPerProductUsd": {
+              "low": 0.06,
+              "high": 0.14
+            },
+            "notes": "Confirm thread and length against the charger's own mounting bosses.",
+            "source": "ai"
+          },
+          {
+            "id": "zd91Qj2TJG0s",
+            "category": "hardware",
+            "name": "Nylon-insert lock nut",
+            "spec": "ISO 10511 thin nylon-insert lock nut M4, A2 stainless.",
+            "quantityPerProduct": 2,
+            "unit": "pc",
+            "costPerProductUsd": {
+              "low": 0.04,
+              "high": 0.1
+            },
+            "notes": "Drop this line if the charger has tapped holes rather than through-holes.",
+            "source": "ai"
+          },
+          {
+            "id": "Pod1hYfF2WWf",
+            "category": "hardware",
+            "name": "Flat washer",
+            "spec": "ISO 7089 flat washer M4, A2 stainless, 200 HV.",
+            "quantityPerProduct": 2,
+            "unit": "pc",
+            "costPerProductUsd": {
+              "low": 0.01,
+              "high": 0.04
+            },
+            "source": "ai"
+          },
+          {
+            "id": "DYpDJRW7zW_S",
+            "category": "material",
+            "name": "Self-adhesive cushion pad",
+            "spec": "Closed-cell EPDM foam strip, 2 mm thick, ~50 \u00d7 50 mm, acrylic pressure-sensitive adhesive backing, black.",
+            "quantityPerProduct": 1,
+            "unit": "pc",
+            "costPerProductUsd": {
+              "low": 0.05,
+              "high": 0.15
+            },
+            "notes": "Protects the charger case and damps rattle; die-cut to shape at volume.",
+            "source": "ai"
+          },
+          {
+            "id": "5KHJz3n_kx5t",
+            "category": "finish",
+            "name": "Powder coat",
+            "spec": "Chromate-free pretreatment plus polyester powder coat, matte black RAL 9005, 60\u201380 \u00b5m, masking of the four screw holes not required.",
+            "quantityPerProduct": 1,
+            "unit": "pc",
+            "costPerProductUsd": {
+              "low": 0.9,
+              "high": 2
+            },
+            "notes": "Clear anodize is an alternative if you prefer a bare-metal look; price similarly.",
+            "source": "ai"
+          },
+          {
+            "id": "VhHLGL6pOqac",
+            "category": "packaging",
+            "name": "Printed carton",
+            "spec": "Corrugated E-flute box, ~150 \u00d7 80 \u00d7 60 mm, 1-colour flexo print outside, kraft interior, die-cut tuck-end.",
+            "quantityPerProduct": 1,
+            "unit": "pc",
+            "costPerProductUsd": {
+              "low": 0.25,
+              "high": 0.6
+            },
+            "source": "ai"
+          },
+          {
+            "id": "eOivLAuXAaws",
+            "category": "packaging",
+            "name": "Hardware bag and instruction slip",
+            "spec": "Clear LDPE polybag 80 \u00d7 120 mm with fold-over seal, plus single A6 sheet, 150 gsm, 1/1 colour print.",
+            "quantityPerProduct": 1,
+            "unit": "set",
+            "costPerProductUsd": {
+              "low": 0.06,
+              "high": 0.18
+            },
+            "notes": "State the load rating and fixings needed for each wall type.",
+            "source": "ai"
+          }
+        ],
+        "assumptions": [
+          "Assumed the charger mounts with M4 screws through existing holes; confirm before finalising fastener lines.",
+          "Assumed the product ships as a kit with wall fixings for masonry, which is the common garage case.",
+          "Assumed a painted finish is wanted for a garage environment; bare 5052 would work but marks easily.",
+          "Assumed no return flange is added; if the second bend is adopted, blank length and part price rise slightly."
+        ],
+        "editedByUser": false
       }
     }
   ],

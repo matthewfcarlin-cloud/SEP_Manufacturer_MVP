@@ -43,7 +43,7 @@ export async function POST(request: Request): Promise<Response> {
     const result = await changeSourcing(found.project.id, found.version.number, (current) => {
       const target = current?.suppliers.find((s) => s.id === supplier.id);
       if (!current || !target) return { ok: false, error: "That supplier was removed while the message was being drafted.", status: 404 };
-      const updated = withDraft(target, draft.message, true, ctx);
+      const updated = withDraft(target, draft.message, true, ctx, draft.subject);
       return { ok: true, sourcing: { ...current, suppliers: current.suppliers.map((s) => (s.id === supplier.id ? updated : s)) } };
     });
     return result.ok ? ok({ sourcing: result.sourcing, rationale: draft.rationale }) : fail(result.error, result.status);

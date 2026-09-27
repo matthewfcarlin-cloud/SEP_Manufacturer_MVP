@@ -25,7 +25,7 @@ const POINTS: { title: string; body: React.ReactNode }[] = [
   },
   {
     title: "Moko never contacts overseas suppliers",
-    body: "Alibaba sourcing only plans your search and drafts messages. Drafting sends your part's spec, notes (unless you hold them back), the supplier details you enter and the conversation you paste in to Anthropic's API. Nothing goes to a supplier unless you copy it and send it yourself on Alibaba.",
+    body: "Alibaba sourcing only plans your search and writes emails for you to send. Drafting sends your part's spec (including your bill of materials' specs and quantities, never its costs or notes), notes (unless you hold them back), the supplier details you enter and the conversation you paste in to Anthropic's API. Nothing goes to a supplier unless you send it yourself from your own email or on Alibaba.",
   },
   {
     title: "Your own AI key",

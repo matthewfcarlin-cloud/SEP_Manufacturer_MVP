@@ -22,6 +22,15 @@ describe("applySourcingOp", () => {
     expect(s.suppliers[0]).toMatchObject({ name: "Ningbo Metal Co", status: "shortlisted", messages: [] });
   });
 
+  test("a draft keeps its email subject, and a blank subject is dropped", () => {
+    let s = withSupplier();
+    const id = s.suppliers[0].id;
+    s = apply(s, { op: "saveDraft", supplierId: id, text: "Hello", subject: "RFQ: 250 enclosures" });
+    expect(draftOf(s.suppliers[0])!.subject).toBe("RFQ: 250 enclosures");
+    s = apply(s, { op: "saveDraft", supplierId: id, text: "Hello", subject: "  " });
+    expect(draftOf(s.suppliers[0])!.subject).toBeUndefined();
+  });
+
   test("a draft only becomes sent when the user marks it, and that moves the status on", () => {
     let s = withSupplier();
     const id = s.suppliers[0].id;

@@ -37,4 +37,6 @@ export const TASK_ROUTES: Record<AiTask, TaskRoute> = {
   plan: { model: STRONGEST_MODEL, effort: "medium", maxTokens: 10_000, thinking: false, budgetAction: "plan" },
   // Etsy listing: short copy within Etsy's limits (build 5).
   listing: { model: STRONGEST_MODEL, effort: "low", maxTokens: 8_000, thinking: false, budgetAction: "listing" },
+  // Bill of materials: a list of 5-25 lines; engineering judgment on what the product needs.
+  bom: { model: STRONGEST_MODEL, effort: "medium", maxTokens: 12_000, thinking: false, budgetAction: "bom" },
 };

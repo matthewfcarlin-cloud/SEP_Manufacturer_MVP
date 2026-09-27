@@ -4,10 +4,13 @@ import { AiErrorBanner } from "@/components/AiErrorBanner";
 import { useMemo, useState } from "react";
 import { FormError } from "@/components/upload/UploadPickers";
 import { PROCESS_LABELS, processInSentence } from "@/lib/processes";
+import { rankSuppliers } from "@/lib/sourcing/compare";
+import { emailText } from "@/lib/sourcing/email";
 import { alibabaSearchUrl, negotiationTargets, type NegotiationTargets } from "@/lib/sourcing/targets";
 import type { Process, ProjectVersion } from "@/lib/types";
 import { CopyButton } from "./CopyButton";
 import { SupplierCard } from "./SupplierCard";
+import { SupplierComparison } from "./SupplierComparison";
 import { EMPTY_FIELDS, SupplierFields, parseSupplierFields } from "./SupplierFields";
 import { useBusy, useSourcing } from "./useSourcing";
 
@@ -43,7 +46,7 @@ function TargetsCard({ targets }: { targets: NegotiationTargets }) {
         {targets.tooling.low.toLocaleString("en-US")}–${targets.tooling.high.toLocaleString("en-US")}). Overseas quotes often come in lower.{" "}
         {targets.walkAway === null
           ? "At your current retail price no per-part price leaves a healthy margin, so the AI will push on terms and ask what brings the price down."
-          : `Walk-away is ${walkAwayNote}. It stays private: the AI is told never to reveal it${targets.walkAway > targets.target ? ", and drafts that state it are rejected" : ""}.`}
+          : `Walk-away is ${walkAwayNote}. It stays private: the AI is told never to reveal it, and drafts that state it are rejected.`}
       </p>
     </div>
   );
@@ -58,6 +61,15 @@ export function SourcingPanel({ projectId, version }: Props) {
   const [addError, setAddError] = useState<string | null>(null);
   const plan = sourcing.plan;
   const targets = useMemo(() => negotiationTargets(version, plan?.process ?? process), [version, plan?.process, process]);
+  const ranking = useMemo(() => rankSuppliers(sourcing.suppliers, version.targetQuantity, targets), [sourcing.suppliers, version.targetQuantity, targets]);
+  const bom = version.bom;
+  const bomChangedSincePlan = !!(bom && plan && (bom.updatedAt ?? bom.generatedAt) > plan.createdAt);
+  const bomNote = !bom
+    ? null
+    : bomChangedSincePlan
+      ? "Your bill of materials changed after this plan. Re-plan so the quote request lists the current parts."
+      : `Your bill of materials (${bom.items.length} ${bom.items.length === 1 ? "line" : "lines"}) goes into the search plan, the quote request and every email: specs and quantities only, never costs or notes.`;
+  const comparable = sourcing.suppliers.filter((s) => s.status !== "dropped").length >= 2;
 
   const addSupplier = () => {
     const parsed = parseSupplierFields(fields);
@@ -75,14 +87,14 @@ export function SourcingPanel({ projectId, version }: Props) {
         <p className="eyebrow text-muted">Alibaba sourcing · beta</p>
         <h2 id="sourcing-heading" className="display-type text-[clamp(2rem,4vw,3.25rem)]">Overseas suppliers</h2>
         <p className="mt-1 max-w-3xl text-sm text-muted">
-          Find factories on Alibaba for larger runs. The AI plans your search, writes the quote request, and drafts every message and
-          counter-offer from your cost targets. You send each message yourself.
+          Find factories on Alibaba for larger runs. The AI plans your search, writes the quote request, and writes every email and
+          counter-offer from your cost targets. Each one opens in your own email app, ready to send.
         </p>
       </div>
 
       <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-muted">
         <span className="font-semibold text-ink">Moko never contacts suppliers.</span> Alibaba has no public API for buyers to message
-        suppliers and its terms don&apos;t allow automated access, so you search and chat on alibaba.com and paste replies back here.
+        suppliers and its terms don&apos;t allow automated access, so you find suppliers on alibaba.com, email them from your own email, and paste their replies back here.
         Drafts carry only spec-level facts (size, material, process, quantity), never your product name, notes, budget or price.
       </p>
 
@@ -103,6 +115,7 @@ export function SourcingPanel({ projectId, version }: Props) {
             {busy === "plan" ? "Planning the search…" : plan ? "Re-plan the search" : "Plan my Alibaba search"}
           </button>
         </div>
+        {bomNote && <p className="text-sm text-muted">{bomNote}</p>}
         {error && <AiErrorBanner message={error} status={errorStatus} />}
         {targets && <TargetsCard targets={targets} />}
       </div>
@@ -134,20 +147,22 @@ export function SourcingPanel({ projectId, version }: Props) {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-semibold">3. Send the quote request</h3>
-                <p className="text-xs text-muted">Paste into a supplier&apos;s chat or Alibaba&apos;s RFQ form.</p>
+                <p className="text-xs text-muted">Email it to a supplier&apos;s sales address, or paste it into Alibaba&apos;s chat or RFQ form.</p>
               </div>
-              <CopyButton text={plan.rfq} label="Copy RFQ" />
+              <CopyButton text={emailText(plan.rfqSubject, plan.rfq)} label="Copy RFQ" />
             </div>
+            {plan.rfqSubject && <p className="text-sm"><span className="text-muted">Subject: </span><span className="font-medium">{plan.rfqSubject}</span></p>}
             <p className="whitespace-pre-line rounded-lg bg-bg p-4 text-sm">{plan.rfq}</p>
           </div>
         </div>
       )}
 
       <div className="flex flex-col gap-4">
+        {comparable && <SupplierComparison ranking={ranking} />}
         <h3 className="text-xl font-semibold">Your shortlist</h3>
         {sourcing.suppliers.length > 0 && (
           <ol className="grid gap-4 xl:grid-cols-2">
-            {sourcing.suppliers.map((s) => <SupplierCard key={s.id} supplier={s} targets={targets} edit={edit} draft={draft} />)}
+            {sourcing.suppliers.map((s) => <SupplierCard key={s.id} supplier={s} targets={targets} edit={edit} draft={draft} isBest={comparable && s.id === ranking.best?.supplierId} />)}
           </ol>
         )}
         <details className="rounded-xl border border-dashed border-line p-5" open={sourcing.suppliers.length === 0}>

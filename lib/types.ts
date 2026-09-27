@@ -62,6 +62,8 @@ export type ProjectVersion = {
   plan?: LaunchPlan;
   /** Etsy-ready listing: AI-written copy; price from the business case; photos from the renders (build 5). */
   listing?: EtsyListing;
+  /** Bill of materials: the AI's first draft, corrected by the user. Feeds supplier sourcing. */
+  bom?: Bom;
 };
 
 export type EtsyListing = {
@@ -96,6 +98,42 @@ export type LaunchPlan = {
   basedOn: { kind: "quote"; quoteId: string } | { kind: "analysis" };
   milestones: Milestone[];
   warnings: string[];
+};
+
+/** What kind of line a BOM item is. Only custom parts are made to the inventor's drawing; the rest are bought. */
+export type BomCategory = "custom_part" | "hardware" | "electronics" | "material" | "finish" | "packaging";
+
+export type BomUnit = "pc" | "set" | "g" | "m" | "ml";
+
+export type BomItem = {
+  id: string;
+  category: BomCategory;
+  /** "Enclosure body", "Button-head screw" */
+  name: string;
+  /** What a supplier needs to quote or pick it: material, size, standard, finish. */
+  spec: string;
+  /** Per finished product. */
+  quantityPerProduct: number;
+  unit: BomUnit;
+  /** How a custom part is made. Only on custom parts. */
+  process?: Process;
+  /** Estimated cost of this line for one finished product, at the target quantity. */
+  costPerProductUsd?: { low: number; high: number };
+  /** Private to the inventor; never sent to suppliers. */
+  notes?: string;
+  /** "ai" until the user changes the line. */
+  source: "ai" | "user";
+};
+
+export type Bom = {
+  /** The manufacturing path the BOM was drafted for. */
+  process: Process;
+  generatedAt: string;
+  updatedAt?: string;
+  items: BomItem[];
+  /** What the AI assumed where the brief was silent. */
+  assumptions: string[];
+  editedByUser: boolean;
 };
 
 /** How far a quote request goes. Private by default: a spec summary, no renders or notes. */
@@ -159,8 +197,10 @@ export type SourcingPlan = {
   searchTerms: string[];
   /** What to check on a listing or supplier profile before shortlisting. */
   supplierChecks: string[];
-  /** A request for quotation carrying spec-level facts only, ready to paste. */
+  /** A request for quotation carrying spec-level facts only, ready to paste or email. */
   rfq: string;
+  /** Email subject line for the RFQ (plans made before email generation have none). */
+  rfqSubject?: string;
 };
 
 export type SupplierStatus = "shortlisted" | "contacted" | "negotiating" | "agreed" | "dropped";
@@ -169,6 +209,8 @@ export type Supplier = {
   id: string;
   name: string;
   listingUrl?: string;
+  /** The supplier's published sales email, entered by the user. Drafts open in the user's own email app. */
+  email?: string;
   status: SupplierStatus;
   /** The latest terms the supplier offered, as typed in by the user. */
   quote?: SupplierQuote;
@@ -184,6 +226,8 @@ export type SupplierMessage = {
   id: string;
   from: "me" | "supplier";
   text: string;
+  /** Email subject line, on messages the user writes. */
+  subject?: string;
   /** "draft" until the user says they sent it themselves. Supplier messages are always "sent". */
   state: "draft" | "sent";
   at: string;
@@ -317,7 +361,7 @@ export type AgentMessage = { role: "user" | "assistant"; content: string };
 export type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell";
 
 /** What an AI call is for (BACKEND.md A1). The gateway routes model, effort and budget by task. */
-export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "plan" | "listing";
+export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "plan" | "listing" | "bom";
 
 /** Whose API key paid for a call: the creator's own (A2) or the house demo key. */
 export type KeySource = "user" | "house";

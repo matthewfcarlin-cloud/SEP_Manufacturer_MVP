@@ -7,15 +7,15 @@ import type { z } from "zod";
 type SupplierFieldsInput = z.infer<typeof supplierFieldsSchema>;
 import type { Supplier, SupplierQuote } from "@/lib/types";
 
-export type FieldDraft = { name: string; listingUrl: string; unitUsd: string; moq: string; toolingUsd: string; leadDays: string; notes: string };
+export type FieldDraft = { name: string; email: string; listingUrl: string; unitUsd: string; moq: string; toolingUsd: string; leadDays: string; notes: string };
 
-export const EMPTY_FIELDS: FieldDraft = { name: "", listingUrl: "", unitUsd: "", moq: "", toolingUsd: "", leadDays: "", notes: "" };
+export const EMPTY_FIELDS: FieldDraft = { name: "", email: "", listingUrl: "", unitUsd: "", moq: "", toolingUsd: "", leadDays: "", notes: "" };
 
 const str = (n: number | undefined) => (n === undefined ? "" : String(n));
 
 export function fieldsFromSupplier(s: Supplier): FieldDraft {
   const q = s.quote ?? {};
-  return { name: s.name, listingUrl: s.listingUrl ?? "", unitUsd: str(q.unitUsd), moq: str(q.moq), toolingUsd: str(q.toolingUsd), leadDays: str(q.leadDays), notes: s.notes ?? "" };
+  return { name: s.name, email: s.email ?? "", listingUrl: s.listingUrl ?? "", unitUsd: str(q.unitUsd), moq: str(q.moq), toolingUsd: str(q.toolingUsd), leadDays: str(q.leadDays), notes: s.notes ?? "" };
 }
 
 const num = (s: string) => (s.trim() === "" ? undefined : Number(s.replace(/[$,\s]/g, "")));
@@ -26,6 +26,7 @@ export function parseSupplierFields(d: FieldDraft): { error: string } | { suppli
   const hasQuote = Object.values(quote).some((v) => v !== undefined);
   const result = supplierFieldsSchema.safeParse({
     name: d.name,
+    email: d.email.trim() || undefined,
     listingUrl: d.listingUrl.trim() || undefined,
     quote: hasQuote ? quote : undefined,
     notes: d.notes.trim() || undefined,
@@ -57,7 +58,8 @@ export function SupplierFields({ value, onChange, idPrefix }: Props) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       {field("name", "Supplier name", "e.g. Ningbo die-casting factory")}
-      {field("listingUrl", "Listing link (optional)", "https://www.alibaba.com/product-detail/…")}
+      {field("email", "Sales email (optional)", "sales@factory.example")}
+      <div className="sm:col-span-2">{field("listingUrl", "Listing or website link (optional)", "https://www.alibaba.com/product-detail/…")}</div>
       <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:grid-cols-4">
         {field("unitUsd", "Quoted $/part", "3.40", "decimal")}
         {field("moq", "MOQ", "500", "numeric")}

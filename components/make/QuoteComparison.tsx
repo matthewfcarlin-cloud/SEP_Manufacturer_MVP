@@ -90,7 +90,7 @@ export function QuoteComparison({ projectId, version, outreach, shops, estimates
         </div>
       </div>
 
-      <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
         {sortQuotes(outreach.quotes, sort).map((q) => {
           const shop = shops[q.shopId];
           const isBest = q.id === best;
@@ -109,7 +109,7 @@ export function QuoteComparison({ projectId, version, outreach, shops, estimates
                     {isBest && <span className="eyebrow bg-accent px-1.5 py-0.5 text-[10px] text-accent-ink">Best value</span>}
                     {q.id === fastest && <span className="eyebrow border border-line px-1.5 py-0.5 text-[10px] text-muted">Fastest</span>}
                   </p>
-                  <h3 className="mt-2 truncate font-semibold">{shop?.name ?? q.shopId}</h3>
+                  <h3 className="mt-2 font-semibold [overflow-wrap:anywhere]">{shop?.name ?? q.shopId}</h3>
                   <p className="text-xs text-muted">
                     {PROCESS_LABELS[q.process]} · {q.machineModel}
                   </p>

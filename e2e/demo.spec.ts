@@ -603,6 +603,21 @@ test("the Make screen compares demo quotes and saves the chosen one", async ({ p
   await expect(page.getByRole("region", { name: "Spec sheet as sent" }).or(page.getByText("Spec sheet as sent"))).toBeVisible();
 });
 
+test("the Make screen shows the bill of materials and exports a supplier CSV without costs or notes", async ({ page }) => {
+  await page.goto(`/project/${BRACKET.id}/make`);
+  const bom = page.locator("section").filter({ has: page.locator("#bom-heading") });
+  await expect(bom.getByRole("heading", { name: "Bill of materials" })).toBeVisible();
+  await expect(bom.getByText("Bracket body")).toBeVisible();
+  await expect(bom.getByText("Powder coat", { exact: true })).toBeVisible();
+  const download = page.waitForEvent("download");
+  await bom.getByRole("button", { name: "Supplier CSV (no costs)" }).click();
+  const csv = await readFile((await (await download).path())!, "utf8");
+  expect(csv).toContain("Bracket body");
+  expect(csv).not.toMatch(/\$\d/);
+  // Private notes stay out: this line's note is only in the app.
+  expect(csv).not.toContain("hole-to-bend distance");
+});
+
 test("choosing a different quote re-dates the launch plan", async ({ page }) => {
   await page.goto(`/project/${BRACKET.id}/plan`);
   await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();

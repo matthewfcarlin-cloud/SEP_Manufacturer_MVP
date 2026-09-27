@@ -142,7 +142,7 @@ export function formatMarginRange(m: Range): string {
   return m.low < 0 ? `${signedPct(m.low)} to ${signedPct(m.high)}` : `${Math.round(m.low * 100)}–${pct(m.high)}`;
 }
 
-const usdCompact = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 });
+const usdCompact = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", minimumFractionDigits: 0, maximumFractionDigits: 1 });
 
 /** "$135k", "−$4.1k". */
 export function formatCompactUsd(n: number): string {

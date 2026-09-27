@@ -2,7 +2,7 @@ import { z } from "zod";
 import { PRODUCT_CATEGORIES } from "./learning/vocabulary";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AiInputs, DemoQuote, EtsyListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
+import type { AiInputs, Bom, DemoQuote, EtsyListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -197,6 +197,7 @@ export const sourcingSchema = z.object({
       searchTerms: z.array(z.string()),
       supplierChecks: z.array(z.string()),
       rfq: z.string(),
+      rfqSubject: z.string().optional(),
     })
     .optional(),
   suppliers: z
@@ -205,6 +206,7 @@ export const sourcingSchema = z.object({
         id: z.string().regex(/^[A-Za-z0-9_-]{8,16}$/),
         name: z.string().min(1),
         listingUrl: z.string().optional(),
+        email: z.string().optional(),
         status: z.enum(SUPPLIER_STATUSES),
         quote: supplierQuoteSchema.optional(),
         notes: z.string().optional(),
@@ -214,6 +216,7 @@ export const sourcingSchema = z.object({
             id: z.string().regex(/^[A-Za-z0-9_-]{8,16}$/),
             from: z.enum(["me", "supplier"]),
             text: z.string(),
+            subject: z.string().optional(),
             state: z.enum(["draft", "sent"]),
             at: z.iso.datetime(),
             aiDrafted: z.boolean().optional(),
@@ -355,6 +358,44 @@ export const listingDraftSchema = listingDraftOutputSchema.superRefine((d, ctx) 
   if (d.description.trim().split(/\s+/).length < 60) ctx.addIssue({ code: "custom", path: ["description"], message: "write a fuller description (at least 60 words)" });
 });
 
+// ---------------------------------------------------------------------------
+// Bill of materials. Stored shape only; the AI output schema and the edit
+// schema live in lib/bom/schemas.ts.
+// ---------------------------------------------------------------------------
+
+export const BOM_CATEGORIES = ["custom_part", "hardware", "electronics", "material", "finish", "packaging"] as const;
+export const BOM_UNITS = ["pc", "set", "g", "m", "ml"] as const;
+export const MAX_BOM_ITEMS = 40;
+export const BOM_ITEM_ID = /^[A-Za-z0-9_-]{8,16}$/;
+
+export const costRangeSchema = z
+  .object({ low: z.number().min(0).max(100_000), high: z.number().min(0).max(100_000) })
+  .refine((r) => r.low <= r.high, { message: "The low cost can't be above the high cost." });
+
+export const bomSchema = z.object({
+  process: processSchema,
+  generatedAt: z.iso.datetime(),
+  updatedAt: z.iso.datetime().optional(),
+  items: z
+    .array(
+      z.object({
+        id: z.string().regex(BOM_ITEM_ID),
+        category: z.enum(BOM_CATEGORIES),
+        name: z.string().min(1),
+        spec: z.string(),
+        quantityPerProduct: z.number().positive(),
+        unit: z.enum(BOM_UNITS),
+        process: processSchema.optional(),
+        costPerProductUsd: costRangeSchema.optional(),
+        notes: z.string().optional(),
+        source: z.enum(["ai", "user"]),
+      }),
+    )
+    .max(MAX_BOM_ITEMS),
+  assumptions: z.array(z.string()),
+  editedByUser: z.boolean(),
+}) satisfies z.ZodType<Bom>;
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -378,6 +419,7 @@ export const projectVersionSchema = z.object({
   outreach: outreachSchema.optional(),
   plan: launchPlanSchema.optional(),
   listing: etsyListingSchema.optional(),
+  bom: bomSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({
