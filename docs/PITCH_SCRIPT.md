@@ -39,7 +39,7 @@ Open `/present`. Click / arrow / space = next line. **N** shows these notes on s
 
 ## Slide 7 · field (03 · Market & distribution)
 
-- **[click]** Everyone else covers one piece. Design tools stop at the model. Alibaba and Thomasnet are directories: you still find, vet and write to suppliers yourself. Xometry and Craftcloud need finished CAD. Printify only does catalog products. Etsy and Shopify only sell.
+- **[click]** Everyone else covers one piece. Design tools stop at the model. Alibaba and Thomasnet are directories: you still find, vet and write to suppliers yourself. Xometry and Craftcloud need finished CAD. Etsy and Shopify only sell.
 - **[click]** We're the only one taking a first-timer from an idea to the right manufacturer, with manufacturability and profit checked before they spend.
 
 ## Slide 8 · business (04 · Business plan)
