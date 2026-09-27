@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { fail, ok } from "@/lib/api";
 import { aiFailure } from "@/lib/analysis/errors";
-import { isClaudeConfigured } from "@/lib/analysis/claude";
+import { isAiConfigured } from "@/lib/analysis/callers";
 import { generateListing } from "@/lib/listing";
 import { updateVersion } from "@/lib/projectStore";
 import { aiBudgetGate } from "@/lib/usage/gate";
@@ -18,9 +18,9 @@ export async function POST(request: Request): Promise<Response> {
   if (found instanceof Response) return found;
   const { project, version } = found;
   if (!version.analysis || !version.businessCase) return fail("Analyze this version and set its business case before writing a listing.", 422);
-  if (!isClaudeConfigured()) return fail("AI writing isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
   const ownerHash = await aiBudgetGate("listing");
   if (ownerHash instanceof Response) return ownerHash;
+  if (!(await isAiConfigured(ownerHash))) return fail("AI writing isn't set up yet: add an AI key in Settings or configure the server key.", 503);
 
   try {
     const copy = await generateListing(project, version, ownerHash);

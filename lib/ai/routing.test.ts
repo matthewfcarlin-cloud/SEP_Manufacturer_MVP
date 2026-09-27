@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { AiTask } from "../types";
 import { STRONGEST_MODEL, TASK_ROUTES } from "./routing";
 
-const TASKS: AiTask[] = ["analyze", "agent_chat", "price", "pitch", "sourcing_plan", "negotiation"];
+const TASKS: AiTask[] = ["analyze", "agent_chat", "price", "pitch", "sourcing_plan", "negotiation", "listing"];
 
 describe("routing table", () => {
   test("every task has a route with a model, token limit and budget action", () => {
@@ -25,6 +25,7 @@ describe("routing table", () => {
     expect(TASK_ROUTES.sourcing_plan).toMatchObject({ effort: "low", thinking: false });
     expect(TASK_ROUTES.pitch).toMatchObject({ effort: "medium", thinking: false });
     expect(TASK_ROUTES.negotiation).toMatchObject({ effort: "medium", thinking: false });
+    expect(TASK_ROUTES.listing).toMatchObject({ effort: "medium", thinking: false, budgetAction: "listing" });
     expect(TASK_ROUTES.agent_chat.effort).toBe("medium");
   });
 });

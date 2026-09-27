@@ -283,7 +283,7 @@ export type AgentMessage = { role: "user" | "assistant"; content: string };
 export type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell";
 
 /** What an AI call is for (BACKEND.md A1). The gateway routes model, effort and budget by task. */
-export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation";
+export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation" | "listing";
 
 /** Whose API key paid for a call: the creator's own (A2) or the house demo key. */
 export type KeySource = "user" | "house";
