@@ -2,11 +2,11 @@ import { z } from "zod";
 import { fail, ok } from "@/lib/api";
 import { isAiConfigured, textCaller } from "@/lib/analysis/callers";
 import { aiFailure } from "@/lib/analysis/errors";
+import { recordEvent } from "@/lib/learning/record";
 import { buildPlanBrief, runPlanDraft } from "@/lib/analysis/plan";
 import { buildPlan, productionFacts, todayIso } from "@/lib/plan/schedule";
 import { updateVersion } from "@/lib/projectStore";
 import { aiBudgetGate } from "@/lib/usage/gate";
-import { recordEvent } from "@/lib/learning/record";
 import { findVersion } from "@/lib/versionLookup";
 
 export const maxDuration = 120;

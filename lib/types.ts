@@ -568,3 +568,11 @@ export type ProductFeatures = {
   realQuotes?: { count: number; medianUnitUsd: number; medianQuantity: number }; // real_quote outcomes with source "real"
   revision?: { tweakProcess: Process; unitCostChangePct: number }; // this version applied a tweak; change vs the version it revised
 };
+
+// Cost calibration (BACKEND.md B3). Real quotes correct the AI's cost ranges,
+// per process × size × quantity cell, shrunk toward 1 when data is thin.
+/** Target quantity: under 100, 100–999, 1,000–9,999, 10,000+. */
+export type QuantityBucket = "q1" | "q100" | "q1k" | "q10k";
+export type CalibrationCell = { process: Process; sizeBucket: SizeBucket; quantityBucket: QuantityBucket; n: number; factor: number };
+/** A cost range after calibration, with where it came from. factor 1 and n 0 = uncalibrated. */
+export type CalibratedRange = { low: number; high: number; factor: number; n: number; label: string };

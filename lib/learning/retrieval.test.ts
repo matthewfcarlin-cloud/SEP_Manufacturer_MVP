@@ -191,7 +191,7 @@ describe("POST /api/learning/recompute", () => {
     const res = await recomputeRoute.POST();
     const body = await res.json();
     // Only Sharing001: the example is flagged too, but examples never contribute.
-    expect(body.data).toEqual({ projects: 5, contributingProjects: 1, featureRows: 1 });
+    expect(body.data).toEqual({ projects: 5, contributingProjects: 1, featureRows: 1, calibrationCells: 1, calibrationQuotes: 1 });
     expect(JSON.stringify(body)).not.toMatch(/Sharing001|cnc_milling/);
   });
 });
