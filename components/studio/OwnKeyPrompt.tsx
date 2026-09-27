@@ -33,7 +33,7 @@ export function OwnKeyPrompt() {
     <aside aria-label="Use your own API key" className="flex flex-wrap items-center justify-between gap-4 border border-line border-l-4 border-l-accent bg-surface px-5 py-4">
       <div className="max-w-2xl">
         <p className="font-semibold">Use your own API key</p>
-        <p className="text-sm text-muted">AI features run on a small shared demo budget. Add your own Anthropic or OpenAI key to keep going without limits; calls are billed to your provider account.</p>
+        <p className="text-sm text-muted">AI features run on a small shared demo budget. Add your own Anthropic key to keep going without limits; calls are billed to your provider account.</p>
       </div>
       <div className="flex items-center gap-2">
         <Link href="/settings" className="bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90">

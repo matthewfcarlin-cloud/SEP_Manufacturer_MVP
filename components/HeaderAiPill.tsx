@@ -28,7 +28,7 @@ export function HeaderAiPill() {
     <Link
       href="/settings"
       aria-label={pill?.kind === "key" ? "Using your own AI key. Open settings" : pill ? `Demo AI budget: $${pill.remainingUsd.toFixed(2)} left. Open settings` : "AI settings"}
-      className={`eyebrow flex min-w-[3.75rem] items-center justify-center gap-1.5 whitespace-nowrap border px-1.5 py-1.5 text-[10px] sm:min-w-[11rem] sm:px-2 ${
+      className={`eyebrow flex min-w-[3.25rem] items-center justify-center gap-1.5 whitespace-nowrap border px-1 py-1.5 text-[10px] sm:min-w-[11rem] sm:px-2 ${
         isLow ? "border-night-accent text-night-accent" : "border-night-line text-night-muted hover:text-night-ink"
       }`}
     >
