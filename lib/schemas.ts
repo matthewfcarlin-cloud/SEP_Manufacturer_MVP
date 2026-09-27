@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AiInputs, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
+import type { AiInputs, DemoQuote, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -223,6 +223,48 @@ export const sourcingSchema = z.object({
     .max(MAX_SUPPLIERS),
 }) satisfies z.ZodType<Sourcing>;
 
+// ---------------------------------------------------------------------------
+// Outreach (Phase 10+ build 3): quote requests to local demo shops.
+// ---------------------------------------------------------------------------
+
+export const shareLevelSchema = z.enum(["summary", "full"]);
+export const quoteStatusSchema = z.enum(["sent", "quoted", "sample", "ordered"]);
+
+export const specSheetSchema = z.object({
+  shareLevel: shareLevelSchema,
+  process: processSchema,
+  dimensionsMm: z.object({ x: z.number().nonnegative(), y: z.number().nonnegative(), z: z.number().nonnegative() }),
+  material: z.string().min(1),
+  finish: z.string().min(1),
+  quantityTiers: z.array(z.number().int().positive()).min(1),
+  targetUnitPriceUsd: z.number().positive().optional(),
+  quoteBy: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  renders: z.array(z.string()),
+  notes: z.string().optional(),
+}) satisfies z.ZodType<SpecSheet>;
+
+export const demoQuoteSchema = z.object({
+  id: z.string().min(1),
+  shopId: z.string().min(1),
+  machineModel: z.string().min(1),
+  process: processSchema,
+  quantity: z.number().int().positive(),
+  unitPriceUsd: z.number().positive(),
+  toolingUsd: z.number().nonnegative(),
+  leadTimeDays: z.number().int().positive(),
+  moq: z.number().int().positive(),
+  note: z.string(),
+  status: quoteStatusSchema,
+  isDemo: z.literal(true),
+}) satisfies z.ZodType<DemoQuote>;
+
+export const outreachSchema = z.object({
+  requestedAt: z.iso.datetime(),
+  specSheet: specSheetSchema,
+  quotes: z.array(demoQuoteSchema),
+  chosenQuoteId: z.string().optional(),
+}) satisfies z.ZodType<Outreach>;
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -243,6 +285,7 @@ export const projectVersionSchema = z.object({
   pitchVideo: pitchVideoSchema.optional(),
   aiInputs: aiInputsSchema.optional(),
   sourcing: sourcingSchema.optional(),
+  outreach: outreachSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({

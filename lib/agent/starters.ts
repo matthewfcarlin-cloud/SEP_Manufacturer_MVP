@@ -34,6 +34,13 @@ export function starterQuestionsForStage(stage: Stage, project: Project): string
           : "What would make this part easier to manufacture?",
       ];
     case "make":
+      if (v.outreach?.quotes.length) {
+        return [
+          `Which of my ${v.outreach.quotes.length} demo quotes should I choose, and why?`,
+          "What should I check on a first-article sample?",
+          `What should I negotiate before ordering ${quantity}?`,
+        ];
+      }
       return [
         shop ? `What should I ask ${shop} before placing an order?` : "How do I find a shop that can make this?",
         best ? `What drives the ${processInSentence(best.process)} cost at ${quantity}?` : "What drives manufacturing cost for a part like this?",

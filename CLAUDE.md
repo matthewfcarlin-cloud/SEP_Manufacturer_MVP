@@ -390,7 +390,7 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 |---|---|---|---|
 | 1 | Studio dashboard `/studio` | Opening the studio shows every product, its stage, key numbers and next step at a glance | Built |
 | 2 | Agent assist on every product screen | "How do I make this cheaper?" answers with this part's features and numbers | Built (quotes and plan join its context in builds 3–4) |
-| 3 | Manufacturer outreach | Five labeled demo quotes appear, sort by price and lead time, and one can be chosen | Planned |
+| 3 | Manufacturer outreach | Five labeled demo quotes appear, sort by price and lead time, and one can be chosen | Built |
 | 4 | Plan and timeline | Choosing a quote re-dates the launch | Planned |
 | 5 | Selling (Etsy listing) | A full listing copies into Etsy in under a minute | Planned |
 
@@ -405,8 +405,8 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 
 **Routes (planned unless marked)**
 - `/studio` (built): the creators' home (header link "Studio"); `/projects` redirects there. `/` stays the marketing landing.
-- Product screens share a stage sub-nav (Design · Make · Money · Launch · Sell) and the agent panel: `/project/[id]` (design + money), `/project/[id]/make` (outreach + quotes), `/project/[id]/plan`, `/project/[id]/pitch` (built), `/project/[id]/sell`.
-- `POST /api/projects/[id]/versions/[n]/quotes`: request quotes (spec sheet + simulated demo quotes). `PATCH .../quotes/[quoteId]` `{ status }`, `POST .../quotes/[quoteId]/choose`.
+- Product screens share a tab bar and the agent panel: `/project/[id]` (design + money, built), `/project/[id]/make` (outreach + quotes, built), `/project/[id]/plan`, `/project/[id]/pitch` (built), `/project/[id]/sell`.
+- `POST /api/projects/[id]/versions/[n]/quotes` (built): request quotes (spec sheet + simulated demo quotes). `PATCH .../quotes/[quoteId]` `{ status }`, `POST .../quotes/[quoteId]/choose` (built).
 - `POST /api/plan` `{ projectId, version }`: Claude drafts milestones as zod-validated JSON; choosing a quote re-dates the plan without an AI call.
 - `POST /api/listing` `{ projectId, version }`: generates the Etsy listing.
 - `POST /api/agent` (built): the agent's streamed answers.
@@ -415,7 +415,8 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 ```ts
 type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell"; // build 1 (in lib/types.ts), derived, never stored
 
-// Build 3, on ProjectVersion.outreach
+// Build 3 (in lib/types.ts), on ProjectVersion.outreach
+type ShareLevel = "summary" | "full";
 type QuoteStatus = "sent" | "quoted" | "sample" | "ordered";
 type DemoQuote = {
   id: string; shopId: string; machineModel: string; process: Process;
@@ -424,9 +425,10 @@ type DemoQuote = {
   note: string; status: QuoteStatus; isDemo: true;
 };
 type SpecSheet = {
+  shareLevel: ShareLevel; process: Process;
   dimensionsMm: { x: number; y: number; z: number }; material: string; finish: string;
-  quantityTiers: number[]; targetUnitPriceUsd?: number; deadline?: string;
-  renders: string[]; includesNotes: boolean; // follows the privacy settings
+  quantityTiers: number[]; targetUnitPriceUsd?: number; quoteBy: string; // YYYY-MM-DD
+  renders: string[]; notes?: string; // only with shareLevel "full" (notes only if aiInputs allows)
 };
 type Outreach = { requestedAt: string; specSheet: SpecSheet; quotes: DemoQuote[]; chosenQuoteId?: string };
 
@@ -448,6 +450,14 @@ type EtsyListing = { title: string; description: string; tags: string[]; priceUs
 - Derived, pure, tested (`lib/studio/`): `stageProgress()` (a stage is done when its data exists on the latest version; the current stage is the first gap, so later stages can be done out of order), `nextStep()` (ordered rules: wrong units → analyze → set a price → rework if unprofitable at every volume → talk to a shop → write pitch → share; each links to the screen that does it), `keyNumbers()` (best-path unit cost at target qty, retail, margin at target qty) and `unitCostTrend()` (best-path unit cost per analyzed version). Make/Launch/Sell rules gain quotes, plan and listing in builds 3–5.
 - `StudioModel` mounts the WebGL viewer only while the card is on screen (browsers cap live contexts), shows the saved render or a skeleton until `onReady`, spins slowly (`rotateSpeed` 0.5, zoom off) and not at all under reduced motion. `ModelViewer` gained `rotateSpeed`, `enableZoom`, `onReady`, `showLoading` (defaults unchanged).
 - Grid children need `min-w-0` or a long title widens the page on phones (E2E checks no horizontal scroll at 390 px).
+
+### Build 3 – Manufacturer outreach (built)
+- `/project/[id]/make` is the Make stage screen (latest version): **Local shops · demo** (request panel → comparison → spec sheet as sent) and **Overseas · Alibaba** (the teammate-built `SourcingPanel`, moved here from the overview; the overview links to Make). Product screens share a tab bar (`components/product/ProductNav.tsx`, in the product layout): Design & money · Make · Launch.
+- `POST /api/projects/[id]/versions/[n]/quotes` `{ shareLevel }` builds the spec sheet and simulates quotes from the top 5 matches, replacing any earlier request. `PATCH .../quotes/[quoteId]` `{ status }` and `POST .../quotes/[quoteId]/choose` edit it through `editOutreach()` (`lib/outreach/store.ts`, under the project lock). Access: owner or example, like other edits.
+- Pure and tested (`lib/outreach/`): `buildSpecSheet()` (summary by default; "full" adds renders, and notes only if `aiInputs` allows; target price = revenue per unit × (1 − 30% healthy margin); quote-by = request + 7 days), `simulateQuotes()` (deterministic, seeded by project/version/shop/request time; price placed inside the analysis unit-cost range for the shop's process, lower for idle machines and orders in the shop's range; tooling inside the tooling range; notes in the shop's voice, never claiming experience it doesn't list), `compare.ts` (best value = lowest all-in per unit, tooling spread over max(qty, MOQ); fastest; sorts), `pipeline.ts` (Sent → Quoted → Sample → Ordered, forward only; only the chosen quote can be ordered).
+- Quotes are single figures (they're prices, not estimates) and are always badged "Demo quote" (`DemoBadge label`), each shown next to the analysis estimate range for its process.
+- Make is done when a quote is chosen **or** an Alibaba supplier is "agreed". Next step: "Request quotes" → "N quotes waiting". The agent's context lists the quotes (chosen marked) and the Alibaba shortlist; its Make starters change once quotes exist.
+- Seeded: the pedal has 5 quotes (none chosen); the bracket v2 has 5 with the best value chosen. Regenerate by requesting quotes through the API on a fresh seed and copying `.data` back to `demo/`.
 
 ### Build 2 – Agent assist (built)
 - The panel lives in `app/project/[id]/layout.tsx`, so every product screen (overview, compare, new version, pitch, and future make/plan/sell) has it, and a conversation survives moving between them. It always works on the **latest** version.

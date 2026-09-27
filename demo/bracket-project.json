@@ -2,7 +2,6 @@
   "id": "Dr9z34I2mA",
   "name": "E-bike charger wall bracket",
   "createdAt": "2026-09-26T05:50:52.439Z",
-  "isExample": true,
   "versions": [
     {
       "number": 1,
@@ -805,7 +804,104 @@
         "audience": "E-bike owners and retrofit riders buying accessories alongside the bike. A natural fit for e-bike and charger brands, garage-storage lines, and cycling accessory buyers stocking a $19 impulse add-on.",
         "ask": "I am looking for a licence or a stocking order. The first run is 500 units at an estimated $4.50 to $7.50 each, roughly $3,000 with no tooling; at $19 retail the maker receives about $9.50 per unit.",
         "editedByUser": false
+      },
+      "outreach": {
+        "requestedAt": "2026-09-27T20:00:16.880Z",
+        "specSheet": {
+          "shareLevel": "summary",
+          "process": "sheet_metal",
+          "dimensionsMm": {
+            "x": 80,
+            "y": 60,
+            "z": 50
+          },
+          "material": "Aluminum 5052-H32 2 mm",
+          "finish": "Deburred, raw; powder coat quoted separately",
+          "quantityTiers": [
+            100,
+            500,
+            1000,
+            10000
+          ],
+          "targetUnitPriceUsd": 6.65,
+          "quoteBy": "2026-10-04",
+          "renders": []
+        },
+        "quotes": [
+          {
+            "id": "q1-bitterroot-sheetworks",
+            "shopId": "bitterroot-sheetworks",
+            "machineModel": "Amada EG-6013",
+            "process": "sheet_metal",
+            "quantity": 500,
+            "unitPriceUsd": 4.64,
+            "toolingUsd": 10,
+            "leadTimeDays": 9,
+            "moq": 25,
+            "note": "Good timing: the Amada EG-6013 is open this month (about 12 h/week). Price holds for 30 days; 50% up front, 50% on delivery.",
+            "status": "quoted",
+            "isDemo": true
+          },
+          {
+            "id": "q2-oxbow-metalcraft",
+            "shopId": "oxbow-metalcraft",
+            "machineModel": "Trumpf TruBend 3100",
+            "process": "sheet_metal",
+            "quantity": 500,
+            "unitPriceUsd": 4.6,
+            "toolingUsd": 10,
+            "leadTimeDays": 9,
+            "moq": 50,
+            "note": "Good timing: the Trumpf TruBend 3100 is open this month (about 14 h/week). Finishing can be quoted separately; we work with a coater in Commerce.",
+            "status": "quoted",
+            "isDemo": true
+          },
+          {
+            "id": "q3-redtail-laser-form",
+            "shopId": "redtail-laser-form",
+            "machineModel": "Amada HG 1303",
+            "process": "sheet_metal",
+            "quantity": 500,
+            "unitPriceUsd": 4.85,
+            "toolingUsd": 30,
+            "leadTimeDays": 8,
+            "moq": 25,
+            "note": "Our Amada HG 1303 has open time this month (about 10 h/week), so we can start right after sample approval. We'll confirm tolerances on a quick call before cutting metal.",
+            "status": "quoted",
+            "isDemo": true
+          },
+          {
+            "id": "q4-longshore-fabrication",
+            "shopId": "longshore-fabrication",
+            "machineModel": "Trumpf TruBend 5230",
+            "process": "sheet_metal",
+            "quantity": 500,
+            "unitPriceUsd": 5.61,
+            "toolingUsd": 90,
+            "leadTimeDays": 11,
+            "moq": 10,
+            "note": "This is a good fit for our Trumpf TruBend 5230. We'll confirm tolerances on a quick call before cutting metal.",
+            "status": "quoted",
+            "isDemo": true
+          },
+          {
+            "id": "q5-marigold-fab-collective",
+            "shopId": "marigold-fab-collective",
+            "machineModel": "Amada EG-6013",
+            "process": "sheet_metal",
+            "quantity": 500,
+            "unitPriceUsd": 5.87,
+            "toolingUsd": 110,
+            "leadTimeDays": 12,
+            "moq": 1,
+            "note": "This is a good fit for our Amada EG-6013. Price holds for 30 days; 50% up front, 50% on delivery.",
+            "status": "quoted",
+            "isDemo": true
+          }
+        ],
+        "chosenQuoteId": "q2-oxbow-metalcraft"
       }
     }
-  ]
+  ],
+  "isExample": true
 }

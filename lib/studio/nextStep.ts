@@ -45,14 +45,19 @@ export function nextStep(project: Project): NextStep {
       cta: "Try a tweak",
     };
   }
+  const isMade = Boolean(v.outreach?.chosenQuoteId) || Boolean(v.sourcing?.suppliers.some((sup) => sup.status === "agreed"));
+  if (!isMade && v.outreach && v.outreach.quotes.length > 0) {
+    const n = v.outreach.quotes.length;
+    return { title: `${n} quote${n === 1 ? "" : "s"} waiting`, detail: "Compare them side by side and choose one to plan around.", href: `${base}/make`, cta: "Compare quotes" };
+  }
   const matches = matchVersion(v);
-  if (matches.length > 0) {
+  if (!isMade && matches.length > 0) {
     const idle = matches.filter((m) => m.idleBoost).length;
     return {
-      title: "Talk to a shop",
-      detail: `${matches.length} demo shops can make it${idle ? `; ${idle} have machines idle this month` : ""}.`,
-      href: `${onVersion}#shop-matches-heading`,
-      cta: "See shop matches",
+      title: "Request quotes",
+      detail: `${Math.min(matches.length, 5)} demo shops can make it${idle ? `; ${idle} have machines idle this month` : ""}. One click sends them a spec sheet.`,
+      href: `${base}/make`,
+      cta: "Go to Make",
     };
   }
   if (!v.pitch) {

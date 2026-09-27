@@ -19,7 +19,8 @@ export type StageStatus = "done" | "current" | "todo";
 const IS_DONE: Record<Stage, (v: ProjectVersion) => boolean> = {
   idea: () => true,
   design: (v) => Boolean(v.analysis),
-  make: () => false, // done once a quote is chosen (build 3)
+  // A chosen local demo quote, or an Alibaba supplier the creator agreed terms with.
+  make: (v) => Boolean(v.outreach?.chosenQuoteId) || Boolean(v.sourcing?.suppliers.some((s) => s.status === "agreed")),
   money: (v) => Boolean(v.businessCase),
   launch: (v) => Boolean(v.pitch), // plus the launch plan (build 4)
   sell: () => false, // done once a listing exists (build 5)

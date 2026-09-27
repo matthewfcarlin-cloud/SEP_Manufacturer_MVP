@@ -11,7 +11,6 @@ import { formatNumber, formatUsd } from "@/lib/format";
 import { matchVersion } from "@/lib/match";
 import { getAccessibleProject } from "@/lib/access";
 import { ShopMatches } from "@/components/ShopMatches";
-import { SourcingPanel } from "@/components/sourcing/SourcingPanel";
 import { BusinessCasePanel } from "@/components/businessCase/BusinessCasePanel";
 import { VersionTimeline } from "@/components/versions/VersionTimeline";
 import { AiBudgetNote } from "@/components/AiBudgetNote";
@@ -206,7 +205,20 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
         />
       )}
       {version.analysis && <ShopMatches matches={shopMatches} version={version} />}
-      {version.analysis && <SourcingPanel key={`sourcing-v${version.number}`} projectId={project.id} version={version} />}
+      {version.analysis && (
+        <Link
+          href={`/project/${project.id}/make`}
+          className="group flex flex-wrap items-center justify-between gap-3 border border-line bg-surface p-5 hover:border-ink"
+        >
+          <span>
+            <span className="eyebrow block text-[11px] text-accent">Stage 3 · Make</span>
+            <span className="font-semibold">Request quotes from these shops, compare them, or source overseas on Alibaba</span>
+          </span>
+          <span className="eyebrow flex items-center gap-2 text-[11px]">
+            Go to Make <span aria-hidden className="transition-transform group-hover:translate-x-1 motion-reduce:transition-none">→</span>
+          </span>
+        </Link>
+      )}
       {access === "owner" && (
         <DangerZone projectId={project.id} projectName={project.name} version={version.number} versionCount={project.versions.length} />
       )}

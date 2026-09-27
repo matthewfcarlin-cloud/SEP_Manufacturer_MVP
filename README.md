@@ -19,7 +19,7 @@ Every product moves through six stages, and the app always shows the next step.
 |---|---|---|---|
 | 1 | **Idea** | Upload CAD (STL/STEP), photos, notes, quantity and budget | ✅ Built |
 | 2 | **Design** | Measured geometry, AI analysis and design tweaks, versions and compare, agent assist | ✅ Built |
-| 3 | **Make** | Manufacturing paths, shop matches, outreach and quotes | ✅ Matches · 🔨 Outreach |
+| 3 | **Make** | Manufacturing paths, shop matches, outreach and quotes, Alibaba sourcing | ✅ Built |
 | 4 | **Money** | Business case: price, margin, tooling break-even | ✅ Built |
 | 5 | **Launch** | Plan and timeline, pitch kit, marketing | ✅ Pitch kit · 🔨 Timeline |
 | 6 | **Sell** | Etsy-ready listing | 🔨 Building |
@@ -87,7 +87,7 @@ npm run dev                  # http://localhost:3000
 app/                  Pages and API routes (App Router)
   api/                JSON APIs: projects, versions, analyze, match, business-case, pitch, agent, share…
   studio/             The creators' home: every product, its stage and next step
-  project/[id]/       Product screens: overview, compare, new version, pitch
+  project/[id]/       Product screens: overview, make, compare, new version, pitch
   p/[token]/          Public shared pitch
 components/           UI, grouped by feature (analysis, agent, businessCase, pitch, privacy, home, viewer…)
 lib/                  Domain logic, pure and tested
@@ -107,7 +107,7 @@ PRODUCT.md            Product spec
 | Studio dashboard | `app/studio/`, `components/studio/`, `lib/studio/` (stage, next step, key numbers) |
 | Design assist | `app/project/[id]/page.tsx`, `components/analysis/`, `lib/analysis/`, `lib/geometry.ts`, `lib/versions.ts`, `lib/compare.ts` |
 | Manufacturer match | `lib/match.ts`, `components/ShopMatches.tsx`, `lib/specSummary.ts`, `data/shops.json` |
-| Manufacturer outreach | *(building)* |
+| Manufacturer outreach | `app/project/[id]/make/`, `components/make/`, `lib/outreach/` (spec sheet, simulated quotes, compare, pipeline); Alibaba sourcing: `components/sourcing/`, `lib/sourcing/`, `lib/analysis/sourcing.ts` |
 | Plan and timeline | *(building)* |
 | Marketing (pitch kit) | `app/project/[id]/pitch/`, `components/pitch/`, `lib/analysis/pitch.ts`, `lib/iterationStory.ts` |
 | Selling | *(building)* |

@@ -50,6 +50,54 @@ export type ProjectVersion = {
   aiInputs?: AiInputs;
   /** Overseas supplier sourcing (Alibaba): AI search plan, the user's shortlist and drafted messages. */
   sourcing?: Sourcing;
+  /** Quote requests to the matched local demo shops, and their simulated quotes (Phase 10+ build 3). */
+  outreach?: Outreach;
+};
+
+/** How far a quote request goes. Private by default: a spec summary, no renders or notes. */
+export type ShareLevel = "summary" | "full";
+
+/** What a quote request carries, built from the version and its business case. */
+export type SpecSheet = {
+  shareLevel: ShareLevel;
+  process: Process;
+  dimensionsMm: { x: number; y: number; z: number };
+  material: string;
+  finish: string;
+  quantityTiers: number[];
+  /** Highest unit price that keeps a healthy margin at the retail price, if there's a business case. */
+  targetUnitPriceUsd?: number;
+  /** Date quotes are requested by (YYYY-MM-DD). */
+  quoteBy: string;
+  /** Only with shareLevel "full". */
+  renders: string[];
+  /** Only with shareLevel "full" and notes allowed in the AI settings. */
+  notes?: string;
+};
+
+export type QuoteStatus = "sent" | "quoted" | "sample" | "ordered";
+
+/** A simulated quote from a fictional demo shop, priced inside the analysis cost range. Always shown as "Demo quote". */
+export type DemoQuote = {
+  id: string;
+  shopId: string;
+  machineModel: string;
+  process: Process;
+  quantity: number;
+  unitPriceUsd: number;
+  toolingUsd: number;
+  leadTimeDays: number;
+  moq: number;
+  note: string;
+  status: QuoteStatus;
+  isDemo: true;
+};
+
+export type Outreach = {
+  requestedAt: string;
+  specSheet: SpecSheet;
+  quotes: DemoQuote[];
+  chosenQuoteId?: string;
 };
 
 /**

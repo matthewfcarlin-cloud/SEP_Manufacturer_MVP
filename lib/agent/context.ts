@@ -67,6 +67,30 @@ function shopLines(version: ProjectVersion): string[] {
   ];
 }
 
+function quoteLines(version: ProjectVersion): string[] {
+  const lines: string[] = [];
+  const outreach = version.outreach;
+  if (outreach?.quotes.length) {
+    lines.push(`Demo quotes (simulated by the app from fictional demo shops, for ${version.targetQuantity.toLocaleString("en-US")} units; share level: ${outreach.specSheet.shareLevel}):`);
+    for (const q of outreach.quotes) {
+      const shop = getShopById(q.shopId)?.name ?? q.shopId;
+      const chosen = q.id === outreach.chosenQuoteId ? " CHOSEN" : "";
+      lines.push(`- ${shop}: ${PROCESS_LABELS[q.process]}, $${q.unitPriceUsd.toFixed(2)}/unit + $${q.toolingUsd.toLocaleString("en-US")} tooling, ${q.leadTimeDays} days, MOQ ${q.moq}, status ${q.status}.${chosen}`);
+    }
+  } else {
+    lines.push("Demo quotes: none requested yet.");
+  }
+  const suppliers = version.sourcing?.suppliers ?? [];
+  if (suppliers.length) {
+    lines.push("Alibaba shortlist (entered by the creator; the app never contacts suppliers):");
+    for (const s of suppliers) {
+      const terms = s.quote ? ` Terms: ${[s.quote.unitUsd && `$${s.quote.unitUsd}/unit`, s.quote.moq && `MOQ ${s.quote.moq}`, s.quote.leadDays && `${s.quote.leadDays} days`].filter(Boolean).join(", ")}.` : "";
+      lines.push(`- ${s.name}: ${s.status}.${terms}`);
+    }
+  }
+  return lines;
+}
+
 export function buildAgentContext(project: Project, version: ProjectVersion): string {
   const story = buildIterationStory(project).filter((s) => s.to <= version.number);
   const { current } = stageProgress(project);
@@ -83,6 +107,8 @@ export function buildAgentContext(project: Project, version: ProjectVersion): st
     ...businessCaseLines(version),
     "",
     ...shopLines(version),
+    "",
+    ...quoteLines(version),
     ...(story.length ? ["", "Version history:", ...story.map((s) => `- v${s.from} → v${s.to}: ${s.summary}`)] : []),
   ].join("\n");
 }
