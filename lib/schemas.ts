@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AiInputs, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop } from "./types";
+import type { AiInputs, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -171,6 +171,58 @@ export const shareLinkSchema = z.object({
   createdAt: z.iso.datetime(),
 }) satisfies z.ZodType<ShareLink>;
 
+// ---------------------------------------------------------------------------
+// Supplier sourcing (Alibaba). Stored shape only; the AI output schemas and
+// the edit operations live in lib/sourcing/schemas.ts.
+// ---------------------------------------------------------------------------
+
+export const MAX_SUPPLIERS = 20;
+export const MAX_MESSAGES_PER_SUPPLIER = 60;
+export const MAX_MESSAGE_CHARS = 4000;
+export const SUPPLIER_STATUSES = ["shortlisted", "contacted", "negotiating", "agreed", "dropped"] as const;
+
+export const supplierQuoteSchema = z.object({
+  unitUsd: z.number().positive().max(MAX_RETAIL_PRICE_USD).optional(),
+  moq: z.number().int().positive().max(MAX_TIER_QUANTITY).optional(),
+  toolingUsd: z.number().min(0).max(10_000_000).optional(),
+  leadDays: z.number().int().positive().max(365).optional(),
+});
+
+export const sourcingSchema = z.object({
+  plan: z
+    .object({
+      process: processSchema,
+      createdAt: z.iso.datetime(),
+      searchTerms: z.array(z.string()),
+      supplierChecks: z.array(z.string()),
+      rfq: z.string(),
+    })
+    .optional(),
+  suppliers: z
+    .array(
+      z.object({
+        id: z.string().regex(/^[A-Za-z0-9_-]{8,16}$/),
+        name: z.string().min(1),
+        listingUrl: z.string().optional(),
+        status: z.enum(SUPPLIER_STATUSES),
+        quote: supplierQuoteSchema.optional(),
+        notes: z.string().optional(),
+        createdAt: z.iso.datetime(),
+        messages: z.array(
+          z.object({
+            id: z.string().regex(/^[A-Za-z0-9_-]{8,16}$/),
+            from: z.enum(["me", "supplier"]),
+            text: z.string(),
+            state: z.enum(["draft", "sent"]),
+            at: z.iso.datetime(),
+            aiDrafted: z.boolean().optional(),
+          }),
+        ),
+      }),
+    )
+    .max(MAX_SUPPLIERS),
+}) satisfies z.ZodType<Sourcing>;
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -190,6 +242,7 @@ export const projectVersionSchema = z.object({
   pitch: pitchContentSchema.optional(),
   pitchVideo: pitchVideoSchema.optional(),
   aiInputs: aiInputsSchema.optional(),
+  sourcing: sourcingSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({

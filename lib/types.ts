@@ -48,6 +48,54 @@ export type ProjectVersion = {
   pitchVideo?: PitchVideo;
   /** Photos and notes can be withheld from every AI call (Phase 9). */
   aiInputs?: AiInputs;
+  /** Overseas supplier sourcing (Alibaba): AI search plan, the user's shortlist and drafted messages. */
+  sourcing?: Sourcing;
+};
+
+/**
+ * Alibaba sourcing for one version. Alibaba has no buyer API and forbids
+ * automated access, so Idlefit never contacts a supplier: the AI plans the
+ * search and drafts messages, and the user sends each one themselves.
+ */
+export type Sourcing = { plan?: SourcingPlan; suppliers: Supplier[] };
+
+export type SourcingPlan = {
+  /** The manufacturing path being sourced. */
+  process: Process;
+  createdAt: string;
+  /** 3-5 phrases to type into Alibaba's search box. */
+  searchTerms: string[];
+  /** What to check on a listing or supplier profile before shortlisting. */
+  supplierChecks: string[];
+  /** A request for quotation carrying spec-level facts only, ready to paste. */
+  rfq: string;
+};
+
+export type SupplierStatus = "shortlisted" | "contacted" | "negotiating" | "agreed" | "dropped";
+
+export type Supplier = {
+  id: string;
+  name: string;
+  listingUrl?: string;
+  status: SupplierStatus;
+  /** The latest terms the supplier offered, as typed in by the user. */
+  quote?: SupplierQuote;
+  notes?: string;
+  createdAt: string;
+  /** Oldest first. At most one message is an unsent draft, and it is always the last. */
+  messages: SupplierMessage[];
+};
+
+export type SupplierQuote = { unitUsd?: number; moq?: number; toolingUsd?: number; leadDays?: number };
+
+export type SupplierMessage = {
+  id: string;
+  from: "me" | "supplier";
+  text: string;
+  /** "draft" until the user says they sent it themselves. Supplier messages are always "sent". */
+  state: "draft" | "sent";
+  at: string;
+  aiDrafted?: boolean;
 };
 
 export type PitchContent = {
