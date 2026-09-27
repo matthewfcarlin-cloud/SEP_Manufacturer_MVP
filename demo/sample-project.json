@@ -416,6 +416,19 @@
         "ask": "I'm looking for a licensing or supply arrangement. Estimates: at 250 units, stock die-cast shells drilled in a fixture and powder coated land near $14-18; full billet 6061 runs roughly $8-12k in setup. Injection molding only pays past about 3,000-4,000 units.",
         "editedByUser": false
       },
+      "listing": {
+        "title": "Pre-Drilled 125B Guitar Pedal Enclosure, Anodized Aluminum Fuzz Pedal Case",
+        "description": "A ready-to-build 125B pedal enclosure with the common control and jack openings already machined. The 122 × 66 × 39.5 mm shell has 2.5 mm walls, four M3 mounting bosses, and a clean aluminum finish. Designed for boutique pedal builders and small production runs. Price is a suggested estimate; confirm finish and availability before ordering.",
+        "tags": ["guitar pedal case", "fuzz pedal", "125b enclosure", "pedal enclosure", "aluminum pedal", "diy guitar pedal", "pedal parts", "boutique pedal", "pre drilled case", "effects pedal", "stompbox case", "guitar effects", "maker hardware"],
+        "priceUsd": 32,
+        "photos": [
+          "/api/files/yAeM9-RDOE/render-0.png?v=1790459855327",
+          "/api/files/yAeM9-RDOE/render-1.png?v=1790459855327",
+          "/api/files/yAeM9-RDOE/render-2.png?v=1790459855327",
+          "/api/files/yAeM9-RDOE/render-3.png?v=1790459855327"
+        ],
+        "generatedAt": "2026-09-27T20:00:00.000Z"
+      },
       "outreach": {
         "requestedAt": "2026-09-27T20:00:16.864Z",
         "specSheet": {

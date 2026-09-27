@@ -286,6 +286,14 @@ export const projectVersionSchema = z.object({
   aiInputs: aiInputsSchema.optional(),
   sourcing: sourcingSchema.optional(),
   outreach: outreachSchema.optional(),
+  listing: z.object({
+    title: z.string().max(140),
+    description: z.string(),
+    tags: z.array(z.string().max(20)).length(13),
+    priceUsd: z.number().positive(),
+    photos: z.array(z.string()),
+    generatedAt: z.iso.datetime(),
+  }).optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({

@@ -52,6 +52,18 @@ export type ProjectVersion = {
   sourcing?: Sourcing;
   /** Quote requests to the matched local demo shops, and their simulated quotes (Phase 10+ build 3). */
   outreach?: Outreach;
+  /** Etsy-ready listing saved for this product version (Build 5). */
+  listing?: EtsyListing;
+};
+
+export type EtsyListing = {
+  title: string;
+  description: string;
+  tags: string[];
+  priceUsd: number;
+  /** Version pitch-kit renders used as listing photos. */
+  photos: string[];
+  generatedAt: string;
 };
 
 /** How far a quote request goes. Private by default: a spec summary, no renders or notes. */

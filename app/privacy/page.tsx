@@ -13,7 +13,7 @@ const POINTS: { title: string; body: React.ReactNode }[] = [
   },
   {
     title: "What the AI sees, and what it doesn't",
-    body: "Analysis, pricing and pitch writing send your project name, notes, quantity, budget, material ideas, photos and the measurements of your part to Anthropic's API. Your CAD file itself is never sent. Each project shows exactly what gets sent under \"What the AI sees\", where you can hold back your photos or notes.",
+    body: "Analysis, pricing and pitch writing send your project name, notes, quantity, budget, material ideas, photos and part measurements to Anthropic's API, subject to the controls shown under \"What the AI sees\". Listing requests send the project name, allowed notes, target quantity, material ideas, analysis summary and features, and suggested business-case price; they never send CAD or renders. Analysis may also send permitted photos and measurements. Each project shows what gets sent under \"What the AI sees\", where you can hold back photos or notes.",
   },
   {
     title: "Sharing is off until you turn it on",

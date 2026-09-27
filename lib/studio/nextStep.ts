@@ -60,6 +60,9 @@ export function nextStep(project: Project): NextStep {
       cta: "Go to Make",
     };
   }
+  if (isMade && !v.listing) {
+    return { title: "Write your listing", detail: "Turn the product and its pitch-kit photos into an Etsy-ready listing.", href: `${base}/launch#selling`, cta: "Write your listing" };
+  }
   if (!v.pitch) {
     return { title: "Write your pitch", detail: "Turn the analysis and numbers into a pitch for a company.", href: `${base}/pitch`, cta: "Open the pitch kit" };
   }

@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 const TABS = [
   { href: "", label: "Design & money" },
   { href: "/make", label: "Make" },
-  { href: "/pitch", label: "Launch" },
+  { href: "/launch", label: "Launch" },
 ] as const;
 
 export function ProductNav({ projectId, projectName }: { projectId: string; projectName: string }) {

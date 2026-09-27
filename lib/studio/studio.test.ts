@@ -42,6 +42,11 @@ describe("stageProgress", () => {
     expect(current).toBe("make");
     expect(statuses.make).toBe("current");
   });
+
+  test("a saved Etsy listing completes Sell", () => {
+    const { statuses } = stageProgress(pedal);
+    expect(statuses.sell).toBe("done");
+  });
 });
 
 describe("nextStep", () => {
@@ -76,6 +81,13 @@ describe("nextStep", () => {
     const step = nextStep(withLatest(pedal, { outreach }));
     expect(step.title).toBe("2 quotes waiting");
     expect(step.href).toBe(`/project/${pedal.id}/make`);
+  });
+
+  test("asks to write a listing as soon as Make is done", () => {
+    const outreach = { requestedAt: "2026-09-27T12:00:00.000Z", specSheet: {} as never, quotes: [], chosenQuoteId: "chosen" };
+    const step = nextStep(withLatest(pedal, { outreach, listing: undefined }));
+    expect(step.title).toBe("Write your listing");
+    expect(step.href).toBe(`/project/${pedal.id}/launch#selling`);
   });
 });
 
