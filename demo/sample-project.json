@@ -621,6 +621,33 @@
           "Total non-production spend of roughly $1,650-$7,200 sits on top of the $7,300-$12,900 build, so budget at least $9,000 before any revenue arrives.",
           "The sequential plan runs about 73 days, putting launch in mid-December and risking the holiday gift window if prototype or finish approval slips."
         ]
+      },
+      "listing": {
+        "title": "125B Guitar Pedal Enclosure, Drilled Aluminum Fuzz Pedal Box, 3PDT and 2 Pot Holes, Anodized DIY Stompbox Case",
+        "description": "A ready-to-build 125B pedal enclosure for boutique fuzz and overdrive circuits. Machined from 6061 aluminum and anodized, it is made to be stomped on night after night while still looking like a premium build on a pedalboard.\n\nThe box arrives pre-drilled, so you can go straight to wiring instead of measuring and filing.\n\n- Outside dimensions: 122 x 66 x 39.5 mm, with an open bottom and roughly 36 mm of internal depth\n- Nominal wall thickness 2.5 mm for solid, dent-resistant feel\n- One 12 mm hole on the top face for a 3PDT footswitch\n- Two 7.5 mm pot holes on the top face\n- Two 1/4 inch jack holes, one on each long side\n- One 9 V DC jack hole on the top end wall\n- Four internal corner bosses tapped for M3 screws to take a flat bottom plate\n\nGood for small-batch pedal brands, repair and contract shops, enclosure suppliers and DIY builders who want a clean, repeatable shell.\n\nIn the box: one anodized 125B aluminum enclosure shell. Bottom plate, screws, hardware and electronics are not included.\n\nMade in small runs, so slight variation in anodized tone between batches is normal.",
+        "tags": [
+          "125b enclosure",
+          "pedal enclosure",
+          "fuzz pedal box",
+          "guitar pedal case",
+          "diy pedal enclosure",
+          "stompbox enclosure",
+          "aluminum pedal box",
+          "drilled enclosure",
+          "3pdt enclosure",
+          "anodized enclosure",
+          "pedal builder parts",
+          "effects pedal case",
+          "boutique pedal parts"
+        ],
+        "priceUsd": 32,
+        "photos": [
+          "/api/files/yAeM9-RDOE/render-0.png?v=1790459855327",
+          "/api/files/yAeM9-RDOE/render-1.png?v=1790459855327",
+          "/api/files/yAeM9-RDOE/render-2.png?v=1790459855327",
+          "/api/files/yAeM9-RDOE/render-3.png?v=1790459855327"
+        ],
+        "generatedAt": "2026-09-27T20:36:50.368Z"
       }
     }
   ],

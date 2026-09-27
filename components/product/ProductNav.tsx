@@ -9,6 +9,7 @@ const TABS = [
   { href: "/make", label: "Make" },
   { href: "/plan", label: "Plan" },
   { href: "/pitch", label: "Pitch" },
+  { href: "/sell", label: "Sell" },
 ] as const;
 
 export function ProductNav({ projectId, projectName }: { projectId: string; projectName: string }) {

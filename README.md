@@ -22,7 +22,7 @@ Every product moves through six stages, and the app always shows the next step.
 | 3 | **Make** | Manufacturing paths, shop matches, outreach and quotes, Alibaba sourcing | ✅ Built |
 | 4 | **Money** | Business case: price, margin, tooling break-even | ✅ Built |
 | 5 | **Launch** | Plan and timeline, pitch kit, marketing | ✅ Built |
-| 6 | **Sell** | Etsy-ready listing | 🔨 Building |
+| 6 | **Sell** | Etsy-ready listing | ✅ Built |
 
 ## The eight components
 
@@ -110,8 +110,9 @@ PRODUCT.md            Product spec
 | Manufacturer outreach | `app/project/[id]/make/`, `components/make/`, `lib/outreach/` (spec sheet, simulated quotes, compare, pipeline); Alibaba sourcing: `components/sourcing/`, `lib/sourcing/`, `lib/analysis/sourcing.ts` |
 | Plan and timeline | `app/project/[id]/plan/`, `components/plan/`, `lib/plan/schedule.ts`, `lib/analysis/plan.ts` |
 | Marketing (pitch kit) | `app/project/[id]/pitch/`, `components/pitch/`, `lib/analysis/pitch.ts`, `lib/iterationStory.ts` |
-| Selling | *(building)* |
+| Selling | `app/project/[id]/sell/`, `components/sell/`, `lib/analysis/listing.ts`, `lib/sell/fees.ts` |
 | Agent assist | `components/agent/BuildAgent.tsx`, `app/api/agent/`, `lib/agent/` |
 | Money (business case) | `lib/businessCase.ts`, `components/businessCase/`, `lib/analysis/price.ts` |
+| Your own API key (frontend) | `app/settings/`, `components/settings/`, `lib/client/aiKey.ts`, `components/HeaderAiPill.tsx`, `components/AiErrorBanner.tsx` |
 | Privacy, sharing, AI budget | `lib/access.ts`, `proxy.ts`, `lib/shareStore.ts`, `lib/aiInputs.ts`, `lib/usage/`, `app/privacy/` |
 | Data model | `lib/types.ts` (the contract), `lib/schemas.ts`, `lib/projectStore.ts` |

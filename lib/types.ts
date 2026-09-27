@@ -54,6 +54,20 @@ export type ProjectVersion = {
   outreach?: Outreach;
   /** Launch plan: AI-drafted milestones, dated from the chosen quote or the analysis (build 4). */
   plan?: LaunchPlan;
+  /** Etsy-ready listing: AI-written copy; price from the business case; photos from the renders (build 5). */
+  listing?: EtsyListing;
+};
+
+export type EtsyListing = {
+  /** At most 140 characters (Etsy's limit). */
+  title: string;
+  description: string;
+  /** Exactly 13 tags, each at most 20 characters (Etsy's limits). */
+  tags: string[];
+  /** From the business case's retail price. */
+  priceUsd: number;
+  photos: string[];
+  generatedAt: string;
 };
 
 export type MilestoneKey = "finalize_design" | "prototype" | "sample_approval" | "tooling" | "production" | "photos" | "listing" | "launch";

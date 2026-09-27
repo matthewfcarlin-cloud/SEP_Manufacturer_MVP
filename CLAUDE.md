@@ -392,7 +392,7 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 | 2 | Agent assist on every product screen | "How do I make this cheaper?" answers with this part's features and numbers | Built (quotes and plan join its context in builds 3–4) |
 | 3 | Manufacturer outreach | Five labeled demo quotes appear, sort by price and lead time, and one can be chosen | Built |
 | 4 | Plan and timeline | Choosing a quote re-dates the launch | Built |
-| 5 | Selling (Etsy listing) | A full listing copies into Etsy in under a minute | Planned |
+| 5 | Selling (Etsy listing) | A full listing copies into Etsy in under a minute | Built |
 
 **Rules for every build**
 - Keep the design system exactly: dark header, huge uppercase `display-type` headings, mono `eyebrow` labels, orange `accent`, sharp corners, `night-*` tokens on dark bands. Extend, don't restyle. Check light, dark and phone widths.
@@ -408,7 +408,7 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 - Product screens share a tab bar and the agent panel: `/project/[id]` (design + money, built), `/project/[id]/make` (outreach + quotes, built), `/project/[id]/plan`, `/project/[id]/pitch` (built), `/project/[id]/sell`.
 - `POST /api/projects/[id]/versions/[n]/quotes` (built): request quotes (spec sheet + simulated demo quotes). `PATCH .../quotes/[quoteId]` `{ status }`, `POST .../quotes/[quoteId]/choose` (built).
 - `POST /api/plan` `{ projectId, version? }` (built): Claude drafts milestones as zod-validated JSON; choosing a quote re-dates the plan without an AI call.
-- `POST /api/listing` `{ projectId, version }`: generates the Etsy listing.
+- `POST /api/listing` `{ projectId, version? }` (built): generates the Etsy listing.
 - `POST /api/agent` (built): the agent's streamed answers.
 
 **New types (added to `lib/types.ts` by the build that uses them)**
@@ -441,7 +441,7 @@ type LaunchPlan = {
   milestones: Milestone[]; warnings: string[];
 };
 
-// Build 5, on ProjectVersion.listing
+// Build 5 (in lib/types.ts), on ProjectVersion.listing
 type EtsyListing = { title: string; description: string; tags: string[]; priceUsd: number; photos: string[]; generatedAt: string }; // title ≤ 140 chars, exactly 13 tags
 ```
 
@@ -450,6 +450,12 @@ type EtsyListing = { title: string; description: string; tags: string[]; priceUs
 - Derived, pure, tested (`lib/studio/`): `stageProgress()` (a stage is done when its data exists on the latest version; the current stage is the first gap, so later stages can be done out of order), `nextStep()` (ordered rules: wrong units → analyze → set a price → rework if unprofitable at every volume → talk to a shop → write pitch → share; each links to the screen that does it), `keyNumbers()` (best-path unit cost at target qty, retail, margin at target qty) and `unitCostTrend()` (best-path unit cost per analyzed version). Make/Launch/Sell rules gain quotes, plan and listing in builds 3–5.
 - `StudioModel` mounts the WebGL viewer only while the card is on screen (browsers cap live contexts), shows the saved render or a skeleton until `onReady`, spins slowly (`rotateSpeed` 0.5, zoom off) and not at all under reduced motion. `ModelViewer` gained `rotateSpeed`, `enableZoom`, `onReady`, `showLoading` (defaults unchanged).
 - Grid children need `min-w-0` or a long title widens the page on phones (E2E checks no horizontal scroll at 390 px).
+
+### Build 5 – Selling (built)
+- `/project/[id]/sell` (tab "Sell"): title (with n/140), description, 13 tag chips, price, photos, each with a copy button (reuses `components/sourcing/CopyButton`); photo downloads; "Connect Etsy shop" and "Shopify" disabled and marked Coming soon; an honest note on Etsy's commercial review for publishing to other sellers' shops.
+- `POST /api/listing` `{ projectId, version? }` (budget action `listing`, $0.08 est.): Claude writes title/description/tags (`lib/analysis/listing.ts`, `callClaudeListing`, low effort), validated by `listingDraftSchema` against Etsy's limits (title ≤ 140, exactly 13 tags, each ≤ 20 chars, distinct). The **code** sets the price (business case retail) and the photos (studio renders). Requires an analysis and a business case.
+- `etsySale()` (`lib/sell/fees.ts`): what one sale leaves after Etsy's approximate US fees ($0.20 listing, 6.5% transaction, 3% + $0.25 payment processing), and profit per sale after the chosen quote's price or the analysis unit cost (a range). Update the constants if Etsy's fees change.
+- Sell stage is done when a listing exists; next step "Create your listing" follows a plan; the agent's context mentions the listing. Both examples are seeded with real listings.
 
 ### Own API key – frontend (built; backend pending)
 - The key storage and AI gateway are built separately on `feat/backend` (BACKEND.md phases A1/A2). **Don't build encryption, key storage or provider routing in the frontend.** When this landed, neither the branch nor BACKEND.md was on the remote, so the frontend targets an **assumed contract**, written at the top of `lib/client/aiKey.ts` (GET/PUT/DELETE `/api/settings/ai-key`, POST `/api/settings/ai-key/test`, `SavedAiKey = { provider, maskedKey, savedAt }`). Reconcile it with BACKEND.md §4 when the backend merges.

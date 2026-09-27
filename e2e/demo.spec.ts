@@ -650,3 +650,18 @@ test("the studio's own-key prompt can be dismissed for good", async ({ page }) =
   await expect(page.getByRole("heading", { level: 1, name: "Studio" })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Use your own API key" })).toHaveCount(0);
 });
+
+test("the Sell screen shows a copy-ready Etsy listing within Etsy's limits", async ({ page }) => {
+  await page.goto(`/project/${BRACKET.id}/sell`);
+  await expect(page.getByRole("link", { name: "Sell", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByText(/^\d+\/140$/)).toBeVisible();
+  const title = page.locator("section", { hasText: "Copy title" }).locator("p");
+  expect((await title.innerText()).length).toBeLessThanOrEqual(140);
+  await expect(page.locator("section", { hasText: "Copy tags" }).locator("li")).toHaveCount(13);
+  await expect(page.getByText("13/13")).toBeVisible();
+  await expect(page.getByText("$19.00")).toBeVisible(); // price from the business case
+  for (const label of ["Copy title", "Copy description", "Copy tags", "Copy price"]) await expect(page.getByRole("button", { name: label })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Connect Etsy shop/ })).toBeDisabled();
+  await expect(page.getByRole("button", { name: /Shopify/ })).toBeDisabled();
+  await expect(page.getByRole("img", { name: /listing photo/ })).toHaveCount(4);
+});

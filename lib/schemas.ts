@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AiInputs, DemoQuote, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
+import type { AiInputs, DemoQuote, EtsyListing, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -320,6 +320,40 @@ export const planDraftSchema = planDraftOutputSchema.superRefine((d, ctx) => {
   if (d.warnings.length > 3) ctx.addIssue({ code: "custom", path: ["warnings"], message: "at most 3 warnings" });
 });
 
+// ---------------------------------------------------------------------------
+// Etsy listing (build 5). Etsy's limits: title <= 140 chars, 13 tags, each
+// tag <= 20 chars.
+// ---------------------------------------------------------------------------
+
+export const ETSY_TITLE_MAX = 140;
+export const ETSY_TAG_COUNT = 13;
+export const ETSY_TAG_MAX = 20;
+
+export const etsyListingSchema = z.object({
+  title: z.string().min(1).max(ETSY_TITLE_MAX),
+  description: z.string().min(1),
+  tags: z.array(z.string().min(1).max(ETSY_TAG_MAX)).length(ETSY_TAG_COUNT),
+  priceUsd: z.number().positive(),
+  photos: z.array(z.string()),
+  generatedAt: z.iso.datetime(),
+}) satisfies z.ZodType<EtsyListing>;
+
+export const listingDraftOutputSchema = z.object({
+  title: z.string().describe(`Etsy title, at most ${ETSY_TITLE_MAX} characters: what it is first, then key buyer search words. No ALL CAPS, no emoji.`),
+  description: z.string().describe("Etsy description, 120-220 words, plain text with short paragraphs and '- ' bullets: what it is, who it's for, key features and dimensions, materials, what's in the box. No claims the brief doesn't support."),
+  tags: z.array(z.string()).describe(`Exactly ${ETSY_TAG_COUNT} Etsy tags, each at most ${ETSY_TAG_MAX} characters, lowercase, distinct phrases buyers search for.`),
+});
+
+export const listingDraftSchema = listingDraftOutputSchema.superRefine((d, ctx) => {
+  if (d.title.length > ETSY_TITLE_MAX) ctx.addIssue({ code: "custom", path: ["title"], message: `must be at most ${ETSY_TITLE_MAX} characters (got ${d.title.length})` });
+  if (d.tags.length !== ETSY_TAG_COUNT) ctx.addIssue({ code: "custom", path: ["tags"], message: `need exactly ${ETSY_TAG_COUNT} tags, got ${d.tags.length}` });
+  d.tags.forEach((t, i) => {
+    if (t.trim().length === 0 || t.length > ETSY_TAG_MAX) ctx.addIssue({ code: "custom", path: ["tags", i], message: `"${t}" must be 1-${ETSY_TAG_MAX} characters` });
+  });
+  if (new Set(d.tags.map((t) => t.trim().toLowerCase())).size !== d.tags.length) ctx.addIssue({ code: "custom", path: ["tags"], message: "tags must be distinct" });
+  if (d.description.trim().split(/\s+/).length < 60) ctx.addIssue({ code: "custom", path: ["description"], message: "write a fuller description (at least 60 words)" });
+});
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -342,6 +376,7 @@ export const projectVersionSchema = z.object({
   sourcing: sourcingSchema.optional(),
   outreach: outreachSchema.optional(),
   plan: launchPlanSchema.optional(),
+  listing: etsyListingSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({

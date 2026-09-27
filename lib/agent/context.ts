@@ -122,6 +122,7 @@ export function buildAgentContext(project: Project, version: ProjectVersion): st
     ...quoteLines(version),
     "",
     ...planLines(version),
+    version.listing ? `Etsy listing drafted: "${version.listing.title}" at $${version.listing.priceUsd}.` : "Etsy listing: not drafted yet.",
     ...(story.length ? ["", "Version history:", ...story.map((s) => `- v${s.from} → v${s.to}: ${s.summary}`)] : []),
   ].join("\n");
 }
