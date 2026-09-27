@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { HeaderAiPill } from "@/components/HeaderAiPill";
+import { OwnKeyPrompt } from "@/components/studio/OwnKeyPrompt";
 import logo from "@/public/brand/moko-logo-night.png";
 import { titleFor, type RecentProduct } from "./nav";
 import { NavIcon } from "./NavIcon";
@@ -51,7 +52,7 @@ export function AppFrame({ recent, productNames, children }: Props) {
   }, [isSheetOpen]);
 
   return (
-    <div className="flex min-h-svh">
+    <div className="app-ui flex min-h-svh">
       <aside
         aria-label="Main"
         className={`sticky top-0 hidden h-svh shrink-0 flex-col justify-between border-r border-night-line bg-night text-night-ink lg:flex ${
@@ -113,6 +114,7 @@ export function AppFrame({ recent, productNames, children }: Props) {
             </Link>
           </div>
         </header>
+        <OwnKeyPrompt />
         <main className="flex-1">{children}</main>
       </div>
 

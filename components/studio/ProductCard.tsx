@@ -6,6 +6,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { DemoBadge } from "@/components/Badges";
 import type { ApiResponse } from "@/lib/api";
 import type { StageStatus } from "@/lib/studio/stage";
+import type { Stage } from "@/lib/types";
+import { StepBar } from "./StepBar";
 import { StudioModel } from "./StudioModel";
 
 /** What the grid needs about one product; built on the server. */
@@ -18,12 +20,14 @@ export type ProductSummary = {
   status: string;
   stageLabel: string;
   stageIndex: number;
-  dots: { label: string; status: StageStatus }[];
+  statuses: Record<Stage, StageStatus>;
   canSharePitch: boolean;
   updatedAt: string;
 };
 
-const DOT: Record<StageStatus, string> = { done: "bg-ink", current: "bg-accent", todo: "bg-line" };
+type Tone = "good" | "action" | "neutral";
+const STATUS_TONE: Record<Tone, string> = { good: "bg-idle-soft text-idle", action: "bg-accent/10 text-accent", neutral: "bg-bg text-muted border border-line" };
+const toneFor = (status: string): Tone => (/^Ready to sell/.test(status) ? "good" : /waiting|Ready to get quotes|Ready to see/.test(status) ? "action" : "neutral");
 
 async function send(url: string, method: "POST" | "PATCH" | "DELETE", body?: object): Promise<void> {
   const res = await fetch(url, { method, headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
@@ -78,11 +82,11 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   const item = "block w-full px-3 py-2 text-left text-sm hover:bg-bg disabled:text-muted";
 
   return (
-    <article className="group relative flex h-full flex-col border border-line bg-surface transition-colors hover:border-ink motion-reduce:transition-none">
+    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition-shadow hover:shadow-lg motion-reduce:transition-none">
       <StudioModel url={product.cadUrl} still={product.still} name={product.name} />
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-start justify-between gap-2">
-          <h2 className="display-type line-clamp-2 min-w-0 break-words text-xl">
+          <h2 className="line-clamp-2 min-w-0 break-words text-lg font-semibold leading-snug">
             {/* The link covers the whole card; the ⋯ menu sits above it. */}
             <Link href={href} className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:outline-accent">
               {product.name}
@@ -122,14 +126,12 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           </div>
         </div>
 
-        <p className="text-sm font-medium">{product.status}</p>
+        <p className="self-start"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_TONE[toneFor(product.status)]}`}>{product.status}</span></p>
 
         <div className="mt-auto flex items-center justify-between gap-3">
-          <ol aria-label={`Stage ${product.stageIndex + 1} of ${product.dots.length}: ${product.stageLabel}`} className="flex gap-1.5">
-            {product.dots.map((d) => (
-              <li key={d.label} title={d.label} className={`h-2 w-2 ${DOT[d.status]}`} />
-            ))}
-          </ol>
+          <div className="min-w-0 flex-1">
+            <StepBar statuses={product.statuses} stageIndex={product.stageIndex} />
+          </div>
           {product.isExample && <DemoBadge label="Example" title="A shared demo product anyone can open" />}
         </div>
 

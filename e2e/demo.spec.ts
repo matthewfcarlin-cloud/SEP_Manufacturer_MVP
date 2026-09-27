@@ -286,7 +286,7 @@ test("My products shows each product as a card with one status line and its prog
   const pedal = page.locator("article", { hasText: "Fuzz pedal enclosure" });
   await expect(pedal.getByText("Example")).toBeVisible();
   await expect(pedal).toContainText("5 quotes waiting");
-  await expect(pedal.getByRole("list", { name: "Stage 3 of 6: Make" }).locator("li")).toHaveCount(6);
+  await expect(pedal.getByRole("progressbar", { name: "Step 3 of 6 · Make" })).toBeVisible();
   const bracket = page.locator("article", { hasText: "E-bike charger wall bracket" });
   await expect(bracket).toContainText("Ready to sell");
 
@@ -831,13 +831,13 @@ test("a spent demo budget explains itself on the screen that made the call", asy
 
 test("the studio's own-key prompt can be dismissed for good", async ({ page }) => {
   await page.goto("/studio");
-  const prompt = page.getByRole("complementary", { name: "Use your own API key" });
+  const prompt = page.getByRole("complementary", { name: "Demo budget notice" });
   await expect(prompt).toBeVisible();
   await prompt.getByRole("button", { name: "Not now" }).click();
   await expect(prompt).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole("heading", { level: 1, name: "My products" })).toBeVisible();
-  await expect(page.getByRole("complementary", { name: "Use your own API key" })).toHaveCount(0);
+  await expect(page.getByRole("complementary", { name: "Demo budget notice" })).toHaveCount(0);
 });
 
 test("the Sell screen shows a copy-ready Etsy listing within Etsy's limits", async ({ page }) => {

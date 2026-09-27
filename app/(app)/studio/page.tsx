@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { OwnKeyPrompt } from "@/components/studio/OwnKeyPrompt";
 import type { ProductSummary } from "@/components/studio/ProductCard";
 import { ProductGrid } from "@/components/studio/ProductGrid";
 import { stageProgress, STAGES } from "@/lib/studio/stage";
@@ -24,7 +23,7 @@ export default async function StudioPage() {
       status: statusLine(project),
       stageLabel: STAGES[stageIndex].label,
       stageIndex,
-      dots: STAGES.map((s) => ({ label: s.label, status: statuses[s.key] })),
+      statuses,
       canSharePitch: Boolean(latestAnalyzedVersion(project)),
       updatedAt,
     };
@@ -36,7 +35,6 @@ export default async function StudioPage() {
         <h1 className="display-type text-[clamp(2.75rem,7vw,5.5rem)] leading-[0.9]">My products</h1>
         <p className="max-w-xl text-muted">Everything you&apos;re making, where each one stands, and what to do next.</p>
       </div>
-      <OwnKeyPrompt />
       <ProductGrid products={products} />
     </div>
   );

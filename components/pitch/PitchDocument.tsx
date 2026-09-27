@@ -362,7 +362,7 @@ function Ask({ project, version, isOwnerView }: PitchDocumentProps) {
 /** The pitch itself, read-only. The owner's page and (Phase 9) the shared page both render it. */
 export function PitchDocument(props: PitchDocumentProps) {
   return (
-    <article className="flex flex-col gap-14 print:gap-0">
+    <article className="pitch-doc flex flex-col gap-14 print:gap-0">
       <Cover {...props} />
       <ProblemAndProduct {...props} />
       <HowItsMade {...props} />

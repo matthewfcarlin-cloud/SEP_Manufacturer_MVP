@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DemoBadge } from "@/components/Badges";
+import { StepBar } from "@/components/studio/StepBar";
 import { StudioModel } from "@/components/studio/StudioModel";
 import { nextStep } from "@/lib/studio/nextStep";
 import { stageProgress, STAGES } from "@/lib/studio/stage";
@@ -21,25 +22,17 @@ export function ProductHero({ project, isExample }: { project: Project; isExampl
           <StudioModel url={version.cadFileUrl} still={still} name={project.name} />
         </div>
         <div className="flex min-w-0 flex-col gap-3">
-          <p className="eyebrow flex flex-wrap items-center gap-2 text-[11px] text-muted">
+          <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
             <span>
-              Stage {stageIndex + 1} of 6 · <span className="text-accent">{STAGES[stageIndex].label}</span>
-            </span>
-            <span aria-hidden>·</span>
-            <span>
-              v{version.number} · {version.targetQuantity.toLocaleString("en-US")} units
+              {STAGES[stageIndex].label} stage · {version.targetQuantity.toLocaleString("en-US")} units{project.versions.length > 1 && ` · version ${version.number}`}
             </span>
             {isExample && <DemoBadge label="Example" title="A shared demo product anyone can open" />}
           </p>
           <h1 className="display-type text-[clamp(2.25rem,5vw,4rem)] leading-[0.9] [overflow-wrap:anywhere]">{project.name}</h1>
-          <ol aria-label={`Stage ${stageIndex + 1} of 6: ${STAGES[stageIndex].label}`} className="flex gap-1.5">
-            {STAGES.map((s) => (
-              <li key={s.key} title={s.label} className={`h-2 w-2 ${statuses[s.key] === "done" ? "bg-ink" : statuses[s.key] === "current" ? "bg-accent" : "bg-line"}`} />
-            ))}
-          </ol>
+          <StepBar statuses={statuses} stageIndex={stageIndex} />
         </div>
-        <div className="flex flex-col gap-3 border-l-4 border-accent bg-surface p-5 @2xl:col-span-2 @5xl:col-span-1">
-          <p className="eyebrow text-[11px] text-accent">Next step</p>
+        <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-5 shadow-sm @2xl:col-span-2 @5xl:col-span-1">
+          <p className="text-sm font-semibold text-accent">Next step</p>
           <p className="text-xl font-semibold leading-snug">{step.title}</p>
           <p className="text-sm text-muted">{step.detail}</p>
           <Link href={step.href} className="group mt-1 inline-flex items-center justify-between gap-4 self-start bg-ink px-5 py-3 font-medium text-bg hover:opacity-90">

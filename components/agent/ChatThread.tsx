@@ -23,7 +23,7 @@ function Bubble({ message, isStreaming }: { message: AgentMessage; isStreaming: 
   const isUser = message.role === "user";
   return (
     <li className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[88%] whitespace-pre-wrap px-3.5 py-2.5 text-sm leading-relaxed ${isUser ? "bg-ink text-bg" : "border border-line bg-surface"}`}>
+      <div className={`max-w-[88%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${isUser ? "rounded-br-md bg-ink text-bg" : "rounded-bl-md border border-line bg-surface"}`}>
         {message.content || (isStreaming ? <span className="text-muted">Thinking…</span> : null)}
       </div>
     </li>
@@ -68,17 +68,19 @@ export function ChatThread({ chat, greeting, starters, afterAnswer, footer, inpu
           <div className="flex flex-col gap-4">
             <div className="text-sm leading-relaxed">{greeting}</div>
             <div className="flex flex-col gap-2">
-              <p className="eyebrow text-[10px] text-muted">Try asking</p>
+              <p className="text-xs font-medium text-muted">Try asking</p>
+              <div className="flex flex-wrap gap-2">
               {starters.map((q) => (
                 <button
                   key={q}
                   type="button"
                   onClick={() => send(q)}
-                  className="border border-line bg-surface px-3.5 py-2.5 text-left text-sm hover:border-ink"
+                  className="rounded-full border border-line bg-surface px-3.5 py-1.5 text-left text-sm hover:border-ink hover:bg-bg"
                 >
                   {q}
                 </button>
               ))}
+              </div>
             </div>
           </div>
         ) : (
@@ -90,7 +92,7 @@ export function ChatThread({ chat, greeting, starters, afterAnswer, footer, inpu
         )}
         {lastIsAnswer && !isFull && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={() => send(TELL_ME_MORE)} className="border border-line px-3 py-1.5 text-xs font-medium hover:border-ink">
+            <button type="button" onClick={() => send(TELL_ME_MORE)} className="rounded-full border border-line px-3 py-1.5 text-xs font-medium hover:border-ink">
               Tell me more
             </button>
             {afterAnswer}
@@ -118,7 +120,7 @@ export function ChatThread({ chat, greeting, starters, afterAnswer, footer, inpu
           onKeyDown={onKeyDown}
           disabled={isFull}
           placeholder="Ask in your own words…"
-          className="w-full resize-none border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink"
+          className="w-full resize-none rounded-xl border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink"
         />
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] text-muted">{footer}</p>

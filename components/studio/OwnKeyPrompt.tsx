@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 const DISMISSED_KEY = "idlefit:own-key-prompt-dismissed";
 
-/** One-time, dismissible nudge on the studio: bring your own API key instead of the demo budget. */
+/** One slim, dismissible line under the app's top bar: bring your own API key instead of the demo budget. */
 export function OwnKeyPrompt() {
   // Hidden until we know it wasn't dismissed, so it never flashes in and out.
   const [isVisible, setIsVisible] = useState(false);
@@ -30,19 +30,16 @@ export function OwnKeyPrompt() {
   };
 
   return (
-    <aside aria-label="Use your own API key" className="flex flex-wrap items-center justify-between gap-4 border border-line border-l-4 border-l-accent bg-surface px-5 py-4">
-      <div className="max-w-2xl">
-        <p className="font-semibold">Use your own API key</p>
-        <p className="text-sm text-muted">AI features run on a small shared demo budget. Add your own Anthropic key to keep going without limits; calls are billed to your provider account.</p>
-      </div>
-      <div className="flex items-center gap-2">
-        <Link href="/settings" className="bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90">
-          Add your key
+    <aside aria-label="Demo budget notice" className="flex items-center justify-between gap-3 border-b border-line bg-surface px-4 py-2 text-sm sm:px-6">
+      <p className="min-w-0 text-muted">
+        Using the demo AI budget ·{" "}
+        <Link href="/settings" className="font-medium text-ink underline-offset-4 hover:underline">
+          Add your own key
         </Link>
-        <button type="button" onClick={dismiss} className="px-3 py-2 text-sm text-muted hover:text-ink">
-          Not now
-        </button>
-      </div>
+      </p>
+      <button type="button" onClick={dismiss} aria-label="Not now" className="grid h-7 w-7 shrink-0 place-items-center text-muted hover:text-ink">
+        ×
+      </button>
     </aside>
   );
 }
