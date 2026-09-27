@@ -604,16 +604,19 @@ async function overBudget(page: Page): Promise<string> {
   return ledger;
 }
 
-test("settings shows the AI provider form without faking a saved key", async ({ page }) => {
+test("settings checks a key with the backend and never fakes a saved one", async ({ page }) => {
   await page.goto("/settings");
   await expect(page.getByRole("heading", { level: 1, name: "AI provider" })).toBeVisible();
   await expect(page.getByLabel("Anthropic (Claude)")).toBeChecked();
-  await expect(page.getByLabel("API key")).toBeVisible();
-  // The key backend hasn't landed on this branch: Save and Test say so, and nothing claims a saved key.
-  await page.getByLabel("API key").fill("sk-ant-test-1234567890");
-  await expect(page.getByRole("button", { name: "Save · Coming soon" })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Test key · Coming soon" })).toBeDisabled();
-  await expect(page.getByText("Saved key")).toHaveCount(0);
+  await expect(page.getByLabel("OpenAI")).toBeDisabled();
+  await expect(page.getByText("Your key is encrypted and only used for your projects. Calls are billed to your provider account.")).toBeVisible();
+  // A malformed key is refused by the key route itself (no provider call), for Test and for Save.
+  await page.getByLabel("API key").fill("not-a-real-key");
+  await page.getByRole("button", { name: "Test key", exact: true }).click();
+  await expect(page.getByText("That doesn't look like an Anthropic API key. Keys start with sk-ant-.")).toBeVisible();
+  await page.getByRole("button", { name: "Save key" }).click();
+  await expect(page.getByText("That doesn't look like an Anthropic API key. Keys start with sk-ant-.")).toBeVisible();
+  await expect(page.getByText(/Saved key ·/)).toHaveCount(0);
   await expect(page.getByText(/Demo AI budget · this browser/)).toBeVisible();
 });
 

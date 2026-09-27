@@ -3,7 +3,7 @@ import { classifyAiError } from "@/lib/client/aiError";
 
 const TITLES = {
   budget: "Demo AI budget used up",
-  key: "Your AI key didn't work",
+  key: "There's a problem with the AI key",
   busy: "The AI is busy",
   other: "That didn't work",
 } as const;

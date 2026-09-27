@@ -1,26 +1,26 @@
 // The only place the frontend talks to the "use your own API key" backend
-// (built separately on feat/backend: key storage + AI gateway, BACKEND.md
-// phases A1/A2). Nothing here stores, encrypts or routes keys.
+// (lib/ai/: encrypted key store + gateway, BACKEND.md phases A1/A2). Nothing
+// here stores, encrypts or routes keys.
 //
-// ASSUMED CONTRACT. BACKEND.md section 4 wasn't available when this was
-// written; align these shapes with it when the backend lands:
-//   GET    /api/settings/ai-key         → ApiResponse<SavedAiKey | null>
-//   PUT    /api/settings/ai-key         { provider, key } → ApiResponse<SavedAiKey>
-//   DELETE /api/settings/ai-key         → ApiResponse<{ removed: true }>
-//   POST   /api/settings/ai-key/test    { provider, key } → ApiResponse<{ ok: boolean; message?: string }>
-// Until the routes exist they answer 404, and the UI shows "Coming soon".
+// Contract (BACKEND.md section 4, as built):
+//   GET    /api/settings/ai-key        → ApiResponse<{ key: AiKeyInfo | null }>
+//   POST   /api/settings/ai-key        { provider: "anthropic", apiKey } → ApiResponse<AiKeyInfo>   (tests the key, then saves it)
+//   DELETE /api/settings/ai-key        → ApiResponse<{ removed: boolean }>
+//   POST   /api/settings/ai-key/test   { provider: "anthropic", apiKey } → ApiResponse<{ valid: true }>
+//   GET    /api/usage                  → ApiResponse<UsageSummary>
+// If a route is missing (Next's HTML 404), the UI shows "Coming soon" instead.
 
 import type { ApiResponse } from "../api";
+import type { AiKeyInfo, UsageSummary } from "../types";
 
+/** OpenAI is listed so creators know it's planned; the gateway supports Anthropic today. */
 export const AI_PROVIDERS = [
-  { id: "anthropic", label: "Anthropic (Claude)", placeholder: "sk-ant-…" },
-  { id: "openai", label: "OpenAI", placeholder: "sk-…" },
+  { id: "anthropic", label: "Anthropic (Claude)", placeholder: "sk-ant-…", isSupported: true },
+  { id: "openai", label: "OpenAI", placeholder: "sk-…", isSupported: false },
 ] as const;
 export type AiProvider = (typeof AI_PROVIDERS)[number]["id"];
 
-/** What the server returns for a saved key: never the key itself, only a masked form. */
-export type SavedAiKey = { provider: AiProvider; maskedKey: string; savedAt: string };
-
+export type SavedAiKey = AiKeyInfo;
 export type KeyState = { available: false } | { available: true; saved: SavedAiKey | null };
 export type KeyResult<T> = { ok: true; data: T } | { ok: false; message: string; comingSoon?: boolean };
 
@@ -41,18 +41,27 @@ async function call<T>(path: string, init?: RequestInit): Promise<KeyResult<T>> 
   return json.success ? { ok: true, data: json.data } : { ok: false, message: json.error };
 }
 
-/** Whether the key backend exists yet, and the saved key (masked) if there is one. */
+/** Whether the key backend is reachable, and the saved key (masked) if there is one. */
 export async function getKeyState(): Promise<KeyState> {
-  const result = await call<SavedAiKey | null>(ROUTE);
+  const result = await call<{ key: SavedAiKey | null }>(ROUTE);
   if (!result.ok) return { available: false };
-  return { available: true, saved: result.data };
+  return { available: true, saved: result.data.key };
 }
 
-export const saveKey = (provider: AiProvider, key: string) => call<SavedAiKey>(ROUTE, { method: "PUT", body: JSON.stringify({ provider, key }) });
-export const removeKey = () => call<{ removed: true }>(ROUTE, { method: "DELETE" });
-export const testKey = (provider: AiProvider, key: string) => call<{ ok: boolean; message?: string }>(`${ROUTE}/test`, { method: "POST", body: JSON.stringify({ provider, key }) });
+/** Tests the key, then saves it encrypted; a failing key is never saved. */
+export const saveKey = (provider: AiProvider, apiKey: string) => call<SavedAiKey>(ROUTE, { method: "POST", body: JSON.stringify({ provider, apiKey }) });
+export const removeKey = () => call<{ removed: boolean }>(ROUTE, { method: "DELETE" });
+export const testKey = async (provider: AiProvider, apiKey: string): Promise<KeyResult<{ ok: boolean; message?: string }>> => {
+  const r = await call<{ valid: true }>(`${ROUTE}/test`, { method: "POST", body: JSON.stringify({ provider, apiKey }) });
+  if (r.ok) return { ok: true, data: { ok: true } };
+  if (r.comingSoon) return r;
+  return { ok: true, data: { ok: false, message: r.message } };
+};
 
-/** For display only: "sk-ant-…7Q2f". The server should send this already masked. */
+/** What pays for this browser's AI calls, for the header pill. */
+export const getUsage = () => call<UsageSummary>("/api/usage");
+
+/** For display only: "sk-ant-…7Q2f". The server sends saved keys already masked. */
 export function maskKey(key: string): string {
   const trimmed = key.trim();
   if (trimmed.length <= 12) return "…" + trimmed.slice(-4);

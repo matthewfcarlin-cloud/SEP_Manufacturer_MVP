@@ -91,7 +91,8 @@ app/                  Pages and API routes (App Router)
   p/[token]/          Public shared pitch
 components/           UI, grouped by feature (analysis, agent, businessCase, pitch, privacy, home, viewer…)
 lib/                  Domain logic, pure and tested
-  analysis/           Prompts and the only file that calls the Claude SDK (claude.ts)
+  ai/                 AI gateway, task routing, encrypted key store; providers/ is the only SDK user
+  analysis/           Prompts, schemas and callers for each AI task
   agent/  usage/      Agent context/protocol; AI budget and metering
 data/shops.json       The 25 fictional demo shops
 demo/                 Example products, STL parts and saved renders
@@ -113,6 +114,6 @@ PRODUCT.md            Product spec
 | Selling | `app/project/[id]/sell/`, `components/sell/`, `lib/analysis/listing.ts`, `lib/sell/fees.ts` |
 | Agent assist | `components/agent/BuildAgent.tsx`, `app/api/agent/`, `lib/agent/` |
 | Money (business case) | `lib/businessCase.ts`, `components/businessCase/`, `lib/analysis/price.ts` |
-| Your own API key (frontend) | `app/settings/`, `components/settings/`, `lib/client/aiKey.ts`, `components/HeaderAiPill.tsx`, `components/AiErrorBanner.tsx` |
+| Your own API key | UI: `app/settings/`, `components/settings/`, `lib/client/aiKey.ts`, `components/HeaderAiPill.tsx`, `components/AiErrorBanner.tsx`. Backend: `lib/ai/` (gateway, encrypted key store), `app/api/settings/ai-key/`, `app/api/usage/` |
 | Privacy, sharing, AI budget | `lib/access.ts`, `proxy.ts`, `lib/shareStore.ts`, `lib/aiInputs.ts`, `lib/usage/`, `app/privacy/` |
 | Data model | `lib/types.ts` (the contract), `lib/schemas.ts`, `lib/projectStore.ts` |

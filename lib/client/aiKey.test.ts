@@ -13,13 +13,13 @@ describe("aiKey client", () => {
   });
 
   test("never invents a saved key: no key is null", async () => {
-    respond(200, { success: true, data: null, error: null });
+    respond(200, { success: true, data: { key: null }, error: null });
     expect(await getKeyState()).toEqual({ available: true, saved: null });
   });
 
   test("returns the server's masked key", async () => {
-    const saved = { provider: "anthropic", maskedKey: "sk-ant-…7Q2f", savedAt: "2026-09-27T12:00:00.000Z" };
-    respond(200, { success: true, data: saved, error: null });
+    const saved = { provider: "anthropic", maskedKey: "sk-ant-…7Q2f", createdAt: "2026-09-27T12:00:00.000Z" };
+    respond(200, { success: true, data: { key: saved }, error: null });
     expect(await getKeyState()).toEqual({ available: true, saved });
   });
 

@@ -13,7 +13,7 @@ export class AiCallError extends Error {
 
 export function classifyAiError(status: number, message: string): AiErrorKind {
   if (/\bAI budget\b/i.test(message)) return "budget";
-  if (/api key|provider key|your key/i.test(message) || status === 401 || status === 402) return "key";
+  if (/api key|anthropic key|provider key|your key|ai key/i.test(message) || status === 401 || status === 402) return "key";
   if (status === 429 || status === 502 || status === 503) return "busy";
   return "other";
 }

@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import type { ApiResponse } from "@/lib/api";
-import { getKeyState } from "@/lib/client/aiKey";
+import { getUsage } from "@/lib/client/aiKey";
 
 type Pill = { kind: "key" } | { kind: "budget"; remainingUsd: number } | null;
 
@@ -15,16 +14,10 @@ export function HeaderAiPill() {
 
   useEffect(() => {
     let isLive = true;
-    (async () => {
-      const keyState = await getKeyState();
-      if (keyState.available && keyState.saved) {
-        if (isLive) setPill({ kind: "key" });
-        return;
-      }
-      const res = await fetch("/api/usage/budget").catch(() => null);
-      const json = (await res?.json().catch(() => null)) as ApiResponse<{ remainingUsd: number }> | null;
-      if (isLive && json?.success) setPill({ kind: "budget", remainingUsd: json.data.remainingUsd });
-    })();
+    getUsage().then((r) => {
+      if (!isLive || !r.ok) return;
+      setPill(r.data.keySource === "user" ? { kind: "key" } : { kind: "budget", remainingUsd: r.data.demoBudgetRemainingUsd });
+    });
     return () => {
       isLive = false;
     };

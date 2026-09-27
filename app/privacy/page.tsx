@@ -29,7 +29,7 @@ const POINTS: { title: string; body: React.ReactNode }[] = [
   },
   {
     title: "Your own AI key",
-    body: "You can use your own Anthropic or OpenAI key instead of the demo budget (Settings). Saving keys arrives with the next backend update; until then nothing you type there is stored. Once live, the key is stored encrypted on this server, used only for your projects' AI calls, never shown back in full (only a masked form like sk-ant-…7Q2f), and removed for good when you click Remove key. Calls made with your key are billed to your provider account.",
+    body: "You can use your own Anthropic key instead of the demo budget (Settings). It's tested with the provider before it's saved, then stored encrypted (AES-256-GCM) on this server, tied to your browser, and used only for your projects' AI calls. It's never shown back in full, only a masked form like sk-ant-…7Q2f, and it's never written to logs. Remove key deletes it for good. Calls made with your key are billed to your Anthropic account. OpenAI keys are coming soon.",
   },
   {
     title: "Deleting is real, with one limit",
