@@ -1,6 +1,7 @@
 import { fail, ok } from "@/lib/api";
 import { parseVersionFields } from "@/lib/projectInput";
-import { getAccessibleProject } from "@/lib/access";
+import { currentOwnerHash, getAccessibleProject } from "@/lib/access";
+import { recordEvent } from "@/lib/learning/record";
 import { addVersion } from "@/lib/projectStore";
 import { resolveTweak } from "@/lib/tweaks";
 import { readTextFields, readUploadedParts } from "@/lib/uploadForm";
@@ -22,8 +23,9 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
     return fail("Expected a multipart form upload.", 400);
   }
 
-  const project = (await getAccessibleProject(id))?.project;
-  if (!project) return fail("Project not found.", 404);
+  const found = await getAccessibleProject(id);
+  if (!found) return fail("Project not found.", 404);
+  const { project } = found;
 
   const basedOnRaw = form.get("basedOn");
   const basedOn = parseVersionParam(typeof basedOnRaw === "string" ? basedOnRaw : undefined);
@@ -50,6 +52,16 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
       ...(form.get("keepPhotos") === "on" && { keepPhotosFrom: base }),
     });
     if (!added) return fail("Project not found.", 404);
+    if (appliedTweak) {
+      await recordEvent({
+        workspaceId: await currentOwnerHash(),
+        projectId: id,
+        version: added.version.number,
+        access: found.access,
+        type: "tweak_applied",
+        payload: { process: appliedTweak.process, fromVersion: base.number },
+      });
+    }
     return ok({ id, version: added.version.number }, 201);
   } catch (err) {
     console.error("[api/projects/versions] failed to save version", err);

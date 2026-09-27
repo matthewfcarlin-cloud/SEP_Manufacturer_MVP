@@ -1,4 +1,5 @@
 import { BuildAgent } from "@/components/agent/BuildAgent";
+import { ProductNav } from "@/components/product/ProductNav";
 import { getAccessibleProject } from "@/lib/access";
 import { starterQuestions } from "@/lib/agent/starters";
 import { STAGES, stageProgress } from "@/lib/studio/stage";
@@ -18,6 +19,7 @@ export default async function ProductLayout({ children, params }: LayoutProps<"/
 
   return (
     <>
+      <ProductNav projectId={project.id} projectName={project.name} />
       {children}
       <BuildAgent
         projectId={project.id}

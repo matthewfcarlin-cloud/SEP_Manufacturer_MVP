@@ -2,19 +2,18 @@ import { fail } from "@/lib/api";
 import { buildAgentContext } from "@/lib/agent/context";
 import { encodeAgentEvent, type AgentEvent } from "@/lib/agent/protocol";
 import { agentRequestSchema } from "@/lib/agent/request";
-import { isClaudeConfigured, streamAgentReply } from "@/lib/analysis/claude";
+import { isAiConfigured, streamAgentReply } from "@/lib/analysis/callers";
 import { describeAiError } from "@/lib/analysis/errors";
-import { ACTION_ESTIMATE_USD, recordSpend } from "@/lib/usage/budget";
+import { recordEvent } from "@/lib/learning/record";
 import { aiBudgetGate } from "@/lib/usage/gate";
-import { costOfTurn } from "@/lib/usage/pricing";
 import { findVersion } from "@/lib/versionLookup";
 
 export const maxDuration = 120;
 
 /**
  * Streams the build agent's answer as newline-delimited JSON (lib/agent/protocol.ts).
- * Budget-gated like every AI route; the real cost is charged when the answer
- * finishes, or the chat estimate if it's cut off after text has streamed.
+ * Budget-gated like every AI route; the gateway meters it (the real cost when
+ * the answer finishes, or the chat estimate if it's cut off after text has streamed).
  */
 export async function POST(request: Request): Promise<Response> {
   const body = agentRequestSchema.safeParse(await request.json().catch(() => null));
@@ -22,11 +21,21 @@ export async function POST(request: Request): Promise<Response> {
 
   const found = await findVersion(body.data.projectId, body.data.version);
   if (found instanceof Response) return found;
-  if (!isClaudeConfigured()) {
-    return fail("The build agent isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
-  }
   const ownerHash = await aiBudgetGate("chat");
   if (ownerHash instanceof Response) return ownerHash;
+  if (!(await isAiConfigured(ownerHash))) {
+    return fail("The build agent isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
+  }
+
+  // Only the conversation's length is logged, never what was asked.
+  await recordEvent({
+    workspaceId: ownerHash,
+    projectId: found.project.id,
+    version: found.version.number,
+    access: found.access,
+    type: "agent_question",
+    payload: { turnCount: body.data.messages.length },
+  });
 
   const context = buildAgentContext(found.project, found.version);
   const encoder = new TextEncoder();
@@ -40,17 +49,13 @@ export async function POST(request: Request): Promise<Response> {
           // The browser went away; nothing left to tell it.
         }
       };
-      let hasStreamedText = false;
-      let isCharged = false;
       try {
-        for await (const event of streamAgentReply({ context, messages: body.data.messages, signal: request.signal })) {
+        const reply = streamAgentReply({ workspaceId: ownerHash, context, messages: body.data.messages, signal: request.signal });
+        for await (const event of reply) {
           if (event.type === "text") {
-            hasStreamedText = true;
             send(event);
             continue;
           }
-          await recordSpend(ownerHash, costOfTurn(event.usage));
-          isCharged = true;
           send(
             event.stopReason === "refusal"
               ? { type: "error", message: "The AI declined to answer that. Try asking another way." }
@@ -58,8 +63,10 @@ export async function POST(request: Request): Promise<Response> {
           );
         }
       } catch (err) {
-        if (hasStreamedText && !isCharged) await recordSpend(ownerHash, ACTION_ESTIMATE_USD.chat);
-        if (!request.signal.aborted) send({ type: "error", message: describeAiError(err, "api/agent").message });
+        if (!request.signal.aborted) {
+          const { message, code } = describeAiError(err, "api/agent");
+          send({ type: "error", message, ...(code && { code }) });
+        }
       } finally {
         try {
           controller.close();

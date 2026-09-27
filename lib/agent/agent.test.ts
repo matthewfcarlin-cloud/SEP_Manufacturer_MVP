@@ -51,12 +51,18 @@ describe("starterQuestions", () => {
   const unanalyzed = { ...pedal, versions: [{ ...pedal.versions[0], analysis: undefined, businessCase: undefined, pitch: undefined }] };
 
   test("are three questions for the current stage, using the product's own numbers", () => {
-    // The pedal is at Make: analyzed and priced, no quote chosen yet.
-    const qs = starterQuestions(pedal);
+    // At Make with no quotes requested yet: analyzed and priced, nothing asked of shops.
+    const noQuotes = { ...pedal, versions: [{ ...pedal.versions[0], outreach: undefined }] };
+    const qs = starterQuestions(noQuotes);
     expect(qs).toHaveLength(3);
     expect(qs.every((q) => q.endsWith("?"))).toBe(true);
     expect(qs.join(" ")).toContain("Breakwater Machine");
     expect(qs.join(" ")).toContain("250 units");
+  });
+
+  test("with quotes waiting, they help choose one", () => {
+    const qs = starterQuestions(pedal); // the seeded pedal has 5 demo quotes, none chosen
+    expect(qs[0]).toBe("Which of my 5 demo quotes should I choose, and why?");
   });
 
   test("at Design (not analyzed) they help get a good analysis", () => {
@@ -77,11 +83,24 @@ describe("starterQuestions", () => {
   });
 });
 
+describe("buildAgentContext quotes", () => {
+  test("lists the demo quotes, labeled, with the chosen one marked", () => {
+    const v = pedal.versions[0];
+    const q = { id: "q1", shopId: "breakwater-machine", machineModel: "Haas VF-4", process: "cnc_milling" as const, quantity: 250, unitPriceUsd: 28.4, toolingUsd: 310, leadTimeDays: 11, moq: 5, note: "", status: "quoted" as const, isDemo: true as const };
+    const withQuotes = { ...v, outreach: { requestedAt: "2026-09-27T12:00:00.000Z", specSheet: {} as never, quotes: [q], chosenQuoteId: "q1" } };
+    const context = buildAgentContext({ ...pedal, versions: [withQuotes] }, withQuotes);
+    expect(context).toMatch(/Demo quotes \(simulated/);
+    expect(context).toContain("Breakwater Machine");
+    expect(context).toContain("$28.40/unit");
+    expect(context).toContain("CHOSEN");
+  });
+});
+
 describe("buildAgentContext stage", () => {
   test("tells the agent the current stage and the next step", () => {
     const context = buildAgentContext(pedal, pedal.versions[0]);
     expect(context).toMatch(/Current stage: Make/);
-    expect(context).toMatch(/Next step the app suggests: Talk to a shop/);
+    expect(context).toMatch(/Next step the app suggests: 5 quotes waiting/);
   });
 });
 

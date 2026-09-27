@@ -248,8 +248,9 @@ test("the studio shows every product with its stage, numbers and next step", asy
   await expect(bracket.getByRole("img", { name: /Unit cost went from/ })).toBeVisible();
   await expect(bracket).toContainText("−14%");
 
+  await expect(pedal).toContainText("5 quotes waiting");
   await pedal.getByRole("link", { name: /Next step/ }).click();
-  await expect(page).toHaveURL(new RegExp(`/project/${PEDAL.id}\\?v=1#shop-matches-heading$`));
+  await expect(page).toHaveURL(new RegExp(`/project/${PEDAL.id}/make$`));
 });
 
 test("the studio fits a phone without sideways scrolling", async ({ page }) => {
@@ -519,8 +520,8 @@ test("the build agent opens with product-specific starters and respects the AI b
     await expect(panel).toContainText("Stage: Make");
     const starters = panel.locator("button.text-left");
     await expect(starters).toHaveCount(3);
-    await expect(starters.first()).toContainText("Breakwater Machine");
-    await expect(starters.nth(1)).toContainText("250 units");
+    await expect(starters.first()).toContainText("5 demo quotes");
+    await expect(starters.nth(2)).toContainText("250 units");
 
     await starters.first().click();
     await expect(panel.getByRole("alert")).toContainText("AI budget");
@@ -541,4 +542,30 @@ test("the build agent is on every product screen", async ({ page }) => {
     await page.getByRole("button", { name: "Close build agent" }).click();
     await expect(page.getByRole("complementary", { name: "Build agent" })).toHaveCount(0);
   }
+});
+
+test("the Make screen compares demo quotes and saves the chosen one", async ({ page }) => {
+  await page.goto(`/project/${PEDAL.id}/make`);
+  await expect(page.getByRole("link", { name: "Make", exact: true })).toHaveAttribute("aria-current", "page");
+  const quotes = page.getByRole("region", { name: "Compare quotes" });
+  const cards = quotes.locator("ul > li");
+  await expect(cards).toHaveCount(5);
+  await expect(quotes.getByText("Demo quote", { exact: true })).toHaveCount(5);
+  await expect(quotes.getByText("Best value", { exact: true }).first()).toBeVisible();
+  await expect(cards.first()).toContainText("Best value"); // sorted by best value
+
+  await quotes.getByRole("button", { name: "Lead time" }).click();
+  await expect(cards.first()).toContainText("Fastest");
+
+  // Ordering needs a choice first; then the chosen quote is saved on the version.
+  await expect(cards.first().getByRole("button", { name: "Mark as ordered" })).toHaveCount(0);
+  await cards.nth(1).getByRole("button", { name: "Choose this quote" }).click();
+  await expect(quotes.getByText("Chosen", { exact: true })).toBeVisible();
+  const chosenName = await quotes.locator("li", { hasText: "Chosen" }).locator("h3").innerText();
+  await quotes.locator("li", { hasText: "Chosen" }).getByRole("button", { name: "Request a sample" }).click();
+  await expect(quotes.locator("li", { hasText: "Chosen" }).getByRole("list", { name: "Quote pipeline" })).toContainText("Sample (current)");
+
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Compare quotes" }).locator("li", { hasText: "Chosen" }).locator("h3")).toHaveText(chosenName);
+  await expect(page.getByRole("region", { name: "Spec sheet as sent" }).or(page.getByText("Spec sheet as sent"))).toBeVisible();
 });

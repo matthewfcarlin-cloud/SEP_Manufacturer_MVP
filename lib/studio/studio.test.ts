@@ -27,9 +27,16 @@ describe("stageProgress", () => {
     expect(statuses.money).toBe("todo");
   });
 
+  test("choosing a quote, or agreeing with an Alibaba supplier, completes Make", () => {
+    const chosen = withLatest(pedal, { outreach: { requestedAt: "2026-09-27T12:00:00.000Z", specSheet: {} as never, quotes: [], chosenQuoteId: "a" } });
+    expect(stageProgress(chosen).statuses.make).toBe("done");
+    const agreed = withLatest(pedal, { outreach: undefined, sourcing: { suppliers: [{ status: "agreed" }] as never } });
+    expect(stageProgress(agreed).statuses.make).toBe("done");
+  });
+
   test("later stages can be done out of order, and the current stage is the first gap", () => {
-    // The pedal has an analysis, a business case and pitch text, but no chosen quote yet.
-    const { current, statuses } = stageProgress(pedal);
+    // An analysis, a business case and pitch text, but no chosen quote.
+    const { current, statuses } = stageProgress(withLatest(pedal, { outreach: undefined }));
     expect(statuses.design).toBe("done");
     expect(statuses.money).toBe("done");
     expect(current).toBe("make");
@@ -57,10 +64,18 @@ describe("nextStep", () => {
     expect(step.href).toContain("#business-case-heading");
   });
 
-  test("with a price set, points at the shops that can make it", () => {
-    const step = nextStep(pedal);
-    expect(step.title).toMatch(/shop/i);
+  test("with a price set, asks for quotes from the matched shops", () => {
+    const step = nextStep(withLatest(pedal, { outreach: undefined }));
+    expect(step.title).toBe("Request quotes");
     expect(step.detail).toMatch(/idle/);
+    expect(step.href).toBe(`/project/${pedal.id}/make`);
+  });
+
+  test("with quotes in and none chosen, asks to compare them", () => {
+    const outreach = { requestedAt: "2026-09-27T12:00:00.000Z", specSheet: {} as never, quotes: [{ id: "a" }, { id: "b" }] as never };
+    const step = nextStep(withLatest(pedal, { outreach }));
+    expect(step.title).toBe("2 quotes waiting");
+    expect(step.href).toBe(`/project/${pedal.id}/make`);
   });
 });
 

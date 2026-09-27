@@ -2,7 +2,6 @@
   "id": "yAeM9-RDOE",
   "name": "Fuzz pedal enclosure",
   "createdAt": "2026-09-26T05:50:52.420Z",
-  "isExample": true,
   "versions": [
     {
       "number": 1,
@@ -416,7 +415,103 @@
         "audience": "Pedal parts distributors, enclosure suppliers and contract shops serving boutique builders, plus brands running their own small-batch pedal lines.",
         "ask": "I'm looking for a licensing or supply arrangement. Estimates: at 250 units, stock die-cast shells drilled in a fixture and powder coated land near $14-18; full billet 6061 runs roughly $8-12k in setup. Injection molding only pays past about 3,000-4,000 units.",
         "editedByUser": false
+      },
+      "outreach": {
+        "requestedAt": "2026-09-27T20:00:16.864Z",
+        "specSheet": {
+          "shareLevel": "summary",
+          "process": "cnc_milling",
+          "dimensionsMm": {
+            "x": 122,
+            "y": 66,
+            "z": 39.5
+          },
+          "material": "Aluminum 6061 (anodized)",
+          "finish": "As machined, deburred; anodize or powder coat quoted separately",
+          "quantityTiers": [
+            100,
+            250,
+            1000,
+            10000
+          ],
+          "targetUnitPriceUsd": 11.2,
+          "quoteBy": "2026-10-04",
+          "renders": []
+        },
+        "quotes": [
+          {
+            "id": "q1-breakwater-machine",
+            "shopId": "breakwater-machine",
+            "machineModel": "Haas VF-4",
+            "process": "cnc_milling",
+            "quantity": 250,
+            "unitPriceUsd": 33.8,
+            "toolingUsd": 470,
+            "leadTimeDays": 13,
+            "moq": 5,
+            "note": "We have a gap on the Haas VF-4 (about 10 h/week) and would like to fill it with your run. We'll confirm tolerances on a quick call before cutting metal.",
+            "status": "quoted",
+            "isDemo": true
+          },
+          {
+            "id": "q2-halyard-machine-co",
+            "shopId": "halyard-machine-co",
+            "machineModel": "Haas VF-2",
+            "process": "cnc_milling",
+            "quantity": 250,
+            "unitPriceUsd": 31.24,
+            "toolingUsd": 400,
+            "leadTimeDays": 12,
+            "moq": 5,
+            "note": "Good timing: the Haas VF-2 is open this month (about 22 h/week). Happy to send one first-article sample before the full run.",
+            "status": "quoted",
+            "isDemo": true
+          },
+          {
+            "id": "q3-ironbark-cnc",
+            "shopId": "ironbark-cnc",
+            "machineModel": "Haas UMC-750 (5-axis)",
+            "process": "cnc_milling",
+            "quantity": 250,
+            "unitPriceUsd": 28.8,
+            "toolingUsd": 320,
+            "leadTimeDays": 11,
+            "moq": 25,
+            "note": "Good timing: the Haas UMC-750 (5-axis) is open this month (about 18 h/week). Price holds for 30 days; 50% up front, 50% on delivery.",
+            "status": "quoted",
+            "isDemo": true
+          },
+          {
+            "id": "q4-tailwind-rapid-tooling",
+            "shopId": "tailwind-rapid-tooling",
+            "machineModel": "Haas VF-2",
+            "process": "cnc_milling",
+            "quantity": 250,
+            "unitPriceUsd": 28.53,
+            "toolingUsd": 320,
+            "leadTimeDays": 11,
+            "moq": 100,
+            "note": "Good timing: the Haas VF-2 is open this month (about 15 h/week). We'll confirm tolerances on a quick call before cutting metal.",
+            "status": "quoted",
+            "isDemo": true
+          },
+          {
+            "id": "q5-bitterroot-sheetworks",
+            "shopId": "bitterroot-sheetworks",
+            "machineModel": "Amada EG-6013",
+            "process": "sheet_metal",
+            "quantity": 250,
+            "unitPriceUsd": 20.41,
+            "toolingUsd": 540,
+            "leadTimeDays": 14,
+            "moq": 25,
+            "note": "Good timing: the Amada EG-6013 is open this month (about 12 h/week). Finishing can be quoted separately; we work with a coater in Gardena.",
+            "status": "quoted",
+            "isDemo": true
+          }
+        ]
       }
     }
-  ]
+  ],
+  "isExample": true
 }
