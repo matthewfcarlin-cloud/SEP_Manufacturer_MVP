@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BomPanel } from "@/components/bom/BomPanel";
 import { QuoteComparison } from "@/components/make/QuoteComparison";
 import { QuoteRequestPanel, type MatchSummary } from "@/components/make/QuoteRequestPanel";
 import { SpecSheetCard } from "@/components/make/SpecSheetCard";
@@ -95,6 +96,18 @@ export default async function MakePage(props: PageProps<"/project/[id]/make">) {
           <SpecSheetCard sheet={outreach.specSheet} title="Spec sheet as sent" />
         </>
       )}
+
+      <div className="border-t border-line pt-10">
+        <BomPanel
+          key={`bom-v${version.number}`}
+          projectId={project.id}
+          projectName={project.name}
+          version={version.number}
+          targetQuantity={version.targetQuantity}
+          processes={version.analysis.paths.map((p) => p.process)}
+          initial={version.bom}
+        />
+      </div>
 
       <div className="flex flex-col gap-2 border-t border-line pt-10">
         <p className="eyebrow text-accent">Overseas · Alibaba</p>
