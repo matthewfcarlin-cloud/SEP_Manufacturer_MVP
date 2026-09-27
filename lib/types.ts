@@ -269,3 +269,33 @@ export type AgentMessage = { role: "user" | "assistant"; content: string };
 
 /** The creator journey's six stages (Phase 10+). Derived from a product's data, never stored. */
 export type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell";
+
+/** What an AI call is for (BACKEND.md A1). The gateway routes model, effort and budget by task. */
+export type AiTask = "analyze" | "agent_chat" | "price" | "pitch" | "sourcing_plan" | "negotiation";
+
+/** Whose API key paid for a call: the creator's own (A2) or the house demo key. */
+export type KeySource = "user" | "house";
+
+/**
+ * One AI call, as metered by the gateway. Never holds prompt or response
+ * content. `workspaceId` is the browser's owner-cookie hash.
+ */
+export type UsageRecord = {
+  at: string;
+  workspaceId: string;
+  task: AiTask;
+  provider: "anthropic";
+  model: string; // the model that served the call (may be a fallback), or the routed model if it failed
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+  estCostUsd: number;
+  keySource: KeySource;
+  latencyMs: number;
+  ok: boolean;
+  errorKind?: AiErrorKind;
+};
+
+/** Provider failures, normalized so nothing outside lib/ai/ needs the SDK's error classes. */
+export type AiErrorKind = "auth" | "rate_limit" | "connection" | "provider";

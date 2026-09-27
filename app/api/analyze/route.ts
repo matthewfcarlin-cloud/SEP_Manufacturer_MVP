@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { fail, ok } from "@/lib/api";
-import { callClaude, isClaudeConfigured } from "@/lib/analysis/claude";
+import { analysisCaller, isAiConfigured } from "@/lib/analysis/callers";
 import { buildProjectBrief } from "@/lib/analysis/prompt";
 import { imagesToSend } from "@/lib/aiInputs";
 import { aiFailure } from "@/lib/analysis/errors";
@@ -8,7 +8,6 @@ import { runAnalysis } from "@/lib/analysis/run";
 import { getVersionImages, updateVersion } from "@/lib/projectStore";
 import type { Analysis } from "@/lib/types";
 import { aiBudgetGate } from "@/lib/usage/gate";
-import { metered } from "@/lib/usage/metered";
 import { findVersion } from "@/lib/versionLookup";
 
 // Opus with adaptive thinking and up to two attempts can take a few minutes.
@@ -25,16 +24,15 @@ export async function POST(request: Request): Promise<Response> {
   if (found instanceof Response) return found;
   const { project, version } = found;
 
-  if (!isClaudeConfigured()) {
+  const ownerHash = await aiBudgetGate("analysis");
+  if (ownerHash instanceof Response) return ownerHash;
+  if (!(await isAiConfigured(ownerHash))) {
     return fail("AI analysis isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
   }
 
-  const ownerHash = await aiBudgetGate("analysis");
-  if (ownerHash instanceof Response) return ownerHash;
-
   try {
     const images = await imagesToSend(version, () => getVersionImages(project.id, version));
-    const analysis: Analysis = await runAnalysis(metered(callClaude, ownerHash, "analysis"), {
+    const analysis: Analysis = await runAnalysis(analysisCaller(ownerHash), {
       images,
       text: buildProjectBrief(project, version, images.length),
     });

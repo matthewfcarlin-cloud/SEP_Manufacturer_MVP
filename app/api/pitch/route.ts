@@ -1,13 +1,12 @@
 import { z } from "zod";
 import { fail, ok } from "@/lib/api";
-import { callClaudePitch, isClaudeConfigured } from "@/lib/analysis/claude";
+import { textCaller, isAiConfigured } from "@/lib/analysis/callers";
 import { aiFailure } from "@/lib/analysis/errors";
 import { buildPitchBrief, runPitchGeneration } from "@/lib/analysis/pitch";
 import { updateVersion } from "@/lib/projectStore";
 import { pitchEditSchema } from "@/lib/schemas";
 import type { PitchContent } from "@/lib/types";
 import { aiBudgetGate } from "@/lib/usage/gate";
-import { metered } from "@/lib/usage/metered";
 import { findVersion } from "@/lib/versionLookup";
 
 export const maxDuration = 120;
@@ -30,15 +29,15 @@ export async function POST(request: Request): Promise<Response> {
   const found = await findVersion(body.data.projectId, body.data.version);
   if (found instanceof Response) return found;
   if (!found.version.analysis) return fail("Analyze this version before writing its pitch.", 422);
-  if (!isClaudeConfigured()) {
-    return fail("AI writing isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
-  }
 
   const ownerHash = await aiBudgetGate("pitch");
   if (ownerHash instanceof Response) return ownerHash;
+  if (!(await isAiConfigured(ownerHash))) {
+    return fail("AI writing isn't set up yet: add ANTHROPIC_API_KEY to .env.local and restart the server.", 503);
+  }
 
   try {
-    const pitch = await runPitchGeneration(metered(callClaudePitch, ownerHash, "pitch"), buildPitchBrief(found.project, found.version));
+    const pitch = await runPitchGeneration(textCaller("pitch", ownerHash), buildPitchBrief(found.project, found.version));
     return await savePitch(found.project.id, found.version.number, pitch);
   } catch (err) {
     return aiFailure(err, "api/pitch");
