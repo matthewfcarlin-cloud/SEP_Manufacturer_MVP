@@ -11,6 +11,7 @@ import { formatNumber, formatUsd } from "@/lib/format";
 import { matchVersion } from "@/lib/match";
 import { getAccessibleProject } from "@/lib/access";
 import { ShopMatches } from "@/components/ShopMatches";
+import { SourcingPanel } from "@/components/sourcing/SourcingPanel";
 import { BusinessCasePanel } from "@/components/businessCase/BusinessCasePanel";
 import { VersionTimeline } from "@/components/versions/VersionTimeline";
 import { AiBudgetNote } from "@/components/AiBudgetNote";
@@ -205,6 +206,7 @@ export default async function ProjectPage(props: PageProps<"/project/[id]">) {
         />
       )}
       {version.analysis && <ShopMatches matches={shopMatches} version={version} />}
+      {version.analysis && <SourcingPanel key={`sourcing-v${version.number}`} projectId={project.id} version={version} />}
       {access === "owner" && (
         <DangerZone projectId={project.id} projectName={project.name} version={version.number} versionCount={project.versions.length} />
       )}

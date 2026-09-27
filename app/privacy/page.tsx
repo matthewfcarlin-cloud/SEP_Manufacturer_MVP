@@ -24,6 +24,10 @@ const POINTS: { title: string; body: React.ReactNode }[] = [
     body: "Shop matches show only what a quote request would carry: size, material, quantity and process. Every shop listed is fictional demo data, so nothing is sent to anyone.",
   },
   {
+    title: "Idlefit never contacts overseas suppliers",
+    body: "Alibaba sourcing only plans your search and drafts messages. Drafting sends your part's spec, notes (unless you hold them back), the supplier details you enter and the conversation you paste in to Anthropic's API. Nothing goes to a supplier unless you copy it and send it yourself on Alibaba.",
+  },
+  {
     title: "Deleting is real, with one limit",
     body: "Deleting a project or a version removes its files and data from this server. It can't recall what was already sent to the AI for analysis, which Anthropic handles under its API terms and privacy policy.",
   },

@@ -10,10 +10,10 @@ import { serialized } from "../serialize";
 // Spend is recorded from each response's real token usage; before a call,
 // a conservative estimate for that action must still fit.
 
-export type AiAction = "analysis" | "pitch" | "chat" | "price";
+export type AiAction = "analysis" | "pitch" | "chat" | "price" | "sourcing" | "negotiation";
 
 /** Conservative cost of one action, including a possible retry (Opus 5, measured usage + headroom). */
-export const ACTION_ESTIMATE_USD: Record<AiAction, number> = { analysis: 0.6, pitch: 0.15, chat: 0.1, price: 0.05 };
+export const ACTION_ESTIMATE_USD: Record<AiAction, number> = { analysis: 0.6, pitch: 0.15, chat: 0.1, price: 0.05, sourcing: 0.08, negotiation: 0.15 };
 
 const DEFAULT_BROWSER_BUDGET_USD = 3;
 const DEFAULT_DAILY_BUDGET_USD = 25;
