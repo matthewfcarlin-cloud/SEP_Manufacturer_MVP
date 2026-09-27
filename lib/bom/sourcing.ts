@@ -7,6 +7,8 @@ import { CATEGORY_LABELS, runQuantity } from "./build";
 // in front of a supplier: no costs, no private notes, no product name.
 
 export type BomSourcingLine = {
+  /** BomItem.id: stable across edits, so callers can key supplier assignments on it. */
+  id: string;
   name: string;
   spec: string;
   category: BomCategory;
@@ -32,6 +34,7 @@ export function bomSourcingLines(version: Pick<ProjectVersion, "bom" | "targetQu
   return bom.items
     .filter((i) => !process || (i.category === "custom_part" && i.process === process))
     .map((i) => ({
+      id: i.id,
       name: i.name,
       spec: i.spec,
       category: i.category,

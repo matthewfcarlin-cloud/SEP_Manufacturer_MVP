@@ -147,7 +147,7 @@ describe("sourcing interface", () => {
   test("lines carry spec-level facts and run quantities, never costs or notes", () => {
     const lines = bomSourcingLines(version);
     expect(lines).toHaveLength(4);
-    expect(lines[1]).toEqual({ name: "Lid screw", spec: "ISO 7380 button head M3 × 8, A2 stainless", category: "hardware", quantityPerProduct: 4, unit: "pc", runQuantity: 1000 });
+    expect(lines[1]).toEqual({ id: bom.items[1].id, name: "Lid screw", spec: "ISO 7380 button head M3 × 8, A2 stainless", category: "hardware", quantityPerProduct: 4, unit: "pc", runQuantity: 1000 });
     expect(JSON.stringify(lines)).not.toMatch(/cost|notes|Confirm/i);
   });
 
