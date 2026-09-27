@@ -1,6 +1,8 @@
 # Idlefit — Build Spec (working name)
 
 ## What we're building
+> The product direction is now the creator studio (idea → design → make → money → launch → sell). `PRODUCT.md` is the product spec; the build plan is under "Phase 10+: Creator studio" below.
+
 A web app for independent inventors and small hardware teams. They upload a product idea (CAD file + photos + notes). The app shows how it could be manufactured, which local shops have idle machines that fit it, what design tweaks would make it cheaper, and generates a shareable pitch kit.
 
 **Core insight (from customer discovery with a veteran model maker/inventor):** design around what factories already have running, especially idle machines. Good design alone doesn't close the deal; manufacturability and profitability do.
@@ -371,18 +373,68 @@ aiInputs: { includePhotos: boolean; includeNotes: boolean };   // default both t
 - Prepare 2–3 example projects in `demo/`: a guitar bridge or pedal enclosure (hero), plus one part where a tweak clearly changes the process (e.g. molded bracket → sheet metal).
 - Test AI output on these early and tune the prompt until the tweaks are specific and credible.
 
-## Phases 10–13: create → manufacture → sell
+## Phase 10+: Creator studio
 
-Idlefit is being repositioned as an all-in-one platform for first-time product creators (Printify-style: create → manufacture → sell). Four features, built in order, each committed separately. Existing flows must keep working. Every AI feature goes through the AI budget (`aiBudgetGate` + metering) and `lib/aiInputs.ts`; anything simulated is labeled as demo.
+Idlefit is repositioned as the all-in-one studio for first-time product creators: **idea → design → make → money → launch → sell**. `PRODUCT.md` is the product spec (why and what); this file stays the build reference (how). Build in this order, one commit each, stopping after each for testing:
 
-| # | Feature | Status |
-|---|---|---|
-| 10 | Build agent: streamed chat on `/project/[id]` grounded in the version's data | Built |
-| 11 | Request quotes: simulated "Demo quote" from the top 5 matched shops, persisted on the version | Planned |
-| 12 | Sell on Etsy: generated listing (title ≤140, description, exactly 13 tags, price, renders), copy buttons, "Connect Etsy shop" coming soon | Planned |
-| 13 | Share card: public page with an Open Graph image and "Share on X"; only when the owner has sharing on | Planned |
+| # | Build | Done when | Status |
+|---|---|---|---|
+| 1 | Studio dashboard `/studio` | Opening the studio shows every product, its stage, key numbers and next step at a glance | Building |
+| 2 | Agent assist on every product screen | "How do I make this cheaper?" answers with this part's features and numbers | Chat built (below); extend to all product screens, stage-aware starters, quotes + plan in context |
+| 3 | Manufacturer outreach | Five labeled demo quotes appear, sort by price and lead time, and one can be chosen | Planned |
+| 4 | Plan and timeline | Choosing a quote re-dates the launch | Planned |
+| 5 | Selling (Etsy listing) | A full listing copies into Etsy in under a minute | Planned |
 
-### Phase 10 – Build agent (built)
+**Rules for every build**
+- Keep the design system exactly: dark header, huge uppercase `display-type` headings, mono `eyebrow` labels, orange `accent`, sharp corners, `night-*` tokens on dark bands. Extend, don't restyle. Check light, dark and phone widths.
+- Every screen looks finished at rest: loading skeletons, empty states, no layout shift. Every animation respects `useReducedMotion()` / `motion-reduce:`.
+- Costs are ranges labeled "est."; demo data is always badged (`DemoBadge`, "Demo quote").
+- Derived state (stage, next step, deltas) is computed by pure, tested functions, never stored and never AI.
+- AI features go through `aiBudgetGate` + metering, read notes/photos via `lib/aiInputs.ts`, and call the SDK only from `lib/analysis/claude.ts`.
+- The demo projects are seeded so the dashboard, quotes and plan have data the moment the app opens (`demo/*.json` + `npm run demo:seed`).
+- `lib/types.ts` stays the contract: each build adds its types there and in the data-model block above, in the same commit.
+
+**Routes (planned unless marked)**
+- `/studio`: the creators' home (header link "Studio"); `/projects` redirects there. `/` stays the marketing landing.
+- Product screens share a stage sub-nav (Design · Make · Money · Launch · Sell) and the agent panel: `/project/[id]` (design + money), `/project/[id]/make` (outreach + quotes), `/project/[id]/plan`, `/project/[id]/pitch` (built), `/project/[id]/sell`.
+- `POST /api/projects/[id]/versions/[n]/quotes`: request quotes (spec sheet + simulated demo quotes). `PATCH .../quotes/[quoteId]` `{ status }`, `POST .../quotes/[quoteId]/choose`.
+- `POST /api/plan` `{ projectId, version }`: Claude drafts milestones as zod-validated JSON; choosing a quote re-dates the plan without an AI call.
+- `POST /api/listing` `{ projectId, version }`: generates the Etsy listing.
+- `POST /api/agent` (built): the agent's streamed answers.
+
+**New types (added to `lib/types.ts` by the build that uses them)**
+```ts
+type Stage = "idea" | "design" | "make" | "money" | "launch" | "sell"; // build 1, derived, never stored
+
+// Build 3, on ProjectVersion.outreach
+type QuoteStatus = "sent" | "quoted" | "sample" | "ordered";
+type DemoQuote = {
+  id: string; shopId: string; machineModel: string; process: Process;
+  quantity: number; unitPriceUsd: number;   // simulated, inside the analysis unit-cost range for that process
+  toolingUsd: number; leadTimeDays: number; moq: number;
+  note: string; status: QuoteStatus; isDemo: true;
+};
+type SpecSheet = {
+  dimensionsMm: { x: number; y: number; z: number }; material: string; finish: string;
+  quantityTiers: number[]; targetUnitPriceUsd?: number; deadline?: string;
+  renders: string[]; includesNotes: boolean; // follows the privacy settings
+};
+type Outreach = { requestedAt: string; specSheet: SpecSheet; quotes: DemoQuote[]; chosenQuoteId?: string };
+
+// Build 4, on ProjectVersion.plan
+type MilestoneKey = "finalize_design" | "prototype" | "sample_approval" | "tooling" | "production" | "photos" | "listing" | "launch";
+type Milestone = { key: MilestoneKey; title: string; startDate: string; endDate: string; budgetUsd: { low: number; high: number }; note?: string };
+type LaunchPlan = {
+  generatedAt: string; startDate: string; launchDate: string;
+  basedOn: { kind: "quote"; quoteId: string } | { kind: "analysis" };
+  milestones: Milestone[]; warnings: string[];
+};
+
+// Build 5, on ProjectVersion.listing
+type EtsyListing = { title: string; description: string; tags: string[]; priceUsd: number; photos: string[]; generatedAt: string }; // title ≤ 140 chars, exactly 13 tags
+```
+
+### Build 2 foundation – the agent chat (built)
 - `POST /api/agent` `{ projectId, version?, messages: AgentMessage[] }` streams newline-delimited JSON events (`lib/agent/protocol.ts`: `text` deltas, then `done` or `error`). Validated by `agentRequestSchema` (alternating turns starting and ending with the user, ≤24 turns, ≤4,000 chars each).
 - `streamAgentReply()` in `lib/analysis/claude.ts` (still the only file calling the SDK): `messages.stream()` with adaptive thinking, effort `medium`, server-side fallback. The system prompt (`lib/agent/prompt.ts`) is followed by the product context as a second system block with `cache_control`, so follow-up turns re-read it from cache.
 - Context: `buildAgentContext()` (`lib/agent/context.ts`) = brief (notes via `notesForAi`), geometry, analysis paths and tweaks, cost-by-volume, business case tiers and verdict, top 5 shop matches (labeled fictional), version history. Photos are never sent to the agent.
