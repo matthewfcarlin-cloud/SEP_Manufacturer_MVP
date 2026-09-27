@@ -31,15 +31,17 @@ export const CAPABILITY_LABELS: Record<AssemblyCapability, string> = {
 /** Hands-on minutes per finished unit for each line, per piece, before the spread. Capped so a bag of 40 screws doesn't count as 40 steps. */
 const MINUTES_PER_PIECE: Record<OrderLineKind, number> = {
   custom_part: 1.5,
-  hardware: 0.4,
+  // Loose hardware is mostly counted into a bag or driven with a power tool.
+  hardware: 0.2,
   electronics: 3,
   material: 0.5,
-  finish: 2,
-  packaging: 1,
+  // A finish (powder coat, anodizing) is applied to the part before it ships, not at the bench.
+  finish: 0,
+  packaging: 0.75,
 };
 const MAX_PIECES_COUNTED = 8;
 /** Receiving, a quick inspection and moving the unit along. */
-const BASE_MINUTES = 1.5;
+const BASE_MINUTES = 1;
 /** The estimate is a range: simple builds go faster than the table, fiddly ones slower. */
 const MINUTES_SPREAD = { low: 0.7, high: 1.4 } as const;
 
@@ -60,9 +62,9 @@ export function assemblyMinutes(lines: readonly OrderLine[]): { low: number; hig
 export function requiredCapabilities(lines: readonly OrderLine[]): AssemblyCapability[] {
   const kinds = new Set(lines.map((l) => l.kind));
   const needs: AssemblyCapability[] = [];
-  if (lines.filter((l) => l.kind !== "packaging").length > 1 || kinds.has("hardware")) needs.push("mechanical");
+  const benchLines = lines.filter((l) => l.kind !== "packaging" && l.kind !== "finish");
+  if (benchLines.length > 1 || kinds.has("hardware")) needs.push("mechanical");
   if (kinds.has("electronics")) needs.push("electronics");
-  if (kinds.has("finish")) needs.push("finishing");
   if (kinds.has("packaging")) needs.push("packaging");
   return needs;
 }
