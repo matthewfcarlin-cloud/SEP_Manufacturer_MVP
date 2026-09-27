@@ -91,6 +91,17 @@ function quoteLines(version: ProjectVersion): string[] {
   return lines;
 }
 
+function planLines(version: ProjectVersion): string[] {
+  const plan = version.plan;
+  if (!plan) return ["Launch plan: none yet."];
+  const basis = plan.basedOn.kind === "quote" ? "the chosen demo quote" : "the analysis lead time";
+  return [
+    `Launch plan (production dated from ${basis}; budgets are estimates): launch ${plan.launchDate}.`,
+    ...plan.milestones.map((m) => `- ${m.title} (${m.key}): ${m.startDate} → ${m.endDate}, $${m.budgetUsd.low.toLocaleString("en-US")}–$${m.budgetUsd.high.toLocaleString("en-US")}.`),
+    ...plan.warnings.map((w) => `Warning: ${w}`),
+  ];
+}
+
 export function buildAgentContext(project: Project, version: ProjectVersion): string {
   const story = buildIterationStory(project).filter((s) => s.to <= version.number);
   const { current } = stageProgress(project);
@@ -109,6 +120,8 @@ export function buildAgentContext(project: Project, version: ProjectVersion): st
     ...shopLines(version),
     "",
     ...quoteLines(version),
+    "",
+    ...planLines(version),
     ...(story.length ? ["", "Version history:", ...story.map((s) => `- v${s.from} → v${s.to}: ${s.summary}`)] : []),
   ].join("\n");
 }

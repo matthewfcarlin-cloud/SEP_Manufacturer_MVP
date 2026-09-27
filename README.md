@@ -21,7 +21,7 @@ Every product moves through six stages, and the app always shows the next step.
 | 2 | **Design** | Measured geometry, AI analysis and design tweaks, versions and compare, agent assist | ✅ Built |
 | 3 | **Make** | Manufacturing paths, shop matches, outreach and quotes, Alibaba sourcing | ✅ Built |
 | 4 | **Money** | Business case: price, margin, tooling break-even | ✅ Built |
-| 5 | **Launch** | Plan and timeline, pitch kit, marketing | ✅ Pitch kit · 🔨 Timeline |
+| 5 | **Launch** | Plan and timeline, pitch kit, marketing | ✅ Built |
 | 6 | **Sell** | Etsy-ready listing | 🔨 Building |
 
 ## The eight components
@@ -108,7 +108,7 @@ PRODUCT.md            Product spec
 | Design assist | `app/project/[id]/page.tsx`, `components/analysis/`, `lib/analysis/`, `lib/geometry.ts`, `lib/versions.ts`, `lib/compare.ts` |
 | Manufacturer match | `lib/match.ts`, `components/ShopMatches.tsx`, `lib/specSummary.ts`, `data/shops.json` |
 | Manufacturer outreach | `app/project/[id]/make/`, `components/make/`, `lib/outreach/` (spec sheet, simulated quotes, compare, pipeline); Alibaba sourcing: `components/sourcing/`, `lib/sourcing/`, `lib/analysis/sourcing.ts` |
-| Plan and timeline | *(building)* |
+| Plan and timeline | `app/project/[id]/plan/`, `components/plan/`, `lib/plan/schedule.ts`, `lib/analysis/plan.ts` |
 | Marketing (pitch kit) | `app/project/[id]/pitch/`, `components/pitch/`, `lib/analysis/pitch.ts`, `lib/iterationStory.ts` |
 | Selling | *(building)* |
 | Agent assist | `components/agent/BuildAgent.tsx`, `app/api/agent/`, `lib/agent/` |

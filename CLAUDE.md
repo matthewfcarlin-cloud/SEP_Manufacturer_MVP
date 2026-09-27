@@ -391,7 +391,7 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 | 1 | Studio dashboard `/studio` | Opening the studio shows every product, its stage, key numbers and next step at a glance | Built |
 | 2 | Agent assist on every product screen | "How do I make this cheaper?" answers with this part's features and numbers | Built (quotes and plan join its context in builds 3–4) |
 | 3 | Manufacturer outreach | Five labeled demo quotes appear, sort by price and lead time, and one can be chosen | Built |
-| 4 | Plan and timeline | Choosing a quote re-dates the launch | Planned |
+| 4 | Plan and timeline | Choosing a quote re-dates the launch | Built |
 | 5 | Selling (Etsy listing) | A full listing copies into Etsy in under a minute | Planned |
 
 **Rules for every build**
@@ -407,7 +407,7 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 - `/studio` (built): the creators' home (header link "Studio"); `/projects` redirects there. `/` stays the marketing landing.
 - Product screens share a tab bar and the agent panel: `/project/[id]` (design + money, built), `/project/[id]/make` (outreach + quotes, built), `/project/[id]/plan`, `/project/[id]/pitch` (built), `/project/[id]/sell`.
 - `POST /api/projects/[id]/versions/[n]/quotes` (built): request quotes (spec sheet + simulated demo quotes). `PATCH .../quotes/[quoteId]` `{ status }`, `POST .../quotes/[quoteId]/choose` (built).
-- `POST /api/plan` `{ projectId, version }`: Claude drafts milestones as zod-validated JSON; choosing a quote re-dates the plan without an AI call.
+- `POST /api/plan` `{ projectId, version? }` (built): Claude drafts milestones as zod-validated JSON; choosing a quote re-dates the plan without an AI call.
 - `POST /api/listing` `{ projectId, version }`: generates the Etsy listing.
 - `POST /api/agent` (built): the agent's streamed answers.
 
@@ -432,9 +432,9 @@ type SpecSheet = {
 };
 type Outreach = { requestedAt: string; specSheet: SpecSheet; quotes: DemoQuote[]; chosenQuoteId?: string };
 
-// Build 4, on ProjectVersion.plan
+// Build 4 (in lib/types.ts), on ProjectVersion.plan
 type MilestoneKey = "finalize_design" | "prototype" | "sample_approval" | "tooling" | "production" | "photos" | "listing" | "launch";
-type Milestone = { key: MilestoneKey; title: string; startDate: string; endDate: string; budgetUsd: { low: number; high: number }; note?: string };
+type Milestone = { key: MilestoneKey; title: string; startDate: string; endDate: string; durationDays: number; budgetUsd: { low: number; high: number }; note?: string };
 type LaunchPlan = {
   generatedAt: string; startDate: string; launchDate: string;
   basedOn: { kind: "quote"; quoteId: string } | { kind: "analysis" };
@@ -450,6 +450,14 @@ type EtsyListing = { title: string; description: string; tags: string[]; priceUs
 - Derived, pure, tested (`lib/studio/`): `stageProgress()` (a stage is done when its data exists on the latest version; the current stage is the first gap, so later stages can be done out of order), `nextStep()` (ordered rules: wrong units → analyze → set a price → rework if unprofitable at every volume → talk to a shop → write pitch → share; each links to the screen that does it), `keyNumbers()` (best-path unit cost at target qty, retail, margin at target qty) and `unitCostTrend()` (best-path unit cost per analyzed version). Make/Launch/Sell rules gain quotes, plan and listing in builds 3–5.
 - `StudioModel` mounts the WebGL viewer only while the card is on screen (browsers cap live contexts), shows the saved render or a skeleton until `onReady`, spins slowly (`rotateSpeed` 0.5, zoom off) and not at all under reduced motion. `ModelViewer` gained `rotateSpeed`, `enableZoom`, `onReady`, `showLoading` (defaults unchanged).
 - Grid children need `min-w-0` or a long title widens the page on phones (E2E checks no horizontal scroll at 390 px).
+
+### Build 4 – Plan and timeline (built)
+- `/project/[id]/plan` (tab "Plan"): timeline (`components/plan/PlanTimeline.tsx`: one row per milestone on a shared date axis, month ticks, Today and Launch markers, production in accent, zero-day steps as diamonds), key figures, AI warnings, and a budget table with running totals (all est.).
+- `POST /api/plan` `{ projectId, version? }` (budget action `plan`, $0.15 est.): Claude drafts the 8 milestones (`MILESTONE_KEYS` order) as `planDraftSchema`-validated JSON via `runStructured` (`lib/analysis/plan.ts`, `callClaudePlan`). The **code** owns what must be exact (`lib/plan/schedule.ts`): `productionFacts()` = chosen quote's lead time and cost (else the analysis best path's high lead time and cost range), zero-day tooling when there's none, and every date (`buildPlan`, back to back from today).
+- Choosing a quote re-dates an existing plan with `redatePlan()` inside the choose route (no AI call; keeps the AI's titles, notes and other durations, and the start date).
+- Launch stage is done when a plan exists; next step "Plan your launch" follows a chosen quote; the studio card's "Next deadline" = `nextDeadline(plan, today)`; the agent's context lists the plan.
+- `AiErrorBanner` + `classifyAiError()` (`lib/client/aiError.ts`): every AI call's failure is shown on the screen that made it, distinguishing a spent demo budget and a failed key (both link to `/settings`) from a busy service.
+- Seeded: both examples have real AI-drafted plans (bracket dated from its chosen quote, pedal from the analysis).
 
 ### Build 3 – Manufacturer outreach (built)
 - `/project/[id]/make` is the Make stage screen (latest version): **Local shops · demo** (request panel → comparison → spec sheet as sent) and **Overseas · Alibaba** (the teammate-built `SourcingPanel`, moved here from the overview; the overview links to Make). Product screens share a tab bar (`components/product/ProductNav.tsx`, in the product layout): Design & money · Make · Launch.

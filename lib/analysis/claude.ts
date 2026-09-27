@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
-import { analysisOutputSchema, pitchOutputSchema, priceSuggestionOutputSchema } from "../schemas";
+import { analysisOutputSchema, pitchOutputSchema, planDraftOutputSchema, priceSuggestionOutputSchema } from "../schemas";
 import { getShops } from "../shops";
 import { summarizeCapacity } from "./capacity";
 import type { CallTextModel } from "./structured";
@@ -8,6 +8,7 @@ import { tolerateUnparseableOutput } from "./structuredOutput";
 import { AGENT_SYSTEM_PROMPT } from "../agent/prompt";
 import type { AgentMessage } from "../types";
 import { PITCH_SYSTEM_PROMPT } from "./pitch";
+import { PLAN_SYSTEM_PROMPT } from "./plan";
 import { PRICE_SYSTEM_PROMPT } from "./price";
 import { NEGOTIATION_SYSTEM_PROMPT, SOURCING_PLAN_SYSTEM_PROMPT } from "./sourcing";
 import { sourcingPlanOutputSchema, supplierDraftOutputSchema } from "../sourcing/schemas";
@@ -157,6 +158,15 @@ export const callClaudeNegotiation = makeTextCaller({
   effort: "medium",
   maxTokens: 10_000,
   logTag: "negotiation",
+});
+
+// A launch plan: eight short milestones, medium effort.
+export const callClaudePlan = makeTextCaller({
+  system: PLAN_SYSTEM_PROMPT,
+  schema: planDraftOutputSchema,
+  effort: "medium",
+  maxTokens: 10_000,
+  logTag: "plan",
 });
 
 // The build agent: a streamed conversation. The product context is a stable

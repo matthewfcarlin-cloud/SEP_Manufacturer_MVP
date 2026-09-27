@@ -569,3 +569,27 @@ test("the Make screen compares demo quotes and saves the chosen one", async ({ p
   await expect(page.getByRole("region", { name: "Compare quotes" }).locator("li", { hasText: "Chosen" }).locator("h3")).toHaveText(chosenName);
   await expect(page.getByRole("region", { name: "Spec sheet as sent" }).or(page.getByText("Spec sheet as sent"))).toBeVisible();
 });
+
+test("choosing a different quote re-dates the launch plan", async ({ page }) => {
+  await page.goto(`/project/${BRACKET.id}/plan`);
+  await expect(page.getByRole("heading", { name: "Timeline" })).toBeVisible();
+  await expect(page.getByRole("figure", { name: /Launch plan timeline/ }).locator("ol > li")).toHaveCount(8);
+  const launch = page.locator("dl div", { hasText: /^Launch/ }).locator("dd");
+  const before = await launch.innerText();
+
+  // Choose the slowest quote on Make, then come back: production is re-dated from it.
+  await page.goto(`/project/${BRACKET.id}/make`);
+  const quotes = page.getByRole("region", { name: "Compare quotes" });
+  await quotes.getByRole("button", { name: "Lead time" }).click();
+  const slowest = quotes.locator("ul > li").last();
+  const slowestName = await slowest.locator("h3").innerText();
+  if (await slowest.getByRole("button", { name: "Choose this quote" }).count()) {
+    await slowest.getByRole("button", { name: "Choose this quote" }).click();
+    await expect(slowest.getByText("Chosen", { exact: true })).toBeVisible();
+  }
+  await page.goto(`/project/${BRACKET.id}/plan`);
+  await expect(page.getByText(`chosen demo quote: ${slowestName}`)).toBeVisible();
+  const after = await page.locator("dl div", { hasText: /^Launch/ }).locator("dd").innerText();
+  expect(after >= before).toBe(true);
+  expect(after).not.toBe(before);
+});

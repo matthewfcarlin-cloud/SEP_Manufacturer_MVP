@@ -5,6 +5,9 @@ import { formatMarginRange } from "@/lib/businessCase";
 import { nextStep } from "@/lib/studio/nextStep";
 import { stageProgress, STAGES } from "@/lib/studio/stage";
 import { keyNumbers, unitCostTrend } from "@/lib/studio/summary";
+import { nextDeadline, todayIso } from "@/lib/plan/schedule";
+
+const shortDate = (iso: string) => new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 import type { Project } from "@/lib/types";
 import { latestAnalyzedVersion, latestVersion } from "@/lib/versions";
 import { StageRail } from "./StageRail";
@@ -28,6 +31,7 @@ export function StudioCard({ project, isExample }: { project: Project; isExample
   const step = nextStep(project);
   const still = (latestAnalyzedVersion(project) ?? version).renders?.[0];
   const stageLabel = STAGES.find((s) => s.key === current)?.label;
+  const deadline = version.plan ? nextDeadline(version.plan, todayIso()) : undefined;
 
   return (
     <article className="flex w-full min-w-0 flex-col overflow-hidden border border-line bg-surface">
@@ -62,7 +66,7 @@ export function StudioCard({ project, isExample }: { project: Project; isExample
             muted={!numbers.margin}
             warn={Boolean(numbers.margin && numbers.margin.mid < 0)}
           />
-          <Figure label="Next deadline" value="No plan yet" muted />
+          <Figure label="Next deadline" value={deadline ? `${shortDate(deadline.endDate)} · ${deadline.title}` : version.plan ? "All done" : "No plan yet"} muted={!deadline} />
         </dl>
 
         <UnitCostSparkline points={unitCostTrend(project)} />

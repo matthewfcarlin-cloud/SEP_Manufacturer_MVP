@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_QUANTITY_TIERS } from "./businessCase";
 import { PROCESSES } from "./processes";
-import type { AiInputs, DemoQuote, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
+import type { AiInputs, DemoQuote, LaunchPlan, Outreach, SpecSheet, AppliedTweak, Analysis, BusinessCaseInputs, ShareLink, GeometryStats, Machine, PitchContent, PitchVideo, PriceSuggestion, Project, ProjectVersion, Shop, Sourcing } from "./types";
 
 const dimsMm = z.object({
   x: z.number().positive(),
@@ -265,6 +265,61 @@ export const outreachSchema = z.object({
   chosenQuoteId: z.string().optional(),
 }) satisfies z.ZodType<Outreach>;
 
+// ---------------------------------------------------------------------------
+// Launch plan (build 4). The AI drafts durations, budgets and notes per
+// milestone in a fixed order; dates and the production numbers are computed.
+// ---------------------------------------------------------------------------
+
+export const MILESTONE_KEYS = ["finalize_design", "prototype", "sample_approval", "tooling", "production", "photos", "listing", "launch"] as const;
+const milestoneKeySchema = z.enum(MILESTONE_KEYS);
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+export const milestoneSchema = z.object({
+  key: milestoneKeySchema,
+  title: z.string().min(1),
+  startDate: isoDate,
+  endDate: isoDate,
+  durationDays: z.number().int().nonnegative(),
+  budgetUsd: z.object({ low: z.number().nonnegative(), high: z.number().nonnegative() }),
+  note: z.string().optional(),
+});
+
+export const launchPlanSchema = z.object({
+  generatedAt: z.iso.datetime(),
+  startDate: isoDate,
+  launchDate: isoDate,
+  basedOn: z.discriminatedUnion("kind", [z.object({ kind: z.literal("quote"), quoteId: z.string() }), z.object({ kind: z.literal("analysis") })]),
+  milestones: z.array(milestoneSchema),
+  warnings: z.array(z.string()),
+}) satisfies z.ZodType<LaunchPlan>;
+
+/** What the model returns: one entry per milestone, in MILESTONE_KEYS order. */
+export const planDraftOutputSchema = z.object({
+  milestones: z
+    .array(
+      z.object({
+        key: milestoneKeySchema,
+        title: z.string().describe("Short, specific to this product, under 6 words."),
+        durationDays: z.number().describe("Calendar days for this step. Use 0 only for tooling when there is no tooling."),
+        budgetLowUsd: z.number().describe("Low end of this step's cost in USD (estimate)."),
+        budgetHighUsd: z.number().describe("High end of this step's cost in USD (estimate)."),
+        note: z.string().describe("One sentence, under 25 words: what to do and what to watch for."),
+      }),
+    )
+    .describe("Exactly 8 milestones in this order: finalize_design, prototype, sample_approval, tooling, production, photos, listing, launch."),
+  warnings: z.array(z.string()).describe("0-3 one-sentence warnings about timing or budget risks specific to this plan."),
+});
+
+export const planDraftSchema = planDraftOutputSchema.superRefine((d, ctx) => {
+  const keys = d.milestones.map((m) => m.key).join(",");
+  if (keys !== MILESTONE_KEYS.join(",")) ctx.addIssue({ code: "custom", path: ["milestones"], message: `must be exactly ${MILESTONE_KEYS.join(", ")} in that order` });
+  d.milestones.forEach((m, i) => {
+    if (m.durationDays < 0 || m.durationDays > 365) ctx.addIssue({ code: "custom", path: ["milestones", i, "durationDays"], message: "must be 0-365" });
+    if (m.budgetLowUsd < 0 || m.budgetHighUsd < m.budgetLowUsd) ctx.addIssue({ code: "custom", path: ["milestones", i], message: "budget high must be >= low >= 0" });
+  });
+  if (d.warnings.length > 3) ctx.addIssue({ code: "custom", path: ["warnings"], message: "at most 3 warnings" });
+});
+
 export const projectVersionSchema = z.object({
   number: z.number().int().positive(),
   createdAt: z.iso.datetime(),
@@ -286,6 +341,7 @@ export const projectVersionSchema = z.object({
   aiInputs: aiInputsSchema.optional(),
   sourcing: sourcingSchema.optional(),
   outreach: outreachSchema.optional(),
+  plan: launchPlanSchema.optional(),
 }) satisfies z.ZodType<ProjectVersion>;
 
 export const projectSchema = z.object({

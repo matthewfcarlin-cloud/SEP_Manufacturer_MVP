@@ -52,6 +52,30 @@ export type ProjectVersion = {
   sourcing?: Sourcing;
   /** Quote requests to the matched local demo shops, and their simulated quotes (Phase 10+ build 3). */
   outreach?: Outreach;
+  /** Launch plan: AI-drafted milestones, dated from the chosen quote or the analysis (build 4). */
+  plan?: LaunchPlan;
+};
+
+export type MilestoneKey = "finalize_design" | "prototype" | "sample_approval" | "tooling" | "production" | "photos" | "listing" | "launch";
+
+export type Milestone = {
+  key: MilestoneKey;
+  title: string;
+  /** YYYY-MM-DD, inclusive. A zero-day milestone (e.g. no tooling) has start = end. */
+  startDate: string;
+  endDate: string;
+  durationDays: number;
+  budgetUsd: { low: number; high: number };
+  note?: string;
+};
+
+export type LaunchPlan = {
+  generatedAt: string;
+  startDate: string;
+  launchDate: string;
+  basedOn: { kind: "quote"; quoteId: string } | { kind: "analysis" };
+  milestones: Milestone[];
+  warnings: string[];
 };
 
 /** How far a quote request goes. Private by default: a spec summary, no renders or notes. */
