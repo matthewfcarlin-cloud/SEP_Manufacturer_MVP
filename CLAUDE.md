@@ -380,7 +380,7 @@ Idlefit is repositioned as the all-in-one studio for first-time product creators
 | # | Build | Done when | Status |
 |---|---|---|---|
 | 1 | Studio dashboard `/studio` | Opening the studio shows every product, its stage, key numbers and next step at a glance | Built |
-| 2 | Agent assist on every product screen | "How do I make this cheaper?" answers with this part's features and numbers | Chat built (below); extend to all product screens, stage-aware starters, quotes + plan in context |
+| 2 | Agent assist on every product screen | "How do I make this cheaper?" answers with this part's features and numbers | Built (quotes and plan join its context in builds 3–4) |
 | 3 | Manufacturer outreach | Five labeled demo quotes appear, sort by price and lead time, and one can be chosen | Planned |
 | 4 | Plan and timeline | Choosing a quote re-dates the launch | Planned |
 | 5 | Selling (Etsy listing) | A full listing copies into Etsy in under a minute | Planned |
@@ -440,7 +440,14 @@ type EtsyListing = { title: string; description: string; tags: string[]; priceUs
 - `StudioModel` mounts the WebGL viewer only while the card is on screen (browsers cap live contexts), shows the saved render or a skeleton until `onReady`, spins slowly (`rotateSpeed` 0.5, zoom off) and not at all under reduced motion. `ModelViewer` gained `rotateSpeed`, `enableZoom`, `onReady`, `showLoading` (defaults unchanged).
 - Grid children need `min-w-0` or a long title widens the page on phones (E2E checks no horizontal scroll at 390 px).
 
-### Build 2 foundation – the agent chat (built)
+### Build 2 – Agent assist (built)
+- The panel lives in `app/project/[id]/layout.tsx`, so every product screen (overview, compare, new version, pitch, and future make/plan/sell) has it, and a conversation survives moving between them. It always works on the **latest** version.
+- Starters come from the current journey stage: `starterQuestions(project)` → `starterQuestionsForStage(stage, project)` in `lib/agent/starters.ts`, three per stage, built from the product's numbers (no AI call).
+- The context opens with the current stage and the app's suggested next step (`stageProgress` + `nextStep`), and the system prompt requires costs, prices and margins as ranges labeled est., focused on that stage.
+- The panel slides in from the right (instant under reduced motion) and shows "Stage: …" in its header.
+- Builds 3 and 4 must add the quotes and the plan to `buildAgentContext()`.
+
+The chat underneath (built first as "phase 10"):
 - `POST /api/agent` `{ projectId, version?, messages: AgentMessage[] }` streams newline-delimited JSON events (`lib/agent/protocol.ts`: `text` deltas, then `done` or `error`). Validated by `agentRequestSchema` (alternating turns starting and ending with the user, ≤24 turns, ≤4,000 chars each).
 - `streamAgentReply()` in `lib/analysis/claude.ts` (still the only file calling the SDK): `messages.stream()` with adaptive thinking, effort `medium`, server-side fallback. The system prompt (`lib/agent/prompt.ts`) is followed by the product context as a second system block with `cache_control`, so follow-up turns re-read it from cache.
 - Context: `buildAgentContext()` (`lib/agent/context.ts`) = brief (notes via `notesForAi`), geometry, analysis paths and tweaks, cost-by-volume, business case tiers and verdict, top 5 shop matches (labeled fictional), version history. Photos are never sent to the agent.

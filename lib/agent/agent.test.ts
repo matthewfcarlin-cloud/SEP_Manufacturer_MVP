@@ -6,7 +6,7 @@ import type { Project } from "../types";
 import { buildAgentContext } from "./context";
 import { decodeAgentEvents, encodeAgentEvent } from "./protocol";
 import { agentRequestSchema } from "./request";
-import { starterQuestions } from "./starters";
+import { starterQuestions, starterQuestionsForStage } from "./starters";
 
 const pedal = sample as Project;
 const brackets = bracket as Project;
@@ -48,18 +48,40 @@ describe("buildAgentContext", () => {
 });
 
 describe("starterQuestions", () => {
-  test("are three questions specific to the product", () => {
-    const qs = starterQuestions(pedal.versions[0], "Breakwater Machine");
+  const unanalyzed = { ...pedal, versions: [{ ...pedal.versions[0], analysis: undefined, businessCase: undefined, pitch: undefined }] };
+
+  test("are three questions for the current stage, using the product's own numbers", () => {
+    // The pedal is at Make: analyzed and priced, no quote chosen yet.
+    const qs = starterQuestions(pedal);
     expect(qs).toHaveLength(3);
-    expect(qs.join(" ")).toContain("Breakwater Machine");
-    expect(qs.join(" ")).toContain("$32");
     expect(qs.every((q) => q.endsWith("?"))).toBe(true);
+    expect(qs.join(" ")).toContain("Breakwater Machine");
+    expect(qs.join(" ")).toContain("250 units");
   });
 
-  test("fall back to getting-started questions before analysis", () => {
-    const qs = starterQuestions({ ...pedal.versions[0], analysis: undefined, businessCase: undefined });
-    expect(qs).toHaveLength(3);
+  test("at Design (not analyzed) they help get a good analysis", () => {
+    const qs = starterQuestions(unanalyzed);
     expect(qs[0]).toMatch(/notes/i);
+  });
+
+  test("at Money they're about price and margin, with the product's retail price", () => {
+    const qs = starterQuestionsForStage("money", pedal);
+    expect(qs.join(" ")).toContain("$32");
+    expect(qs.join(" ")).toMatch(/margin|price/i);
+  });
+
+  test("every stage has exactly three", () => {
+    for (const stage of ["idea", "design", "make", "money", "launch", "sell"] as const) {
+      expect(starterQuestionsForStage(stage, pedal)).toHaveLength(3);
+    }
+  });
+});
+
+describe("buildAgentContext stage", () => {
+  test("tells the agent the current stage and the next step", () => {
+    const context = buildAgentContext(pedal, pedal.versions[0]);
+    expect(context).toMatch(/Current stage: Make/);
+    expect(context).toMatch(/Next step the app suggests: Talk to a shop/);
   });
 });
 

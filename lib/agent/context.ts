@@ -6,6 +6,8 @@ import { buildIterationStory } from "../iterationStory";
 import { matchVersion } from "../match";
 import { PROCESS_LABELS } from "../processes";
 import { getShopById } from "../shops";
+import { nextStep } from "../studio/nextStep";
+import { STAGES, stageProgress } from "../studio/stage";
 import type { Project, ProjectVersion } from "../types";
 
 // Everything the build agent knows about the product, as plain text for the
@@ -67,8 +69,11 @@ function shopLines(version: ProjectVersion): string[] {
 
 export function buildAgentContext(project: Project, version: ProjectVersion): string {
   const story = buildIterationStory(project).filter((s) => s.to <= version.number);
+  const { current } = stageProgress(project);
+  const step = nextStep(project);
   return [
     `PRODUCT: ${project.name} (version ${version.number} of ${project.versions.length})`,
+    `Current stage: ${STAGES.find((s) => s.key === current)?.label} (journey: Idea → Design → Make → Money → Launch → Sell). Next step the app suggests: ${step.title}. ${step.detail}`,
     `Target quantity: ${version.targetQuantity.toLocaleString("en-US")} units. Budget: ${version.budgetUsd !== undefined ? `$${version.budgetUsd.toLocaleString("en-US")}` : "not given"}. Material ideas: ${version.materialHints?.join(", ") || "none given"}.`,
     `Inventor's description: ${notesForAi(version)}`,
     ...geometryLines(version),

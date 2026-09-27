@@ -516,9 +516,11 @@ test("the build agent opens with product-specific starters and respects the AI b
     await page.getByRole("button", { name: "Ask the build agent" }).click();
     const panel = page.getByRole("complementary", { name: "Build agent" });
     await expect(panel.getByRole("heading", { name: "Ask about Fuzz pedal enclosure" })).toBeVisible();
+    await expect(panel).toContainText("Stage: Make");
     const starters = panel.locator("button.text-left");
     await expect(starters).toHaveCount(3);
-    await expect(starters.nth(2)).toContainText("$32 retail");
+    await expect(starters.first()).toContainText("Breakwater Machine");
+    await expect(starters.nth(1)).toContainText("250 units");
 
     await starters.first().click();
     await expect(panel.getByRole("alert")).toContainText("AI budget");
@@ -528,5 +530,15 @@ test("the build agent opens with product-specific starters and respects the AI b
     await expect(panel).toHaveCount(0);
   } finally {
     await rm(ledger, { force: true });
+  }
+});
+
+test("the build agent is on every product screen", async ({ page }) => {
+  for (const url of [`/project/${PEDAL.id}/pitch`, `/project/${BRACKET.id}/compare?a=1&b=2`, `/project/${BRACKET.id}/versions/new`]) {
+    await page.goto(url);
+    await page.getByRole("button", { name: "Ask the build agent" }).click();
+    await expect(page.getByRole("complementary", { name: "Build agent" }).locator("button.text-left")).toHaveCount(3);
+    await page.getByRole("button", { name: "Close build agent" }).click();
+    await expect(page.getByRole("complementary", { name: "Build agent" })).toHaveCount(0);
   }
 });
