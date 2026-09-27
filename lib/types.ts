@@ -309,7 +309,7 @@ export type ManufacturingPath = {
   materials: string[];
   pros: string[];
   cons: string[];
-  designTweaks: { change: string; why: string; impact: string }[];
+  designTweaks: { change: string; why: string; impact: string; category?: TweakCategory }[]; // category: B4, absent before
   /** Per-part cost excluding tooling at 10 / 100 / 1k / 10k units (added in round 2). */
   unitCostAtVolume?: { quantity: number; low: number; high: number }[];
 };
@@ -576,3 +576,24 @@ export type QuantityBucket = "q1" | "q100" | "q1k" | "q10k";
 export type CalibrationCell = { process: Process; sizeBucket: SizeBucket; quantityBucket: QuantityBucket; n: number; factor: number };
 /** A cost range after calibration, with where it came from. factor 1 and n 0 = uncalibrated. */
 export type CalibratedRange = { low: number; high: number; factor: number; n: number; label: string };
+
+// Tweak ranking (BACKEND.md B4). What each kind of design tweak did on
+// contributing products, from real events and versions only.
+export type TweakCategory =
+  | "add_draft" | "uniform_walls" | "thicken_walls" | "remove_undercuts" | "add_fillets" | "loosen_tolerances"
+  | "simplify_features" | "split_part" | "combine_parts" | "change_process" | "change_material"
+  | "standard_hardware" | "reduce_finish" | "other";
+
+export type TweakStats = {
+  category: TweakCategory;
+  suggested: number; // times the AI suggested it
+  applied: number; // new versions made from it
+  up: number; // latest 👍 per browser and tweak
+  down: number;
+  costDeltas: number; // applied versions whose unit-cost change could be measured
+  medianCostChangePct?: number; // median unit-cost change of those versions (negative = cheaper)
+  score: number; // applied rate + rating + cost drop; 0 with no evidence
+};
+
+/** One tweak on a path, ranked. `key` is "pathIndex.tweakIndex", as used by ?tweak= and tweak_rated. */
+export type RankedTweak = { key: string; index: number; category?: TweakCategory; score: number; evidence: string };

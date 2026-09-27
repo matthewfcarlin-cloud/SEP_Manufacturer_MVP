@@ -35,7 +35,7 @@ function realQuotesFor(version: number, outcomes: Outcome[]): ProductFeatures["r
 }
 
 /** How the tweak this version applied moved the best unit cost, if both versions were analyzed. */
-function revisionOf(project: Project, version: ProjectVersion): ProductFeatures["revision"] {
+export function revisionOf(project: Project, version: ProjectVersion): ProductFeatures["revision"] {
   const tweak = version.appliedTweak;
   const before = tweak && getVersion(project, tweak.fromVersion);
   const was = before && summarizeVersion(before).unitCost;

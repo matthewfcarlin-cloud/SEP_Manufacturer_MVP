@@ -1,4 +1,4 @@
-import type { MaterialFamily, ProductCategory, SizeBucket } from "../types";
+import type { MaterialFamily, ProductCategory, SizeBucket, TweakCategory } from "../types";
 
 // Fixed vocabularies for similar-product features. Everything another
 // creator's prompt can see about a product is one of these words or a number.
@@ -98,3 +98,37 @@ export function sizeBucket(box: { x: number; y: number; z: number }): SizeBucket
   const largest = Math.max(box.x, box.y, box.z);
   return SIZE_BOUNDS.find(([, bound]) => largest < bound)?.[0] ?? "xl";
 }
+
+export const TWEAK_CATEGORIES = [
+  "add_draft",
+  "uniform_walls",
+  "thicken_walls",
+  "remove_undercuts",
+  "add_fillets",
+  "loosen_tolerances",
+  "simplify_features",
+  "split_part",
+  "combine_parts",
+  "change_process",
+  "change_material",
+  "standard_hardware",
+  "reduce_finish",
+  "other",
+] as const satisfies readonly TweakCategory[];
+
+export const TWEAK_CATEGORY_LABELS: Record<TweakCategory, string> = {
+  add_draft: "add draft angles",
+  uniform_walls: "make walls uniform",
+  thicken_walls: "thicken walls",
+  remove_undercuts: "remove undercuts",
+  add_fillets: "add fillets",
+  loosen_tolerances: "loosen tolerances",
+  simplify_features: "simplify features",
+  split_part: "split the part",
+  combine_parts: "combine parts",
+  change_process: "switch process",
+  change_material: "switch material",
+  standard_hardware: "use standard hardware",
+  reduce_finish: "simplify the finish",
+  other: "other change",
+};
