@@ -5,6 +5,7 @@ import { FormError, inputClass } from "@/components/upload/UploadPickers";
 import { SUPPLIER_STATUSES } from "@/lib/schemas";
 import { draftOf } from "@/lib/sourcing/ops";
 import type { SourcingOp } from "@/lib/sourcing/schemas";
+import { emailText, mailtoLink } from "@/lib/sourcing/email";
 import { quoteStanding, type NegotiationTargets, type QuoteStanding } from "@/lib/sourcing/targets";
 import type { Supplier, SupplierStatus } from "@/lib/types";
 import { CopyButton } from "./CopyButton";
@@ -39,6 +40,7 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
   const current = draftOf(supplier);
   const sent = supplier.messages.filter((m) => m.state === "sent");
   const [draftText, setDraftText] = useState(current?.text ?? "");
+  const [draftSubject, setDraftSubject] = useState(current?.subject ?? "");
   const [draftSeen, setDraftSeen] = useState(current?.id + (current?.at ?? ""));
   const [rationale, setRationale] = useState<string | null>(null);
   const [reply, setReply] = useState("");
@@ -51,11 +53,12 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
   if (serverDraftKey !== draftSeen) {
     setDraftSeen(serverDraftKey);
     setDraftText(current?.text ?? "");
+    setDraftSubject(current?.subject ?? "");
   }
 
   const id = supplier.id;
   const standing = targets && supplier.quote?.unitUsd !== undefined ? STANDING[quoteStanding(supplier.quote.unitUsd, targets)] : null;
-  const draftChanged = draftText.trim() !== (current?.text ?? "").trim();
+  const draftChanged = draftText.trim() !== (current?.text ?? "").trim() || draftSubject.trim() !== (current?.subject ?? "").trim();
 
   const saveFields = () => {
     const parsed = parseSupplierFields(fields);
@@ -72,6 +75,7 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h4 className="text-lg font-semibold">{supplier.name}</h4>
+          {supplier.email && <p className="truncate font-mono text-xs text-muted">{supplier.email}</p>}
           {supplier.listingUrl && (
             <a href={supplier.listingUrl} target="_blank" rel="noopener noreferrer" className="block truncate text-sm text-accent hover:underline">
               Open listing
@@ -141,27 +145,37 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
           {sent.map((m) => (
             <li key={m.id} className={`max-w-[92%] rounded-lg border border-line p-3 text-sm ${m.from === "me" ? "self-end bg-bg" : "self-start bg-surface"}`}>
               <p className="eyebrow mb-1 text-muted">
-                {m.from === "me" ? "You (sent on Alibaba)" : supplier.name} ·{" "}
+                {m.from === "me" ? "You (sent)" : supplier.name} ·{" "}
                 {/* Server and browser can be in different time zones; the browser's reading wins. */}
                 <time dateTime={m.at} suppressHydrationWarning>
                   {time(m.at)}
                 </time>
               </p>
+              {m.subject && <p className="mb-1 font-medium">{m.subject}</p>}
               <p className="whitespace-pre-line">{m.text}</p>
             </li>
           ))}
         </ol>
 
         <div className="flex flex-col gap-2 rounded-xl border border-dashed border-line p-4">
-          <label htmlFor={`draft-${id}`} className="text-sm font-medium">
-            Your next message {current?.aiDrafted && !draftChanged && <span className="font-normal text-muted">· drafted by AI, not sent</span>}
+          <label htmlFor={`subject-${id}`} className="text-sm font-medium">
+            Your next email {current?.aiDrafted && !draftChanged && <span className="font-normal text-muted">· drafted by AI, not sent</span>}
           </label>
+          <input
+            id={`subject-${id}`}
+            value={draftSubject}
+            onChange={(e) => setDraftSubject(e.target.value)}
+            placeholder="Subject"
+            aria-label="Subject"
+            className={inputClass}
+          />
           <textarea
             id={`draft-${id}`}
+            aria-label="Email body"
             rows={draftText ? 8 : 3}
             value={draftText}
             onChange={(e) => setDraftText(e.target.value)}
-            placeholder="Write a message, or let the AI draft one from your RFQ, targets and the conversation."
+            placeholder="Write an email, or let the AI draft one from your RFQ, targets and the conversation."
             className={inputClass}
           />
           {rationale && <p className="text-xs text-muted"><span className="font-medium text-ink">Why this message (for you only): </span>{rationale}</p>}
@@ -172,14 +186,23 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
               onClick={() => run("ai", async () => setRationale(await askForDraft(id)))}
               className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
             >
-              {busy === "ai" ? "Drafting…" : current || sent.length ? "Draft next message with AI" : "Draft first message with AI"}
+              {busy === "ai" ? "Drafting…" : current || sent.length ? "Draft next email with AI" : "Draft first email with AI"}
             </button>
             {draftText.trim() && draftChanged && (
-              <button type="button" disabled={busy !== null} onClick={() => run("save", () => edit({ op: "saveDraft", supplierId: id, text: draftText }))} className="rounded-lg border border-line px-3 py-2 text-sm hover:border-ink">
+              <button type="button" disabled={busy !== null} onClick={() => run("save", () => edit({ op: "saveDraft", supplierId: id, text: draftText, subject: draftSubject }))} className="rounded-lg border border-line px-3 py-2 text-sm hover:border-ink">
                 Save draft
               </button>
             )}
-            {draftText.trim() && <CopyButton text={draftText} />}
+            {draftText.trim() && (
+              <a
+                href={mailtoLink(supplier.email, draftSubject, draftText)}
+                className="rounded-lg border border-line bg-surface px-3 py-1.5 text-sm hover:border-ink"
+                title={supplier.email ? `Opens a new email to ${supplier.email} in your email app` : "Opens a new email in your email app; add the supplier's address there"}
+              >
+                Open in email
+              </a>
+            )}
+            {draftText.trim() && <CopyButton text={emailText(draftSubject, draftText)} />}
             {current && !draftChanged && (
               <>
                 <button
@@ -188,7 +211,7 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
                   onClick={() => run("sent", async () => { await edit({ op: "markSent", supplierId: id, messageId: current.id }); setRationale(null); })}
                   className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90 disabled:opacity-60"
                 >
-                  I sent this on Alibaba
+                  I sent this
                 </button>
                 <button type="button" disabled={busy !== null} onClick={() => run("discard", async () => { await edit({ op: "discardDraft", supplierId: id }); setRationale(null); })} className="text-sm text-muted hover:text-ink">
                   Discard
@@ -196,12 +219,12 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft }: Pr
               </>
             )}
           </div>
-          <p className="text-xs text-muted">Idlefit doesn&apos;t send anything. Copy the message into Alibaba&apos;s chat with this supplier, send it there, then mark it sent.</p>
+          <p className="text-xs text-muted">Idlefit doesn&apos;t send anything. &ldquo;Open in email&rdquo; starts the email in your own email app (or copy it into Alibaba chat). Send it there, then mark it sent.</p>
         </div>
 
         <div className="flex flex-col gap-2">
           <label htmlFor={`reply-${id}`} className="text-sm font-medium">Paste their reply</label>
-          <textarea id={`reply-${id}`} rows={3} value={reply} onChange={(e) => setReply(e.target.value)} className={inputClass} placeholder="Paste the supplier's latest message from Alibaba." />
+          <textarea id={`reply-${id}`} rows={3} value={reply} onChange={(e) => setReply(e.target.value)} className={inputClass} placeholder="Paste the supplier's latest reply from your email or Alibaba." />
           <button
             type="button"
             disabled={busy !== null || !reply.trim()}

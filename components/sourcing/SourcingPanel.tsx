@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { FormError } from "@/components/upload/UploadPickers";
 import { PROCESS_LABELS, processInSentence } from "@/lib/processes";
+import { emailText } from "@/lib/sourcing/email";
 import { alibabaSearchUrl, negotiationTargets, type NegotiationTargets } from "@/lib/sourcing/targets";
 import type { Process, ProjectVersion } from "@/lib/types";
 import { CopyButton } from "./CopyButton";
@@ -74,14 +75,14 @@ export function SourcingPanel({ projectId, version }: Props) {
         <p className="eyebrow text-muted">Alibaba sourcing · beta</p>
         <h2 id="sourcing-heading" className="display-type text-[clamp(2rem,4vw,3.25rem)]">Overseas suppliers</h2>
         <p className="mt-1 max-w-3xl text-sm text-muted">
-          Find factories on Alibaba for larger runs. The AI plans your search, writes the quote request, and drafts every message and
-          counter-offer from your cost targets. You send each message yourself.
+          Find factories on Alibaba for larger runs. The AI plans your search, writes the quote request, and writes every email and
+          counter-offer from your cost targets. Each one opens in your own email app, ready to send.
         </p>
       </div>
 
       <p className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-muted">
         <span className="font-semibold text-ink">Idlefit never contacts suppliers.</span> Alibaba has no public API for buyers to message
-        suppliers and its terms don&apos;t allow automated access, so you search and chat on alibaba.com and paste replies back here.
+        suppliers and its terms don&apos;t allow automated access, so you find suppliers on alibaba.com, email them from your own email, and paste their replies back here.
         Drafts carry only spec-level facts (size, material, process, quantity), never your product name, notes, budget or price.
       </p>
 
@@ -133,10 +134,11 @@ export function SourcingPanel({ projectId, version }: Props) {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="font-semibold">3. Send the quote request</h3>
-                <p className="text-xs text-muted">Paste into a supplier&apos;s chat or Alibaba&apos;s RFQ form.</p>
+                <p className="text-xs text-muted">Email it to a supplier&apos;s sales address, or paste it into Alibaba&apos;s chat or RFQ form.</p>
               </div>
-              <CopyButton text={plan.rfq} label="Copy RFQ" />
+              <CopyButton text={emailText(plan.rfqSubject, plan.rfq)} label="Copy RFQ" />
             </div>
+            {plan.rfqSubject && <p className="text-sm"><span className="text-muted">Subject: </span><span className="font-medium">{plan.rfqSubject}</span></p>}
             <p className="whitespace-pre-line rounded-lg bg-bg p-4 text-sm">{plan.rfq}</p>
           </div>
         </div>

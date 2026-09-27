@@ -21,9 +21,10 @@ export function draftOf(supplier: Supplier): SupplierMessage | undefined {
 const sentMessages = (supplier: Supplier) => supplier.messages.filter((m) => m.state === "sent");
 
 /** Sets the supplier's draft (replacing any unsent one). */
-export function withDraft(supplier: Supplier, text: string, aiDrafted: boolean, ctx: OpContext): Supplier {
+export function withDraft(supplier: Supplier, text: string, aiDrafted: boolean, ctx: OpContext, subject?: string): Supplier {
   const existing = draftOf(supplier);
   const draft: SupplierMessage = { id: existing?.id ?? ctx.newId(), from: "me", text, state: "draft", at: ctx.now, aiDrafted };
+  if (subject?.trim()) draft.subject = subject.trim();
   return { ...supplier, messages: [...sentMessages(supplier), draft] };
 }
 
@@ -62,7 +63,7 @@ export function applySourcingOp(current: Sourcing | undefined, op: SourcingOp, c
         return { ...s, messages, status };
       });
     case "saveDraft":
-      return updateSupplier(sourcing, op.supplierId, (s) => withDraft(s, op.text, false, ctx));
+      return updateSupplier(sourcing, op.supplierId, (s) => withDraft(s, op.text, false, ctx, op.subject));
     case "markSent":
       return updateSupplier(sourcing, op.supplierId, (s) => {
         const draft = draftOf(s);

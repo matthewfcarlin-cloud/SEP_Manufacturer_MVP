@@ -94,6 +94,7 @@ describe("revealsWalkAway", () => {
 });
 
 const goodDraft = {
+  subject: "Re: Quote for 250 aluminum enclosures",
   message: "Thank you for the quote. For 250 pieces we were hoping to be closer to our target. Could you share pricing at 500 and 1,000 pieces, and the sample cost?",
   rationale: "Asks for tier pricing before conceding anything on price.",
 };
@@ -105,6 +106,13 @@ describe("runSupplierDraft", () => {
     expect(await runSupplierDraft(call, "brief", targets)).toEqual(goodDraft);
     expect(call.mock.calls[1][0]).toContain("private walk-away price");
   });
+
+  test("also checks the subject line for the walk-away price", async () => {
+    const leak = { ...goodDraft, subject: `Final offer: $${targets.walkAway!.toFixed(2)} per unit` };
+    const call = vi.fn<CallTextModel>().mockResolvedValueOnce({ stopReason: "end_turn", output: leak }).mockResolvedValueOnce({ stopReason: "end_turn", output: goodDraft });
+    expect(await runSupplierDraft(call, "brief", targets)).toEqual(goodDraft);
+    expect(call).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe("runSourcingPlan", () => {
@@ -112,10 +120,12 @@ describe("runSourcingPlan", () => {
     const plan = {
       searchTerms: ['"aluminum enclosure OEM"', "custom sheet metal box", "guitar pedal enclosure"],
       supplierChecks: ["In-house CNC photos", "Trade Assurance", "MOQ under 500", "Shows anodized parts"],
+      rfqSubject: "  RFQ: 250 custom aluminum enclosures  ",
       rfq: "Hello, we are looking for a factory to make a small aluminum enclosure. ".repeat(6),
     };
     const call = vi.fn<CallTextModel>().mockResolvedValue({ stopReason: "end_turn", output: plan });
     const result = await runSourcingPlan(call, "brief");
     expect(result.searchTerms[0]).toBe("aluminum enclosure OEM");
+    expect(result.rfqSubject).toBe("RFQ: 250 custom aluminum enclosures");
   });
 });

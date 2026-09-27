@@ -67,8 +67,10 @@ export type SourcingPlan = {
   searchTerms: string[];
   /** What to check on a listing or supplier profile before shortlisting. */
   supplierChecks: string[];
-  /** A request for quotation carrying spec-level facts only, ready to paste. */
+  /** A request for quotation carrying spec-level facts only, ready to paste or email. */
   rfq: string;
+  /** Email subject line for the RFQ (plans made before email generation have none). */
+  rfqSubject?: string;
 };
 
 export type SupplierStatus = "shortlisted" | "contacted" | "negotiating" | "agreed" | "dropped";
@@ -77,6 +79,8 @@ export type Supplier = {
   id: string;
   name: string;
   listingUrl?: string;
+  /** The supplier's published sales email, entered by the user. Drafts open in the user's own email app. */
+  email?: string;
   status: SupplierStatus;
   /** The latest terms the supplier offered, as typed in by the user. */
   quote?: SupplierQuote;
@@ -92,6 +96,8 @@ export type SupplierMessage = {
   id: string;
   from: "me" | "supplier";
   text: string;
+  /** Email subject line, on messages the user writes. */
+  subject?: string;
   /** "draft" until the user says they sent it themselves. Supplier messages are always "sent". */
   state: "draft" | "sent";
   at: string;

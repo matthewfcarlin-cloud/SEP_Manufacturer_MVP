@@ -196,6 +196,7 @@ export const sourcingSchema = z.object({
       searchTerms: z.array(z.string()),
       supplierChecks: z.array(z.string()),
       rfq: z.string(),
+      rfqSubject: z.string().optional(),
     })
     .optional(),
   suppliers: z
@@ -204,6 +205,7 @@ export const sourcingSchema = z.object({
         id: z.string().regex(/^[A-Za-z0-9_-]{8,16}$/),
         name: z.string().min(1),
         listingUrl: z.string().optional(),
+        email: z.string().optional(),
         status: z.enum(SUPPLIER_STATUSES),
         quote: supplierQuoteSchema.optional(),
         notes: z.string().optional(),
@@ -213,6 +215,7 @@ export const sourcingSchema = z.object({
             id: z.string().regex(/^[A-Za-z0-9_-]{8,16}$/),
             from: z.enum(["me", "supplier"]),
             text: z.string(),
+            subject: z.string().optional(),
             state: z.enum(["draft", "sent"]),
             at: z.iso.datetime(),
             aiDrafted: z.boolean().optional(),

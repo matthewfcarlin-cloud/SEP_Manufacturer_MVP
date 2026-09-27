@@ -10,7 +10,7 @@ import type { AgentMessage } from "../types";
 import { PITCH_SYSTEM_PROMPT } from "./pitch";
 import { PRICE_SYSTEM_PROMPT } from "./price";
 import { NEGOTIATION_SYSTEM_PROMPT, SOURCING_PLAN_SYSTEM_PROMPT } from "./sourcing";
-import { sourcingPlanOutputSchema, supplierDraftOutputSchema } from "../sourcing/schemas";
+import { sourcingPlanOutputSchemaWithSubject, supplierDraftOutputSchema } from "../sourcing/schemas";
 import { buildSystemPrompt } from "./prompt";
 import type { TurnUsage } from "../usage/pricing";
 import type { CallModel } from "./run";
@@ -144,7 +144,7 @@ export const callClaudePitch = makeTextCaller({
 // Alibaba search plan: a short list and one RFQ. Low effort.
 export const callClaudeSourcingPlan = makeTextCaller({
   system: SOURCING_PLAN_SYSTEM_PROMPT,
-  schema: sourcingPlanOutputSchema,
+  schema: sourcingPlanOutputSchemaWithSubject,
   effort: "low",
   maxTokens: 8_000,
   logTag: "sourcing-plan",
