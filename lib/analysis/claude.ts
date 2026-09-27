@@ -7,6 +7,8 @@ import type { CallTextModel } from "./structured";
 import { tolerateUnparseableOutput } from "./structuredOutput";
 import { PITCH_SYSTEM_PROMPT } from "./pitch";
 import { PRICE_SYSTEM_PROMPT } from "./price";
+import { NEGOTIATION_SYSTEM_PROMPT, SOURCING_PLAN_SYSTEM_PROMPT } from "./sourcing";
+import { sourcingPlanOutputSchema, supplierDraftOutputSchema } from "../sourcing/schemas";
 import { buildSystemPrompt } from "./prompt";
 import type { TurnUsage } from "../usage/pricing";
 import type { CallModel } from "./run";
@@ -135,4 +137,22 @@ export const callClaudePitch = makeTextCaller({
   effort: "medium",
   maxTokens: 10_000,
   logTag: "pitch",
+});
+
+// Alibaba search plan: a short list and one RFQ. Low effort.
+export const callClaudeSourcingPlan = makeTextCaller({
+  system: SOURCING_PLAN_SYSTEM_PROMPT,
+  schema: sourcingPlanOutputSchema,
+  effort: "low",
+  maxTokens: 8_000,
+  logTag: "sourcing-plan",
+});
+
+// One negotiation message; judgment matters more than length. Medium effort.
+export const callClaudeNegotiation = makeTextCaller({
+  system: NEGOTIATION_SYSTEM_PROMPT,
+  schema: supplierDraftOutputSchema,
+  effort: "medium",
+  maxTokens: 10_000,
+  logTag: "negotiation",
 });

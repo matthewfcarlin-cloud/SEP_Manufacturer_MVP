@@ -44,6 +44,9 @@ A web app for independent inventors and small hardware teams. They upload a prod
 - `PUT /api/projects/[id]/versions/[n]/ai-inputs` `{ includePhotos, includeNotes }` – what the AI may see
 - `/p/[token]` – public read-only pitch (noindex); its renders come only from `GET /api/share/[token]/[file]`
 - `/privacy` – the plain-language privacy note
+- `POST /api/sourcing/plan` `{ projectId, version, process? }` – AI plans the Alibaba search (search terms, supplier checks, RFQ); replaces the plan
+- `POST /api/sourcing/draft` `{ projectId, version, supplierId }` – AI drafts the next message to one supplier, saved as its unsent draft
+- `PUT /api/sourcing` `{ projectId, version, op }` – shortlist edits: add/update/remove supplier, paste a reply, save/discard a draft, mark a draft sent
 
 ## Data models
 ```ts
@@ -78,6 +81,12 @@ type BusinessCaseInputs = {
 type PriceSuggestion = { low: number; high: number; suggested: number; comparables: string[]; reasoning: string };
 
 // Phase 8, on ProjectVersion: pitch?: PitchContent; pitchVideo?: PitchVideo
+// Sourcing, on ProjectVersion: sourcing?: Sourcing (Alibaba; nothing is ever sent by the app)
+type Sourcing = { plan?: SourcingPlan; suppliers: Supplier[] };
+type SourcingPlan = { process: Process; createdAt: string; searchTerms: string[]; supplierChecks: string[]; rfq: string };
+type Supplier = { id: string; name: string; listingUrl?: string; status: "shortlisted" | "contacted" | "negotiating" | "agreed" | "dropped";
+  quote?: { unitUsd?: number; moq?: number; toolingUsd?: number; leadDays?: number }; notes?: string; createdAt: string;
+  messages: { id: string; from: "me" | "supplier"; text: string; state: "draft" | "sent"; at: string; aiDrafted?: boolean }[] }; // at most one draft, always last
 type PitchContent = { oneLiner: string; problem: string; product: string; audience: string; ask: string; editedByUser: boolean };
 type PitchVideo = { status: "none" } | { status: "ready"; url: string; provider: string }; // nothing generates one yet
 
@@ -409,6 +418,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - AI calls: `lib/analysis/claude.ts` has `callClaude` (analysis) and `callClaudePrice` (retail price, text-only, low effort). Both go through `tolerateUnparseableOutput`, so a cut-off structured answer gets the normal one retry instead of a 500. Route error mapping is shared: `aiFailure()` in `lib/analysis/errors.ts`. Price briefs (`lib/analysis/price.ts`) deliberately omit costs and the analysis summary, so the price comes from the market, not cost-plus.
 - Stored data vs. AI rules: stored `priceSuggestion` is validated structurally only; the business rules (`priceSuggestionSchema`) gate new AI answers. Tightening a rule must never make saved projects unreadable.
 - Route lookups: API routes load `{ project, version }` with `findVersion()` from `lib/versionLookup.ts`.
+- Alibaba sourcing: Alibaba has no buyer API (its Open Platform is for sellers/ISVs) and its terms forbid automated access, so the app never searches or messages Alibaba. The AI plans the search and drafts messages (`lib/analysis/sourcing.ts`); the user sends each one on alibaba.com and marks it sent. Negotiation numbers (open / aim / walk-away) come only from `negotiationTargets()` in `lib/sourcing/targets.ts` (analysis estimate, capped by a 30% margin when there's a business case). The walk-away is never put in a supplier message: the prompt forbids it and `runSupplierDraft` retries a draft that states it. Shortlist edits are pure ops in `lib/sourcing/ops.ts`, saved under the project lock via `lib/sourcing/store.ts`. Supplier text is third-party input: it's fenced in the brief and the prompt ignores instructions in it. If a real integration is ever added, sending must stay an explicit per-message user action.
 - Process names mid-sentence: `processInSentence()` ("injection molding", but "CNC milling").
 - Deploying (Railway): `railway.json` holds the build/start/healthcheck config. The service needs a volume (e.g. mounted at `/data`), `IDLEFIT_DATA_DIR=/data`, and `ANTHROPIC_API_KEY`. Optional: `IDLEFIT_BROWSER_BUDGET_USD` (default 3) and `IDLEFIT_DAILY_BUDGET_USD` (default 25) for the AI budget. The start command runs `demo:seed` first, so the examples are (re)installed on the volume at every deploy, which also resets any visitor edits to them. One volume means one replica; that's also what the in-process update lock in `projectStore` assumes.
 - Don't run `npm run build` while `next dev` runs from the same folder: the build rewrites `.next` and the dev server then 404s routes added since it started. Stop dev, build, restart.
