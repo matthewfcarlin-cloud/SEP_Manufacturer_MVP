@@ -409,7 +409,7 @@ function Listing({ on, facts }: { on: boolean; facts: DeckFacts }) {
         </div>
         <p className="mt-6 text-[32px] font-medium leading-snug text-[#efeeec]">{l.title}</p>
         <div className="mt-7 flex items-baseline gap-5">
-          <span className="display-type text-[72px] text-[#efeeec]">{l.price}</span>
+          <span className="deck-display text-[72px] text-[#efeeec]">{l.price}</span>
           <span className="font-mono text-[22px] text-[#8f8b83]">{l.afterFees} after Etsy fees</span>
         </div>
         {plan && (

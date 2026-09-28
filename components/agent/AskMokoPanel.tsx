@@ -1,11 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { AGENT_PAGE_LABELS, agentPageFor, PAGE_STARTERS } from "@/lib/agent/pages";
+import { answerActions } from "@/lib/agent/answerFormat";
+import { agentPageFor, PAGE_STARTERS } from "@/lib/agent/pages";
+import { AiUsageFooter } from "./AiUsageFooter";
 import { ChatThread } from "./ChatThread";
 import { useAgentChat } from "./useAgentChat";
+import { PanelRightClose, Sparkles } from "lucide-react";
+import { buttonClasses } from "@/components/ui/classes";
 
 const DOCK_KEY = "moko:ask-docked";
 const WIDE = "(min-width: 1280px)";
@@ -32,14 +35,14 @@ const setDockClosed = (closed: boolean) => {
   dockListeners.forEach((fn) => fn());
 };
 
-type Props = { projectId: string; projectName: string; version: number; stageLabel: string };
+type Props = { projectId: string; projectName: string; version: number; hasAnalysis: boolean; hasTweaks: boolean; hasQuotes: boolean };
 
 /**
  * Ask Moko on product pages: docked on the right of wide screens (collapsible
  * to a floating button, remembered), an overlay on smaller ones. It knows the
  * product and which page is open, and the conversation carries across pages.
  */
-export function AskMokoPanel({ projectId, projectName, version, stageLabel }: Props) {
+export function AskMokoPanel({ projectId, projectName, version, hasAnalysis, hasTweaks, hasQuotes }: Props) {
   const pathname = usePathname();
   const page = agentPageFor(pathname);
   const isDockClosed = useSyncExternalStore(subscribeDock, readDockClosed, () => false);
@@ -62,29 +65,28 @@ export function AskMokoPanel({ projectId, projectName, version, stageLabel }: Pr
       <button
         type="button"
         onClick={open}
-        className={`fixed bottom-5 right-5 z-40 items-center gap-2 bg-ink px-5 py-3 text-sm font-medium text-bg shadow-lg hover:opacity-90 print:hidden ${
-          isSheetOpen ? "hidden" : "flex"
-        } ${isDockClosed ? "xl:flex" : "xl:hidden"}`}
+        className={`${buttonClasses({ className: "fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-40 rounded-pill shadow-pop print:hidden lg:bottom-5 lg:right-5" })} ${isSheetOpen ? "hidden" : "flex"} ${isDockClosed ? "xl:flex" : "xl:hidden"}`}
       >
-        <span aria-hidden className="h-2 w-2 rounded-full bg-accent" />
+        <Sparkles aria-hidden size={18} strokeWidth={1.75} />
         Ask Moko
       </button>
 
       <aside
         aria-label="Ask Moko"
-        className={`z-50 flex-col border-line bg-bg print:hidden max-xl:fixed max-xl:inset-0 max-xl:shadow-2xl sm:max-xl:left-auto sm:max-xl:w-[420px] sm:max-xl:border-l xl:sticky xl:top-14 xl:h-[calc(100svh-3.5rem)] xl:w-[380px] xl:shrink-0 xl:border-l ${
-          isSheetOpen ? "flex" : "hidden"
-        } ${isDockClosed ? "xl:hidden" : "xl:flex"}`}
+        className={`z-50 flex-col border-border bg-surface print:hidden max-xl:fixed max-xl:inset-0 max-xl:shadow-pop sm:max-xl:left-auto sm:max-xl:w-[420px] xl:sticky xl:top-0 xl:h-svh xl:w-[360px] xl:shrink-0 xl:border-l ${isSheetOpen ? "flex" : "hidden"} ${isDockClosed ? "xl:hidden" : "xl:flex"}`}
       >
-        <header className="flex items-start justify-between gap-3 border-b border-line p-4">
-          <div className="min-w-0">
-            <p className="eyebrow text-[11px] text-accent">
-              Ask Moko <span className="text-muted">· {AGENT_PAGE_LABELS[page]}</span>
-            </p>
-            <h2 className="mt-1 truncate font-semibold">{projectName}</h2>
+        <header className="flex items-center justify-between gap-3 border-b border-border p-4">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span aria-hidden className="grid h-7 w-7 shrink-0 place-items-center rounded-pill bg-accent text-white">
+              <Sparkles size={16} strokeWidth={1.75} />
+            </span>
+            <div className="min-w-0">
+              <h2 className="type-h3">Ask Moko</h2>
+              <p className="type-small truncate text-muted">Knows about {projectName}</p>
+            </div>
           </div>
-          <button type="button" onClick={close} aria-label="Close Ask Moko" className="px-2 py-1 text-lg text-muted hover:text-ink">
-            ×
+          <button type="button" onClick={close} aria-label="Close Ask Moko" title="Collapse" className="grid h-9 w-9 shrink-0 place-items-center rounded-control text-ink-2 transition-colors hover:bg-hover hover:text-ink">
+            <PanelRightClose aria-hidden size={18} strokeWidth={1.75} />
           </button>
         </header>
         <ChatThread
@@ -92,21 +94,9 @@ export function AskMokoPanel({ projectId, projectName, version, stageLabel }: Pr
           inputId="ask-moko-input"
           autoFocus={isSheetOpen}
           starters={PAGE_STARTERS[page]}
-          greeting={
-            <p>
-              Hi! I know <span className="font-semibold">{projectName}</span>&apos;s numbers and that you&apos;re on the{" "}
-              <span className="font-semibold">{AGENT_PAGE_LABELS[page]}</span> page{stageLabel && <> (it&apos;s at the {stageLabel} stage)</>}. Ask
-              me anything, in your own words.
-            </p>
-          }
-          footer={
-            <>
-              Answers use this product&apos;s AI estimates; shops are demo data. Uses your AI budget ·{" "}
-              <Link href="/settings" className="underline hover:text-ink">
-                use your own key
-              </Link>
-            </>
-          }
+          greeting={<p>Hi! Ask me anything about {projectName}.</p>}
+          actionsFor={(answer) => answerActions(answer, { projectId, version, hasAnalysis, hasTweaks, hasQuotes })}
+          footer={<AiUsageFooter />}
         />
       </aside>
     </>

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { TabIntro } from "@/components/product/TabIntro";
-import { tabSummary } from "@/lib/studio/plainSummary";
-import Link from "next/link";
-import { notFound } from "next/navigation";
 import { PitchDocument } from "@/components/pitch/PitchDocument";
+import { StageShell } from "@/components/product/StageShell";
+import { loadStage } from "@/lib/studio/loadStage";
 import { AiBudgetNote } from "@/components/AiBudgetNote";
 import { PitchToolbar } from "@/components/pitch/PitchToolbar";
 import { SharePanel } from "@/components/privacy/SharePanel";
@@ -27,42 +25,24 @@ const topShopName = (v: ProjectVersion) => {
 
 export default async function PitchPage(props: PageProps<"/project/[id]/pitch">) {
   const { id } = await props.params;
-  const found = await getAccessibleProject(id);
-  if (!found) notFound();
-  const { project, access } = found;
+  const { project, access, version: latest } = await loadStage(id);
   // Pitch the newest analyzed version; the iteration story covers the rest.
-  const version = latestAnalyzedVersion(project);
-
-  const back = (
-    <Link href={`/project/${project.id}`} className="text-sm font-medium text-muted hover:text-ink print:hidden">
-      ← Back to project
-    </Link>
+  const version = latestAnalyzedVersion(project) ?? latest;
+  const shell = (children: React.ReactNode) => (
+    <StageShell project={project} version={version} access={access} screen="pitch" path={`/project/${project.id}/pitch`} isDetailsOpen={Boolean(version.analysis)}>
+      {children}
+    </StageShell>
   );
 
-  if (!version?.analysis) {
-    return (
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
-        {back}
-        <section className="rounded-2xl border border-line bg-surface p-8">
-          <p className="eyebrow text-accent">Licensing pitch</p>
-          <h2 className="display-type mt-2 text-4xl">{project.name}</h2>
-          <p className="mt-3 max-w-xl text-muted">Run a manufacturing analysis first. The pitch is built from it: how it gets made, what it costs, and the storyboard.</p>
-          <Link href={`/project/${project.id}`} className="mt-5 inline-flex rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-ink">
-            View project analysis
-          </Link>
-        </section>
-      </div>
-    );
-  }
+  if (!version.analysis) return shell(<p className="text-ink-2">The pitch is built from the analysis: how it gets made, what it costs, and the storyboard.</p>);
 
   const analyzed = version as ProjectVersion & { analysis: Analysis };
   const match = matchVersion(analyzed).find((m) => m.matchedMachine.type === analyzed.analysis.paths[0].process);
   const shop = match ? getShopById(match.shopId) : undefined;
 
-  return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12 print:max-w-none print:px-0 print:py-0">
-      <div className="flex flex-col gap-4 border-b border-line pb-6 print:hidden">
-        <TabIntro eyebrow={<><span>Stage 5 · Launch</span><span aria-hidden>·</span><span>v{analyzed.number}</span></>} title="Pitch" lines={tabSummary(analyzed, "pitch")} />
+  return shell(
+    <>
+      <div className="flex flex-col gap-4 print:hidden">
         <PitchToolbar
           projectId={project.id}
           projectName={project.name}
@@ -75,7 +55,7 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
         {access === "owner" ? (
           <SharePanel projectId={project.id} share={project.share} />
         ) : (
-          <p className="text-xs text-muted">This is a shared example, already public. Share links are for your own projects.</p>
+          <p className="text-[13px] text-ink-2">This is a shared example, already public. Share links are for your own projects.</p>
         )}
       </div>
       <PitchDocument
@@ -85,6 +65,6 @@ export default async function PitchPage(props: PageProps<"/project/[id]/pitch">)
         topMatch={match && shop ? { match, shop } : undefined}
         isOwnerView
       />
-    </div>
+    </>,
   );
 }

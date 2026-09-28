@@ -1,20 +1,21 @@
 import type { ReactNode } from "react";
 
 type Props = {
-  eyebrow?: ReactNode;
+  /** A short plain line of context above the title (never a numbered or repeated label). */
+  meta?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   actions?: ReactNode;
 };
 
-/** The shared page title block: mono eyebrow, big uppercase display title, optional actions. */
-export function PageHeader({ eyebrow, title, description, actions }: Props) {
+/** The shared page title block: an h1 in sentence case, one line of description, optional actions. */
+export function PageHeader({ meta, title, description, actions }: Props) {
   return (
-    <header className="flex flex-col justify-between gap-6 border-b border-line pb-8 md:flex-row md:items-end">
-      <div className="flex min-w-0 flex-col gap-4">
-        {eyebrow && <div className="eyebrow flex flex-wrap items-center gap-3 text-muted">{eyebrow}</div>}
-        <h1 className="display-type break-words text-[clamp(2.4rem,6vw,5rem)]">{title}</h1>
-        {description && <div className="max-w-2xl text-muted">{description}</div>}
+    <header className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+      <div className="flex min-w-0 flex-col gap-2">
+        {meta && <div className="type-small flex flex-wrap items-center gap-2 text-muted">{meta}</div>}
+        <h1 className="type-h1 break-words">{title}</h1>
+        {description && <div className="max-w-2xl text-ink-2">{description}</div>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </header>

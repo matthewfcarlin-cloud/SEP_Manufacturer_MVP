@@ -10,10 +10,9 @@ import { serialized } from "../serialize";
 // Spend is recorded from each response's real token usage; before a call,
 // a conservative estimate for that action must still fit.
 
-export type AiAction = "analysis" | "pitch" | "chat" | "price" | "sourcing" | "negotiation" | "plan" | "listing" | "bom" | "order";
-
-/** Conservative cost of one action, including a possible retry (Opus 5, measured usage + headroom). */
-export const ACTION_ESTIMATE_USD: Record<AiAction, number> = { analysis: 0.6, pitch: 0.15, chat: 0.1, price: 0.05, sourcing: 0.08, negotiation: 0.15, plan: 0.15, listing: 0.08, bom: 0.15, order: 0.08 };
+// Estimates live in a browser-safe module so the new-product flow can quote them too.
+export { ACTION_ESTIMATE_USD, type AiAction } from "./estimates";
+import { ACTION_ESTIMATE_USD, type AiAction } from "./estimates";
 
 const DEFAULT_BROWSER_BUDGET_USD = 3;
 const DEFAULT_DAILY_BUDGET_USD = 25;
@@ -22,7 +21,8 @@ const envNumber = (name: string, fallback: number) => {
   const value = Number(process.env[name]);
   return Number.isFinite(value) && value >= 0 ? value : fallback;
 };
-const browserLimit = () => envNumber("IDLEFIT_BROWSER_BUDGET_USD", DEFAULT_BROWSER_BUDGET_USD);
+/** The demo AI budget each browser gets, in USD. */
+export const browserBudgetLimitUsd = () => envNumber("IDLEFIT_BROWSER_BUDGET_USD", DEFAULT_BROWSER_BUDGET_USD);
 const dailyLimit = () => envNumber("IDLEFIT_DAILY_BUDGET_USD", DEFAULT_DAILY_BUDGET_USD);
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -52,7 +52,7 @@ export type BudgetStatus = { spentUsd: number; limitUsd: number; remainingUsd: n
 
 export async function budgetStatus(ownerHash: string): Promise<BudgetStatus> {
   const spentUsd = await readSpent(ledgerPath("browsers", ownerHash));
-  const limitUsd = browserLimit();
+  const limitUsd = browserBudgetLimitUsd();
   return { spentUsd, limitUsd, remainingUsd: Math.max(0, limitUsd - spentUsd) };
 }
 

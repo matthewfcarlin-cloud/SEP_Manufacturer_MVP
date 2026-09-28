@@ -6,6 +6,7 @@ import { useState } from "react";
 import { FormError } from "@/components/upload/UploadPickers";
 import type { ApiResponse } from "@/lib/api";
 import type { AiInputs } from "@/lib/types";
+import { DetailsAccordion } from "@/components/ui/DetailsAccordion";
 
 type Props = {
   projectId: string;
@@ -48,14 +49,11 @@ export function AiInputsPanel({ projectId, version, inputs: saved, briefText, ph
   };
 
   return (
-    <details open={isOpen} className="rounded-xl border border-line bg-surface p-5 text-sm">
-      <summary className="cursor-pointer font-semibold">
-        What the AI sees <span className="font-normal text-muted">· for this version</span>
-      </summary>
-      <div className="mt-4 flex flex-col gap-4">
-        <p className="text-muted">
+    <DetailsAccordion label="What the AI sees for this version" defaultOpen={isOpen} className="card card-pad text-[14px]">
+      <div className="flex flex-col gap-4">
+        <p className="text-ink-2">
           This is everything sent to the AI (Anthropic&apos;s API) when you analyze, price or pitch this version. Your CAD file
-          itself is never sent, only the measurements below. <Link href="/privacy" className="underline">How your data is handled</Link>
+          itself is never sent, only the measurements below. <Link href="/privacy" className="font-medium text-blue-ink hover:underline">How your data is handled</Link>
         </p>
         <fieldset className="flex flex-wrap gap-4" disabled={isSaving}>
           <label className="flex items-center gap-2">
@@ -75,14 +73,14 @@ export function AiInputsPanel({ projectId, version, inputs: saved, briefText, ph
                 key={url}
                 src={url}
                 alt={`Photo ${i + 1}${inputs.includePhotos ? "" : " (not sent)"}`}
-                className={`h-16 w-16 rounded-md border border-line object-cover ${inputs.includePhotos ? "" : "opacity-30 grayscale"}`}
+                className={`h-16 w-16 rounded-control object-cover ${inputs.includePhotos ? "" : "opacity-30 grayscale"}`}
               />
             ))}
           </div>
         )}
-        <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-lg bg-bg p-4 font-mono text-xs leading-relaxed">{briefText}</pre>
+        <pre className="max-h-80 overflow-auto whitespace-pre-wrap rounded-control bg-bg p-4 font-sans text-[13px] leading-relaxed">{briefText}</pre>
         <FormError message={error} />
       </div>
-    </details>
+    </DetailsAccordion>
   );
 }

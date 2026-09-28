@@ -30,7 +30,7 @@ describe("buildAgentContext", () => {
   test("includes the version history when there is one", () => {
     const withHistory = buildAgentContext(brackets, brackets.versions[1]);
     expect(withHistory).toContain("v1 → v2");
-    expect(withHistory).toContain("Unit cost −14%");
+    expect(withHistory).toContain("Each one costs 14% less");
   });
 
   test("never includes notes the inventor withheld", () => {

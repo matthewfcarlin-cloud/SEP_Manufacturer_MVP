@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { GENERAL_STARTERS } from "@/lib/agent/pages";
+import { AiUsageFooter } from "./AiUsageFooter";
 import { ChatThread } from "./ChatThread";
 import { useAgentChat } from "./useAgentChat";
+import { buttonClasses } from "@/components/ui/classes";
 
 const noExtra = () => ({});
 
@@ -11,12 +13,12 @@ const noExtra = () => ({});
 export function AskMokoPage() {
   const chat = useAgentChat("/api/ask", noExtra);
   const startProduct = (
-    <Link href="/new" className="bg-accent px-3 py-1.5 text-xs font-medium text-accent-ink hover:opacity-90">
+    <Link href="/new" className={buttonClasses({ size: "sm" })}>
       Start a new product →
     </Link>
   );
   return (
-    <section aria-label="Ask Moko" className="flex h-[calc(100svh-3.5rem-9rem)] min-h-[28rem] flex-col border border-line bg-bg">
+    <section aria-label="Ask Moko" className="card flex h-[calc(100svh-14rem)] min-h-[28rem] flex-col overflow-hidden">
       <ChatThread
         chat={chat}
         inputId="ask-moko-page-input"
@@ -29,14 +31,7 @@ export function AskMokoPage() {
             find a manufacturer.
           </p>
         }
-        footer={
-          <>
-            Uses your AI budget ·{" "}
-            <Link href="/settings" className="underline hover:text-ink">
-              use your own key
-            </Link>
-          </>
-        }
+        footer={<AiUsageFooter />}
       />
     </section>
   );

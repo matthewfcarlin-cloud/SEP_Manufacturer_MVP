@@ -33,9 +33,9 @@ export type PitchDocumentProps = {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-1 border-l border-line pl-4">
-      <dt className="eyebrow text-muted">{label}</dt>
-      <dd className="font-mono text-sm font-semibold">{value}</dd>
+    <div className="flex flex-col gap-1 rounded-control bg-bg p-3">
+      <dt className="type-small text-ink-2">{label}</dt>
+      <dd className="text-[15px] font-semibold">{value}</dd>
     </div>
   );
 }
@@ -46,19 +46,19 @@ function Cover({ project, version, isOwnerView }: PitchDocumentProps) {
   return (
     <section
       aria-labelledby="pitch-title"
-      className="pitch-page grid gap-8 md:grid-cols-[1fr_1.1fr] md:items-center print:grid-cols-[1fr_1.1fr]"
+      className="pitch-page grid gap-8 @2xl:grid-cols-[1fr_1.1fr] md:items-center print:grid-cols-[1fr_1.1fr]"
     >
       <div className="flex flex-col gap-6">
-        <p className="eyebrow text-accent">
-          Licensing pitch · v{version.number}
+        <p className="text-[13px] font-medium text-accent-ink">
+          Licensing pitch, version {version.number}
         </p>
         <h1
           id="pitch-title"
-          className="display-type text-[clamp(2.6rem,6vw,5.5rem)]"
+          className="type-h1"
         >
           {project.name}
         </h1>
-        <p className="text-xl leading-relaxed">
+        <p className="text-[17px] leading-relaxed text-ink-2">
           {version.pitch?.oneLiner ?? version.analysis.productSummary}
         </p>
         <dl className="grid grid-cols-3 gap-4">
@@ -68,7 +68,7 @@ function Cover({ project, version, isOwnerView }: PitchDocumentProps) {
             value={formatUnitCostRange(best.unitCostUsd)}
           />
           <Fact
-            label="One-time setup (tooling), est."
+            label="One-time setup cost, est."
             value={formatToolingRange(best.toolingCostUsd)}
           />
         </dl>
@@ -112,10 +112,10 @@ function ProblemAndProduct({
         title="Why this needs to exist"
       >
         {pitch ? (
-          <div className="grid gap-6 md:grid-cols-[1.4fr_1fr] print:grid-cols-[1.4fr_1fr]">
+          <div className="grid gap-6 @2xl:grid-cols-[1.4fr_1fr] print:grid-cols-[1.4fr_1fr]">
             <p className="text-2xl leading-relaxed">{pitch.problem}</p>
-            <div className="rounded-xl bg-surface p-5">
-              <p className="eyebrow text-muted">Who buys it</p>
+            <div className="rounded-card bg-surface p-5">
+              <p className="text-[13px] font-medium text-ink-2">Who buys it</p>
               <p className="mt-2 leading-relaxed">{pitch.audience}</p>
             </div>
           </div>
@@ -138,7 +138,7 @@ function ProblemAndProduct({
           {analysis.detectedFeatures.map((f) => (
             <li
               key={f}
-              className="rounded-full border border-line px-3 py-1 text-sm"
+              className="rounded-pill bg-hover px-3 py-1 text-[14px] text-ink-2"
             >
               {f}
             </li>
@@ -169,8 +169,8 @@ function HowItsMade({ version, topMatch }: PitchDocumentProps) {
       eyebrow="How it gets made"
       title={PROCESS_LABELS[best.process]}
     >
-      <div className="grid gap-5 lg:grid-cols-2 print:grid-cols-2">
-        <div className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-6">
+      <div className="grid gap-5 @3xl:grid-cols-2 print:grid-cols-2">
+        <div className="flex flex-col gap-4 card card-pad">
           <p className="leading-relaxed">
             {version.analysis.topRecommendation}
           </p>
@@ -183,11 +183,11 @@ function HowItsMade({ version, topMatch }: PitchDocumentProps) {
             <Fact label="Material" value={best.materials[0] ?? "—"} />
           </dl>
         </div>
-        <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-6">
+        <div className="flex flex-col gap-3 card card-pad">
           {topMatch ? (
             <>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="eyebrow text-accent">
+                <p className="text-[13px] font-medium text-accent-ink">
                   Local shop ready to run it
                 </p>
                 <StartBadge canStartNow={topMatch.match.idleBoost} />
@@ -196,19 +196,19 @@ function HowItsMade({ version, topMatch }: PitchDocumentProps) {
               <p className="text-2xl font-semibold tracking-tight">
                 {topMatch.shop.name}
               </p>
-              <p className="text-sm text-muted">
+              <p className="text-sm text-ink-2">
                 {topMatch.shop.neighborhood} ·{" "}
                 {topMatch.match.matchedMachine.model}
               </p>
               {topMatch.match.requiredTweaks[0] && (
-                <p className="border-l-2 border-accent pl-3 text-sm">
+                <p className="rounded-control bg-accent-soft px-3 py-2 text-sm">
                   <span className="font-semibold">Quote against: </span>
                   {topMatch.match.requiredTweaks[0]}
                 </p>
               )}
             </>
           ) : (
-            <p className="text-sm text-muted">
+            <p className="text-sm text-ink-2">
               No local shop matches this process yet.
             </p>
           )}
@@ -255,7 +255,7 @@ function UnitEconomics({ version, isOwnerView }: PitchDocumentProps) {
             <CostByVolumeChart
               curves={curves}
               targetQuantity={version.targetQuantity}
-              title="Cost per part vs. what the maker receives"
+              title="Cost of each vs. what the maker receives"
               description={`At $${inputs.retailPriceUsd} retail with ${Math.round(inputs.revenueShare * 100)}% to the maker. Where a process's line drops below the dashed line, it pays back its tooling.`}
               priceLine={{
                 value: result.revenuePerUnit,
@@ -280,12 +280,12 @@ function IterationStory({ story }: PitchDocumentProps) {
         {story.map((step) => (
           <li
             key={step.to}
-            className="grid gap-2 rounded-xl border border-line bg-surface p-5 md:grid-cols-[auto_1fr_1fr] md:items-baseline md:gap-6 print:grid-cols-[auto_1fr_1fr]"
+            className="grid gap-2 card card-pad @2xl:grid-cols-[auto_1fr_1fr] md:items-baseline md:gap-6 print:grid-cols-[auto_1fr_1fr]"
           >
-            <span className="display-type text-2xl">
-              v{step.from} → v{step.to}
+            <span className="type-h3">
+              Version {step.from} → {step.to}
             </span>
-            <span className="text-sm text-muted">
+            <span className="text-sm text-ink-2">
               {step.change ?? "Revised design"}
             </span>
             <span className="font-semibold">{step.summary}</span>
@@ -306,22 +306,22 @@ function Commercial({ version }: PitchDocumentProps) {
       <div className="print:mx-auto print:w-[42%]">
         <PitchVideoSlot video={version.pitchVideo} />
       </div>
-      <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-3 print:gap-2 print:text-xs">
+      <ol className="grid gap-3 @lg:grid-cols-2 @3xl:grid-cols-3 print:grid-cols-3 print:gap-2 print:text-[13px]">
         {version.analysis.storyboard.map((shot) => (
           <li
             key={shot.shot}
-            className="flex flex-col justify-between gap-4 rounded-xl border border-line bg-surface p-4 print:gap-2 print:p-3"
+            className="flex flex-col justify-between gap-4 card p-4 print:gap-2 print:p-3"
           >
             <div>
-              <p className="eyebrow text-accent">
-                Frame {String(shot.shot).padStart(2, "0")}{" "}
-                <span className="text-muted">· {shot.seconds}s</span>
+              <p className="text-[13px] font-medium text-accent-ink">
+                Frame {shot.shot}{" "}
+                <span className="text-ink-2">· {shot.seconds}s</span>
               </p>
-              <p className="mt-3 text-sm leading-relaxed print:mt-1 print:text-xs">
+              <p className="mt-3 text-sm leading-relaxed print:mt-1 print:text-[13px]">
                 {shot.visual}
               </p>
             </div>
-            <p className="border-t border-line pt-3 text-sm italic text-muted print:pt-2 print:text-xs">
+            <p className="border-t border-border pt-3 text-sm italic text-ink-2 print:pt-2 print:text-[13px]">
               &ldquo;{shot.voiceover}&rdquo;
             </p>
           </li>
@@ -348,10 +348,10 @@ function Ask({ project, version, isOwnerView }: PitchDocumentProps) {
           Use &ldquo;Write pitch with AI&rdquo; above to draft the ask.
         </MissingText>
       )}
-      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5 text-xs text-muted">
+      <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-5 text-[13px] text-ink-2">
         <span>{project.name} · Moko licensing pitch</span>
         <span>
-          All costs and margins are AI estimates. Shop listings are fictional
+          All costs and profits are AI estimates. Shop listings are fictional
           demo data.
         </span>
       </footer>

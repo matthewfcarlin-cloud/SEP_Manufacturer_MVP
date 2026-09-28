@@ -55,7 +55,7 @@ export function Eyebrow({ children, className = "" }: { children: ReactNode; cla
 /** Huge uppercase Archivo, the site's display face. */
 export function Display({ children, size, className = "" }: { children: ReactNode; size: number; className?: string }) {
   return (
-    <h2 className={`display-type ${className}`} style={{ fontSize: size }}>
+    <h2 className={`deck-display ${className}`} style={{ fontSize: size }}>
       {children}
     </h2>
   );

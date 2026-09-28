@@ -73,3 +73,19 @@ export async function readUploadedParts(form: FormData, logTag: string): Promise
     return rejected("Something went wrong measuring this part. Try re-exporting the STL.", 500);
   }
 }
+
+export type ProjectParts = { stl?: Uint8Array; geometry?: GeometryStats; images: UploadedParts["images"] };
+export type ProjectPartsResult = { ok: true; data: ProjectParts } | { ok: false; error: string; status: number };
+
+/**
+ * A new product's files. The 3D file is optional here ("a description is
+ * enough"); when one is attached it's validated and measured like any other.
+ */
+export async function readProjectParts(form: FormData, logTag: string): Promise<ProjectPartsResult> {
+  const cadFile = form.get("stl");
+  if (cadFile instanceof File && cadFile.size > 0) return readUploadedParts(form, logTag);
+  const imageFiles = form.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
+  const images = await readImages(imageFiles);
+  if (typeof images === "string") return rejected(images);
+  return { ok: true, data: { images } };
+}

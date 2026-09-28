@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { MIN_WALL_MM } from "@/lib/geometryLimits";
 import { ModelViewer } from "./index";
+import { buttonClasses } from "@/components/ui/classes";
 
 type Props = { url: string; hasThinWalls: boolean; className?: string };
 
@@ -18,14 +19,12 @@ export function ProjectViewer({ url, hasThinWalls, className = "" }: Props) {
             type="button"
             aria-pressed={showThin}
             onClick={() => setShowThin((v) => !v)}
-            className={`rounded-lg border px-3 py-1.5 text-sm font-medium shadow-sm transition-colors ${
-              showThin ? "border-accent bg-accent text-accent-ink" : "border-line bg-surface hover:border-ink"
-            }`}
+            className={buttonClasses({ variant: showThin ? "primary" : "secondary", size: "sm", className: "shadow-card" })}
           >
             {showThin ? "Hide thin walls" : "Show thin walls"}
           </button>
           {showThin && (
-            <span className="flex items-center gap-1.5 rounded-lg bg-surface/90 px-2 py-1 text-xs">
+            <span className="flex items-center gap-1.5 rounded-control bg-surface/90 px-2 py-1 text-[13px]">
               <span aria-hidden className="h-2.5 w-2.5 rounded-sm" style={{ background: "#e0461b" }} />
               Under {MIN_WALL_MM} mm thick
             </span>

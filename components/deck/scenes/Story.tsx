@@ -44,7 +44,7 @@ export function Field({ beat }: { beat: Beat }) {
         animate={{ scaleX: whole ? 1 : 0, opacity: whole ? 1 : 0 }}
         transition={{ duration: 1.1, ease, delay: whole ? 0.2 : 0 }}
       >
-        <span className="display-type text-[40px] text-[#0a0a0a]">Moko</span>
+        <span className="deck-display text-[40px] text-[#0a0a0a]">Moko</span>
         <span className="font-mono text-[20px] uppercase tracking-[0.14em] text-[#0a0a0a]">Idea → the right manufacturer → first sale</span>
       </motion.div>
     </>

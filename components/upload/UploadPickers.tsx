@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState, type DragEvent } from "react";
+import { ImagePlus, Upload, X } from "lucide-react";
+import { controlClasses } from "@/components/ui/Field";
 import { ModelViewer } from "@/components/viewer";
 import { resizeImageToJpeg } from "@/lib/client/resizeImage";
 import { CAD_EXTENSIONS, MAX_IMAGES, MAX_STL_BYTES } from "@/lib/projectInput";
@@ -18,8 +20,6 @@ const MB = 1024 * 1024;
 function formatBytes(bytes: number): string {
   return bytes < MB ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / MB).toFixed(1)} MB`;
 }
-export const inputClass =
-  "w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-ink";
 
 export const isStep = (file: File) => /\.(step|stp)$/i.test(file.name);
 
@@ -59,20 +59,20 @@ export function StlPicker({ stl, onPick }: { stl: LocalFile | null; onPick: (f: 
         <>
           {isStep(stl.file) ? (
             // The browser viewer reads STL only; STEP is converted on upload.
-            <div className="grid aspect-[4/3] w-full place-items-center rounded-xl border border-line bg-surface p-6 text-center">
+            <div className="grid aspect-[4/3] w-full place-items-center rounded-card bg-sidebar p-6 text-center">
               <span className="flex flex-col gap-1">
                 <span className="font-medium">STEP file ready</span>
-                <span className="text-sm text-muted">It&apos;s converted to a 3D mesh when you create the project; the preview appears on the next page.</span>
+                <span className="text-sm text-ink-2">It&apos;s turned into a 3D model when you create the product; the preview appears on the next page.</span>
               </span>
             </div>
           ) : (
             <ModelViewer url={stl.previewUrl} className="aspect-[4/3] w-full" />
           )}
           <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="truncate text-muted">
+            <span className="truncate text-ink-2">
               {stl.file.name} · {formatBytes(stl.file.size)}
             </span>
-            <button type="button" className="underline" onClick={() => inputRef.current?.click()}>
+            <button type="button" className="font-semibold text-accent-ink hover:underline" onClick={() => inputRef.current?.click()}>
               Replace
             </button>
           </div>
@@ -87,13 +87,16 @@ export function StlPicker({ stl, onPick }: { stl: LocalFile | null; onPick: (f: 
           }}
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
-          className={`grid aspect-[4/3] w-full place-items-center rounded-xl border-2 border-dashed p-6 text-center transition-colors ${
-            dragging ? "border-accent bg-accent/5" : "border-line bg-surface hover:border-ink"
+          className={`grid aspect-[4/3] w-full place-items-center rounded-card border-2 border-dashed p-6 text-center transition-colors ${
+            dragging ? "border-accent bg-accent-soft" : "border-border bg-surface hover:border-accent"
           }`}
         >
-          <span className="flex flex-col gap-1">
-            <span className="font-medium">Drop your STL or STEP file here</span>
-            <span className="text-sm text-muted">or click to browse · up to {MAX_STL_BYTES / MB} MB</span>
+          <span className="flex flex-col items-center gap-2">
+            <span aria-hidden className="grid h-10 w-10 place-items-center rounded-pill bg-accent-soft text-accent-ink">
+              <Upload size={20} strokeWidth={1.75} />
+            </span>
+            <span className="font-semibold">Drop your STL or STEP file here</span>
+            <span className="text-sm text-ink-2">or click to browse · up to {MAX_STL_BYTES / MB} MB</span>
           </span>
         </button>
       )}
@@ -115,16 +118,16 @@ export function PhotoPicker({
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
         {photos.map((p, i) => (
-          <div key={p.previewUrl} className="relative h-20 w-20 overflow-hidden rounded-lg border border-line">
+          <div key={p.previewUrl} className="relative h-20 w-20 overflow-hidden rounded-control shadow-card">
             {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview */}
             <img src={p.previewUrl} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
             <button
               type="button"
               onClick={() => onRemove(i)}
               aria-label={`Remove photo ${i + 1}`}
-              className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-ink/80 text-xs text-bg"
+              className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-pill bg-ink/80 text-white"
             >
-              ×
+              <X aria-hidden size={14} strokeWidth={2} />
             </button>
           </div>
         ))}
@@ -132,10 +135,10 @@ export function PhotoPicker({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="grid h-20 w-20 place-items-center rounded-lg border-2 border-dashed border-line text-2xl text-muted hover:border-ink hover:text-ink"
+            className="grid h-20 w-20 place-items-center rounded-control rounded-card bg-bg text-ink-2 transition-colors hover:border-accent hover:bg-accent-soft hover:text-accent-ink"
             aria-label="Add photos"
           >
-            +
+            <ImagePlus aria-hidden size={20} strokeWidth={1.75} />
           </button>
         )}
       </div>
@@ -180,6 +183,11 @@ export function useUploadFiles() {
     }
   };
 
+  const clearStl = () => {
+    if (stl) URL.revokeObjectURL(stl.previewUrl);
+    setStl(null);
+  };
+
   const removePhoto = (index: number) => {
     URL.revokeObjectURL(photos[index].previewUrl);
     setPhotos(photos.filter((_, i) => i !== index));
@@ -191,14 +199,14 @@ export function useUploadFiles() {
     photos.forEach((p) => body.append("images", p.file));
   };
 
-  return { stl, photos, error, setError, pickStl, addPhotos, removePhoto, appendFiles };
+  return { stl, photos, error, setError, pickStl, clearStl, addPhotos, removePhoto, appendFiles };
 }
 
 /** The form-level error banner. */
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <p role="alert" className="rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm">
+    <p role="alert" className="rounded-control bg-red-soft px-3 py-2 text-[14px] text-ink">
       {message}
     </p>
   );
@@ -210,19 +218,19 @@ export function FormError({ message }: { message: string | null }) {
  */
 export function UnitsSelect({ stl }: { stl: LocalFile | null }) {
   if (stl && isStep(stl.file)) {
-    return <p className="text-xs text-muted">STEP files carry their own units, so no conversion is needed.</p>;
+    return <p className="text-[13px] text-ink-2">STEP files carry their own units, so no conversion is needed.</p>;
   }
   return (
     <label className="flex flex-wrap items-center gap-2 text-sm font-medium">
       Units in the file
-      <select name="units" defaultValue="mm" className="rounded-lg border border-line bg-surface px-2 py-1.5 text-sm">
+      <select name="units" defaultValue="mm" className={controlClasses("w-auto")}>
         {STL_UNITS.map((u) => (
           <option key={u} value={u}>
             {UNIT_LABELS[u]}
           </option>
         ))}
       </select>
-      <span className="text-xs font-normal text-muted">Most CAD tools export millimeters. Check this if your part looks tiny or huge.</span>
+      <span className="text-[13px] font-medium text-ink-2">Most CAD tools export millimeters. Check this if your part looks tiny or huge.</span>
     </label>
   );
 }

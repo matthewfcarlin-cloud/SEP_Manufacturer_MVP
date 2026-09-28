@@ -1,130 +1,71 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import dynamic from "next/dynamic";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { Fragment, useRef } from "react";
-import { STAGES } from "@/lib/studio/stage";
+import { ButtonLink } from "@/components/ui/Button";
 
 // WebGL only exists in the browser.
 const HeroScene = dynamic(() => import("./HeroScene"), { ssr: false });
 
-const HEADLINE = [["From", "idea"], ["to", "first"], ["sale."]];
 const EASE = [0.2, 0.7, 0.1, 1] as const;
+/** The part sits centered in its circle rather than off to the right. */
+const CENTERED: [number, number, number] = [0, -0.2, 0];
 
 type Props = { exampleHref: string | null };
 
+/** The landing page's one big moment (§4): the headline, and the real demo part turning on a soft circle. */
 export function Hero({ exampleHref }: Props) {
-  const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const sceneY = useTransform(scrollYProgress, [0, 1], [0, 160]);
-  const sceneOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const rise = (delay: number) => ({
+    initial: reduce ? false : { opacity: 0, y: 16 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.7, ease: EASE, delay },
+  });
 
-  let wordIndex = 0;
   return (
-    <section ref={ref} className="relative isolate overflow-hidden bg-night text-night-ink">
-      {/* Engineering grid, faded toward the edges. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(var(--night-ink)_1px,transparent_1px),linear-gradient(90deg,var(--night-ink)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(ellipse_at_60%_40%,black,transparent_70%)]"
-      />
-
-      {/* Keeps the headline legible where it overlaps the part. */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-[5] bg-[linear-gradient(90deg,var(--night)_20%,transparent_65%)]" />
-
-      <motion.div
-        style={reduce ? undefined : { y: sceneY, opacity: sceneOpacity }}
-        // Hidden on phones: the part would sit behind the copy, and it spares their GPUs.
-        className="absolute inset-y-0 -z-10 hidden sm:right-[-10%] sm:block sm:w-[90%] lg:right-0 lg:w-[58%]"
-      >
-        <HeroScene />
-      </motion.div>
-
-      <div className="mx-auto flex min-h-[calc(100svh-57px)] max-w-7xl flex-col justify-between gap-12 px-4 pb-8 pt-16 sm:px-6 sm:pt-24">
-        <div className="flex flex-col gap-8">
-          <motion.p
-            className="eyebrow text-night-muted"
-            initial={reduce ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8 }}
-          >
-            The studio for first-time product creators
+    <section aria-labelledby="hero-heading" className="overflow-hidden">
+      <div className="mx-auto grid max-w-content items-center gap-10 page-pad pb-16 pt-12 sm:pt-20 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
+        <div className="flex flex-col gap-6">
+          <motion.h1 id="hero-heading" className="type-display" {...rise(0)}>
+            Turn your idea into a product <span className="text-accent-ink">you can sell.</span>
+          </motion.h1>
+          <motion.p className="max-w-xl text-[17px] leading-relaxed text-ink-2" {...rise(0.12)}>
+            Bring a 3D file, a few photos or just an idea. Moko shows you how to make it, what it costs,
+            what to charge, and gets your listing ready.
           </motion.p>
-
-          <h1 className="display-type text-[clamp(2.9rem,8.2vw,7.6rem)]">
-            {HEADLINE.map((line, li) => (
-              <span key={li} className="block">
-                {line.map((word) => {
-                  const i = wordIndex++;
-                  return (
-                    // Real spaces between words (not just margins) so screen readers and copy-paste see words.
-                    <Fragment key={word}>
-                    <span className="inline-block overflow-hidden pb-[0.04em] align-bottom">
-                      <motion.span
-                        className={`inline-block ${word === "sale." ? "text-night-accent" : ""}`}
-                        initial={reduce ? false : { y: "105%" }}
-                        animate={{ y: 0 }}
-                        transition={{ duration: 0.9, ease: EASE, delay: 0.15 + i * 0.08 }}
-                      >
-                        {word}
-                      </motion.span>
-                    </span>{" "}
-                    </Fragment>
-                  );
-                })}
-              </span>
-            ))}
-          </h1>
-
-          <motion.div
-            className="flex max-w-xl flex-col gap-8"
-            initial={reduce ? false : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: EASE, delay: 0.75 }}
-          >
-            <p className="text-lg leading-relaxed text-night-muted">
-              Bring a CAD file, a few photos, or just an idea. Leave with a design that can actually be
-              made, quotes from real shops, a price that makes money, a launch plan, and a listing
-              ready to sell.
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/new"
-                className="group inline-flex items-center justify-between gap-6 rounded-md bg-night-ink px-5 py-4 font-medium text-night transition-colors hover:bg-white"
-              >
-                Start a project
-                <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
-              </Link>
-              {exampleHref && (
-                <Link
-                  href={exampleHref}
-                  className="inline-flex items-center justify-center rounded-md border border-night-line px-5 py-4 font-medium text-night-ink transition-colors hover:border-night-muted"
-                >
-                  See an example product
-                </Link>
-              )}
-            </div>
-            <Link href="/privacy" className="eyebrow flex items-center gap-2 text-night-muted hover:text-night-ink">
-              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-night-idle" />
-              Private by default · your CAD file is never sent to the AI
+          <motion.div className="flex flex-col gap-3 sm:flex-row" {...rise(0.24)}>
+            <ButtonLink href="/new" size="lg" iconRight={ArrowRight}>
+              Start your product
+            </ButtonLink>
+            {exampleHref && (
+              <ButtonLink href={exampleHref} size="lg" variant="secondary">
+                See an example product
+              </ButtonLink>
+            )}
+          </motion.div>
+          <motion.div {...rise(0.36)}>
+            <Link href="/privacy" className="type-small inline-flex items-center gap-2 rounded-control text-ink-2 hover:text-ink">
+              <ShieldCheck aria-hidden size={18} strokeWidth={1.75} className="text-green-ink" />
+              Private by default. Your 3D file is never sent to the AI.
             </Link>
           </motion.div>
         </div>
 
-        <motion.dl
-          className="eyebrow grid grid-cols-3 gap-x-8 gap-y-3 border-t border-night-line pt-5 text-night-muted sm:flex sm:flex-wrap"
-          initial={reduce ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 1.1 }}
+        {/* The part turns on a soft circle; it holds still when motion is reduced. */}
+        <motion.div
+          aria-hidden
+          className="relative mx-auto aspect-square w-full max-w-[280px] sm:max-w-[420px] lg:max-w-[520px]"
+          initial={reduce ? false : { opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.9, ease: EASE, delay: 0.1 }}
         >
-          {STAGES.map((s, i) => (
-            <div key={s.key} className="flex gap-2">
-              <dt>{String(i + 1).padStart(2, "0")}</dt>
-              <dd className="text-night-ink">{s.label}</dd>
-            </div>
-          ))}
-        </motion.dl>
+          <div className="absolute inset-0 rounded-pill bg-sidebar" />
+          <div className="absolute inset-0">
+            <HeroScene offset={CENTERED} distance={5.6} />
+          </div>
+        </motion.div>
       </div>
     </section>
   );

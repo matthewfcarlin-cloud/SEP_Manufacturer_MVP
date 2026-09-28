@@ -81,7 +81,7 @@ function Traction({ on }: { on: boolean }) {
 function Stat({ value, goal, label }: { value: number | null; goal: string; label: string }) {
   return (
     <div>
-      <p className="display-type text-[220px] text-[#efeeec]">{value === null ? goal : <CountUp value={value} />}</p>
+      <p className="deck-display text-[220px] text-[#efeeec]">{value === null ? goal : <CountUp value={value} />}</p>
       <motion.p className="mt-4 font-mono text-[26px] uppercase tracking-[0.14em] text-[#8f8b83]" transition={fade}>
         {label}
       </motion.p>

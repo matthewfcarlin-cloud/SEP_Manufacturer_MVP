@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApiResponse } from "@/lib/api";
 import { DEFAULT_QUANTITY_TIERS, DEFAULT_REVENUE_SHARE } from "@/lib/businessCase";
@@ -45,6 +46,9 @@ export function useBusinessCaseDraft(projectId: string, version: number, initial
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const isDirty = useRef(false);
+  const router = useRouter();
+  // The first price ever saved finishes the Money stage: refresh once so the stepper can celebrate.
+  const isFirstSave = useRef(!initial);
 
   const parsed = useMemo(() => parseDraft(draft), [draft]);
 
@@ -64,6 +68,10 @@ export function useBusinessCaseDraft(projectId: string, version: number, initial
         if (!json.success) throw new Error(json.error);
         setSaveState("saved");
         setSaveError(null);
+        if (isFirstSave.current) {
+          isFirstSave.current = false;
+          router.refresh();
+        }
       } catch (err) {
         if (controller.signal.aborted) return;
         setSaveState("error");
@@ -74,7 +82,7 @@ export function useBusinessCaseDraft(projectId: string, version: number, initial
       clearTimeout(timer);
       controller.abort();
     };
-  }, [parsed, projectId, version]);
+  }, [parsed, projectId, version, router]);
 
   const update = (patch: Partial<Draft>) => {
     isDirty.current = true;

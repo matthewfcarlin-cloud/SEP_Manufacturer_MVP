@@ -8,7 +8,7 @@ export async function AiBudgetNote() {
   const { remainingUsd, limitUsd } = await budgetStatus(ownerHash);
   const analyses = Math.floor(remainingUsd / ACTION_ESTIMATE_USD.analysis);
   return (
-    <p className="text-xs text-muted">
+    <p className="type-small text-muted">
       Demo AI budget for this browser: ${remainingUsd.toFixed(2)} of ${limitUsd.toFixed(2)} left
       {analyses > 0 ? ` (about ${analyses} ${analyses === 1 ? "analysis" : "analyses"})` : ", enough only for small AI requests"}.
     </p>

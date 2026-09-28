@@ -2,6 +2,7 @@
 
 import { Bounds, Center, ContactShadows, OrbitControls } from "@react-three/drei";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
+import { useReducedMotion } from "motion/react";
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Box3, BufferAttribute, Color, PerspectiveCamera, Sphere, Spherical, Vector3, type BufferGeometry } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three-stdlib";
@@ -105,7 +106,7 @@ class ViewerErrorBoundary extends Component<
   render() {
     if (this.state.failed) {
       return (
-        <div className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-muted">
+        <div className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-ink-2">
           Couldn&apos;t display this model. The file may be corrupt; try re-exporting it as STL.
         </div>
       );
@@ -236,7 +237,7 @@ function Scene({
         )}
       </Canvas>
       {!ready && showLoading && (
-        <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-muted">
+        <div className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-ink-2">
           Loading model…
         </div>
       )}
@@ -257,14 +258,16 @@ export default function ModelViewer({
   onReady,
   showLoading = true,
 }: ModelViewerProps) {
+  // The model never spins on its own for people who asked for less motion.
+  const reduceMotion = useReducedMotion();
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-line bg-gradient-to-b from-surface to-bg ${className}`}
+      className={`relative overflow-hidden rounded-card bg-sidebar ${className}`}
     >
       <ViewerErrorBoundary key={url} onRenderError={onRenderError}>
         <Scene
           url={url}
-          autoRotate={autoRotate}
+          autoRotate={autoRotate && !reduceMotion}
           captureAngles={captureAngles}
           onRenders={onRenders}
           onRenderError={onRenderError}

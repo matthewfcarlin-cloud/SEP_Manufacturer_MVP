@@ -1,13 +1,15 @@
+import { Info } from "lucide-react";
+
 /** A small ⓘ that explains an unavoidable term on hover or keyboard focus. */
 export function InfoTip({ text, label = "What this means" }: { text: string; label?: string }) {
   return (
     <span className="group/tip relative inline-flex align-middle">
-      <button type="button" aria-label={`${label}: ${text}`} className="ml-1 grid h-4 w-4 place-items-center text-[11px] leading-none text-muted hover:text-ink focus-visible:text-ink">
-        ⓘ
+      <button type="button" aria-label={`${label}: ${text}`} className="ml-1 grid h-5 w-5 place-items-center rounded-pill text-muted transition-colors hover:text-ink focus-visible:text-ink">
+        <Info aria-hidden size={14} strokeWidth={1.75} />
       </button>
       <span
         role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 hidden w-56 -translate-x-1/2 border border-line bg-surface px-3 py-2 text-left text-xs font-normal normal-case leading-snug tracking-normal text-ink shadow-lg group-focus-within/tip:block group-hover/tip:block"
+        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-1.5 hidden w-60 -translate-x-1/2 rounded-[12px] bg-surface px-3 py-2.5 text-left text-[13px] font-normal normal-case leading-snug tracking-normal text-ink shadow-pop group-focus-within/tip:block group-hover/tip:block"
       >
         {text}
       </span>

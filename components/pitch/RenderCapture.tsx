@@ -35,7 +35,7 @@ export function RenderCapture({ projectId, version, cadFileUrl, onDone }: Props)
   const markFailed = useCallback(() => setError("The 3D viewer couldn't render in this browser."), []);
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-4 print:hidden" role="status">
+    <div className="flex flex-col gap-2 card p-4 print:hidden" role="status">
       <p className="text-sm font-medium">{error ?? "Rendering studio shots from your 3D model…"}</p>
       {!error && <ModelViewer url={cadFileUrl} autoRotate={false} captureAngles onRenders={upload} onRenderError={markFailed} className="h-64 w-full" />}
     </div>

@@ -1,0 +1,13 @@
+/*
+ * The /present slide deck keeps its own cinematic identity (always dark,
+ * expanded uppercase display type). It is a presentation about Moko, not part
+ * of the app, so the app's Workshop tokens don't apply here.
+ */
+.deck-display {
+  font-family: var(--font-archivo);
+  font-weight: 700;
+  font-stretch: 112%;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+  line-height: 0.92;
+}

@@ -7,6 +7,8 @@ import { bomItemEditSchema, type BomItemEdit } from "@/lib/bom/schemas";
 import { PROCESS_LABELS, PROCESSES } from "@/lib/processes";
 import { BOM_UNITS } from "@/lib/schemas";
 import type { BomCategory, BomItem, BomUnit, Process } from "@/lib/types";
+import { buttonClasses } from "@/components/ui/classes";
+import { controlClasses } from "@/components/ui/Field";
 
 type Row = {
   key: string;
@@ -83,8 +85,8 @@ function parseRows(rows: Row[]): { items: BomItemEdit[] } | { error: string } {
   return { items };
 }
 
-const input = "w-full min-w-0 border border-line bg-bg px-2.5 py-1.5 text-sm";
-const label = "flex min-w-0 flex-col gap-1 text-xs font-medium text-muted";
+const input = controlClasses("min-w-0 text-[14px]");
+const label = "flex min-w-0 flex-col gap-1 text-[13px] font-medium text-ink-2";
 
 type Props = {
   items: BomItem[];
@@ -111,8 +113,8 @@ export function BomEditor({ items, defaultProcess, saving, onSave, onCancel }: P
     <div className="flex flex-col gap-4">
       <ol className="flex flex-col gap-3">
         {rows.map((r, i) => (
-          <li key={r.key} className="grid gap-3 border border-line bg-surface p-4 sm:grid-cols-6 [&>*]:min-w-0">
-            <label className={`${label} sm:col-span-2`}>
+          <li key={r.key} className="grid gap-3 card p-4 @lg:grid-cols-6 [&>*]:min-w-0">
+            <label className={`${label} @lg:col-span-2`}>
               Item
               <input className={input} value={r.name} maxLength={80} onChange={(e) => change(r.key, { name: e.target.value })} aria-label={`Line ${i + 1} name`} />
             </label>
@@ -136,7 +138,7 @@ export function BomEditor({ items, defaultProcess, saving, onSave, onCancel }: P
                 {PROCESSES.map((p) => <option key={p} value={p}>{PROCESS_LABELS[p]}</option>)}
               </select>
             </label>
-            <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+            <div className="grid grid-cols-2 gap-2 @lg:col-span-2">
               <label className={label}>
                 Qty per unit
                 <input className={input} inputMode="decimal" value={r.quantity} onChange={(e) => change(r.key, { quantity: e.target.value })} />
@@ -148,11 +150,11 @@ export function BomEditor({ items, defaultProcess, saving, onSave, onCancel }: P
                 </select>
               </label>
             </div>
-            <label className={`${label} sm:col-span-4`}>
+            <label className={`${label} @lg:col-span-4`}>
               Spec (suppliers see this)
               <textarea className={`${input} min-h-16`} value={r.spec} maxLength={400} onChange={(e) => change(r.key, { spec: e.target.value })} />
             </label>
-            <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+            <div className="grid grid-cols-2 gap-2 @lg:col-span-2">
               <label className={label}>
                 Est. $ per unit, low
                 <input className={input} inputMode="decimal" value={r.costLow} onChange={(e) => change(r.key, { costLow: e.target.value })} />
@@ -162,14 +164,14 @@ export function BomEditor({ items, defaultProcess, saving, onSave, onCancel }: P
                 <input className={input} inputMode="decimal" value={r.costHigh} onChange={(e) => change(r.key, { costHigh: e.target.value })} />
               </label>
             </div>
-            <label className={`${label} sm:col-span-5`}>
+            <label className={`${label} @lg:col-span-5`}>
               Private notes
               <input className={input} value={r.notes} maxLength={300} onChange={(e) => change(r.key, { notes: e.target.value })} />
             </label>
             <button
               type="button"
               onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}
-              className="self-end border border-line px-3 py-1.5 text-sm hover:border-ink"
+              className={buttonClasses({ variant: "secondary", size: "sm", className: "self-end" })}
               aria-label={`Remove line ${i + 1}`}
             >
               Remove
@@ -179,15 +181,15 @@ export function BomEditor({ items, defaultProcess, saving, onSave, onCancel }: P
       </ol>
       <FormError message={error} />
       <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={() => setRows((rs) => [...rs, blankRow()])} className="border border-dashed border-line px-4 py-2 text-sm hover:border-ink">
+        <button type="button" onClick={() => setRows((rs) => [...rs, blankRow()])} className={buttonClasses({ variant: "secondary", size: "sm", className: "border-dashed" })}>
           Add a line
         </button>
         <span className="flex-1" />
-        <button type="button" onClick={onCancel} disabled={saving} className="border border-line px-4 py-2 text-sm hover:border-ink disabled:opacity-60">
+        <button type="button" onClick={onCancel} disabled={saving} className={buttonClasses({ variant: "secondary", size: "sm" })}>
           Cancel
         </button>
-        <button type="button" onClick={save} disabled={saving} className="bg-accent px-5 py-2 text-sm font-medium text-accent-ink hover:opacity-90 disabled:cursor-wait disabled:opacity-60">
-          {saving ? "Saving…" : "Save BOM"}
+        <button type="button" onClick={save} disabled={saving} className={buttonClasses({ size: "sm" })}>
+          {saving ? "Saving…" : "Save parts list"}
         </button>
       </div>
     </div>

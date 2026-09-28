@@ -9,26 +9,26 @@ export function PlanBudget({ plan }: { plan: LaunchPlan }) {
     plan.milestones.slice(0, i + 1).reduce((t, m) => ({ low: t.low + m.budgetUsd.low, high: t.high + m.budgetUsd.high }), { low: 0, high: 0 }),
   );
   return (
-    <div className="overflow-x-auto border border-line bg-surface">
+    <div className="overflow-x-auto card">
       <table className="w-full min-w-[560px] text-sm">
         <thead>
-          <tr className="border-b border-line text-left">
+          <tr className="border-b border-border text-left">
             {["Milestone", "Dates", "Budget, est.", "Running total, est."].map((h) => (
-              <th key={h} scope="col" className="eyebrow p-3 font-normal text-muted">{h}</th>
+              <th key={h} scope="col" className="text-[13px] font-medium p-3 text-ink-2">{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {plan.milestones.map((m, i) => {
             return (
-              <tr key={m.key} className="border-b border-line last:border-0 align-top">
+              <tr key={m.key} className="border-b border-border last:border-0 align-top">
                 <th scope="row" className="p-3 text-left font-medium">
                   {m.title}
-                  {m.note && <span className="mt-0.5 block text-xs font-normal text-muted">{m.note}</span>}
+                  {m.note && <span className="mt-0.5 block text-[13px] font-medium text-ink-2">{m.note}</span>}
                 </th>
-                <td className="whitespace-nowrap p-3 font-mono text-xs">{m.durationDays ? `${m.startDate} → ${m.endDate}` : "—"}</td>
-                <td className="whitespace-nowrap p-3 font-mono text-xs">{range(m.budgetUsd)}</td>
-                <td className="whitespace-nowrap p-3 font-mono text-xs font-semibold">{range(running[i])}</td>
+                <td className="whitespace-nowrap p-3 font-mono text-[13px]">{m.durationDays ? `${m.startDate} → ${m.endDate}` : "—"}</td>
+                <td className="whitespace-nowrap p-3 font-mono text-[13px]">{range(m.budgetUsd)}</td>
+                <td className="whitespace-nowrap p-3 font-mono text-[13px] font-semibold">{range(running[i])}</td>
               </tr>
             );
           })}

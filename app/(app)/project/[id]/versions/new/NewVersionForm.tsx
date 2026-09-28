@@ -2,9 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { FormError, inputClass, PhotoPicker, StlPicker, UnitsSelect, useUploadFiles } from "@/components/upload/UploadPickers";
+import { FormError, PhotoPicker, StlPicker, UnitsSelect, useUploadFiles } from "@/components/upload/UploadPickers";
+import { controlClasses } from "@/components/ui/Field";
 import type { ApiResponse } from "@/lib/api";
 import { MAX_CHANGE_NOTE, MAX_IMAGES } from "@/lib/projectInput";
+import { buttonClasses } from "@/components/ui/classes";
 
 export type TweakChoice = { key: string; processLabel: string; change: string; impact: string };
 
@@ -27,18 +29,18 @@ function TweakPicker({ tweaks, selected, onSelect }: { tweaks: TweakChoice[]; se
       <legend className="mb-1.5 text-sm font-medium">
         Reason for the change <span className="font-normal text-muted">(optional: pick one of the AI&apos;s tweaks)</span>
       </legend>
-      <label className="flex items-center gap-2 rounded-lg border border-line bg-surface px-3 py-2 text-sm has-[:checked]:border-accent">
+      <label className="flex items-center gap-2 card px-3 py-2 text-sm has-[:checked]:border-accent">
         <input type="radio" name="tweak" value="" checked={selected === null} onChange={() => onSelect(null)} />
         My own change
       </label>
       <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
         {tweaks.map((t) => (
-          <label key={t.key} className="flex gap-3 rounded-lg border border-line bg-surface px-3 py-2 text-sm has-[:checked]:border-accent">
+          <label key={t.key} className="flex gap-3 card px-3 py-2 text-sm has-[:checked]:border-accent">
             <input type="radio" name="tweak" value={t.key} checked={selected === t.key} onChange={() => onSelect(t.key)} className="mt-1" />
             <span className="flex flex-col gap-0.5">
-              <span className="eyebrow text-muted">{t.processLabel}</span>
+              <span className="text-[13px] font-medium text-ink-2">{t.processLabel}</span>
               <span>{t.change}</span>
-              <span className="text-xs text-idle">{t.impact}</span>
+              <span className="text-[13px] text-green-ink">{t.impact}</span>
             </span>
           </label>
         ))}
@@ -82,7 +84,7 @@ export function NewVersionForm({ projectId, base, tweaks, preselectedTweak }: Pr
       const res = await fetch(`/api/projects/${projectId}/versions`, { method: "POST", body });
       const json = (await res.json()) as ApiResponse<{ id: string; version: number }>;
       if (!json.success) throw new Error(json.error);
-      router.push(`/project/${projectId}?v=${json.data.version}`);
+      router.push(`/project/${projectId}/idea?v=${json.data.version}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
       setSubmitting(false);
@@ -95,7 +97,7 @@ export function NewVersionForm({ projectId, base, tweaks, preselectedTweak }: Pr
       <section className="flex flex-col gap-6">
         <div className="flex flex-col gap-3">
           <h2 className="text-sm font-medium">
-            Revised CAD file <span className="text-muted">(STL or STEP)</span>
+            Revised CAD file <span className="text-ink-2">(STL or STEP)</span>
           </h2>
           <StlPicker stl={stl} onPick={pickStl} />
           <UnitsSelect stl={stl} />
@@ -113,26 +115,26 @@ export function NewVersionForm({ projectId, base, tweaks, preselectedTweak }: Pr
             maxLength={MAX_CHANGE_NOTE}
             value={changeNote}
             onChange={(e) => setChangeNote(e.target.value)}
-            className={inputClass}
+            className={controlClasses()}
             placeholder="Re-drew the bracket as one bent aluminum sheet instead of a molded part…"
           />
         </label>
 
         <label className="flex flex-col gap-1.5 text-sm font-medium">
           What is it?
-          <textarea name="notes" rows={4} maxLength={4000} defaultValue={base.notes} className={inputClass} />
+          <textarea name="notes" rows={4} maxLength={4000} defaultValue={base.notes} className={controlClasses()} />
         </label>
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             Target quantity
-            <input name="targetQuantity" type="number" min={1} step={1} required defaultValue={base.targetQuantity} className={inputClass} />
+            <input name="targetQuantity" type="number" min={1} step={1} required defaultValue={base.targetQuantity} className={controlClasses()} />
           </label>
           <label className="flex flex-col gap-1.5 text-sm font-medium">
             <span>
               Budget <span className="font-normal text-muted">(USD, optional)</span>
             </span>
-            <input name="budgetUsd" type="number" min={0} step={1} defaultValue={base.budgetUsd} className={inputClass} />
+            <input name="budgetUsd" type="number" min={0} step={1} defaultValue={base.budgetUsd} className={controlClasses()} />
           </label>
         </div>
 
@@ -140,7 +142,7 @@ export function NewVersionForm({ projectId, base, tweaks, preselectedTweak }: Pr
           <span>
             Material ideas <span className="font-normal text-muted">(optional, comma-separated)</span>
           </span>
-          <input name="materialHints" defaultValue={base.materialHints.join(", ")} className={inputClass} />
+          <input name="materialHints" defaultValue={base.materialHints.join(", ")} className={controlClasses()} />
         </label>
 
         <div className="flex flex-col gap-1.5 text-sm font-medium">
@@ -149,7 +151,7 @@ export function NewVersionForm({ projectId, base, tweaks, preselectedTweak }: Pr
           </span>
           <PhotoPicker photos={photos} onAdd={addPhotos} onRemove={removePhoto} />
           {base.photoCount > 0 && (
-            <label className="mt-1 flex items-center gap-2 font-normal text-muted">
+            <label className="mt-1 flex items-center gap-2 font-medium text-ink-2">
               <input type="checkbox" name="keepPhotos" defaultChecked disabled={photos.length > 0} />
               {photos.length > 0
                 ? `Using your new photos instead of v${base.number}'s`
@@ -163,7 +165,7 @@ export function NewVersionForm({ projectId, base, tweaks, preselectedTweak }: Pr
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-accent px-5 py-3 font-medium text-accent-ink hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+          className={buttonClasses()}
         >
           {submitting ? "Uploading and measuring…" : "Create version"}
         </button>
