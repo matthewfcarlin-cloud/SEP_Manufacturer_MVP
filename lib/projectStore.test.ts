@@ -53,6 +53,17 @@ describe("projectStore", () => {
     expect(Array.from(file!.bytes)).toEqual(Array.from(jpg));
   });
 
+  test("creates a product without a 3D file: no CAD url and no geometry", async () => {
+    const created = await createProject({
+      fields: { name: "Idea only", notes: "A clip for a bike light", targetQuantity: 100, materialHints: [] },
+      images: [],
+    });
+    const [v1] = created.versions;
+    expect(v1).not.toHaveProperty("cadFileUrl");
+    expect(v1).not.toHaveProperty("geometry");
+    expect(await getProject(created.id)).toEqual(created);
+  });
+
   test("returns null for unknown or malformed ids", async () => {
     expect(await getProject("AAAAAAAAAA")).toBeNull();
     expect(await getProject("../../etc")).toBeNull();

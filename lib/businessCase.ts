@@ -134,6 +134,8 @@ const dollars = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
 const cents = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
 const pct = (n: number) => `${Math.round(n * 100)}%`;
+/** Cents under $10 ("$0.50"), whole dollars above ("$36"). */
+const money = (n: number) => (Math.abs(n) < 10 ? cents(n) : dollars(n));
 const MINUS = "−";
 const signedPct = (n: number) => `${Math.round(n * 100) < 0 ? MINUS : ""}${Math.abs(Math.round(n * 100))}%`;
 
@@ -166,22 +168,24 @@ function lowVolumeDetail(paths: readonly ManufacturingPath[], healthyFrom: numbe
   if (toolingPerPart / cost.mid < TOOLING_DOMINANT_SHARE) {
     const tweak = path.designTweaks[0];
     const consider = tweak ? `this design tweak: ${tweak.change}` : "a higher retail price";
-    return `Under ~${count(healthyFrom)} units the per-part cost is too high for this price. Consider ${consider}`.replace(/\.?$/, ".");
+    return `Under about ${count(healthyFrom)} made, the cost of each one is too high for this price. Try ${consider}`.replace(/\.?$/, ".");
   }
 
-  const tooling = `Tooling makes this unprofitable under ~${count(healthyFrom)} units: ${processInSentence(path.process)} needs ${formatToolingRange(path.toolingCostUsd)} up front.`;
+  const tooling = `The one-time setup cost is too big to pay back under about ${count(healthyFrom)} made: ${processInSentence(path.process)} needs ${formatToolingRange(path.toolingCostUsd)} up front.`;
   const others = paths.filter((p) => p.process !== path.process);
   const alternative = others.length ? cheapestPathAt(others, smallestRun) : undefined;
   const altCost = alternative && allInCostAt(alternative, smallestRun);
   if (!alternative || !altCost || altCost.mid >= revenue) {
-    return `${tooling} No other process shown covers its cost at ${count(smallestRun)} units at this price, so consider a bigger first run or a higher price.`;
+    return `${tooling} No other way shown covers its cost at ${count(smallestRun)} made at this price, so try a bigger first run or a higher price.`;
   }
-  const altTooling = alternative.toolingCostUsd.high === 0 ? "no tooling" : `${formatToolingRange(alternative.toolingCostUsd)} tooling`;
-  return `${tooling} Consider ${processInSentence(alternative.process)} for smaller runs (est. ${cents(altCost.mid)} per part at ${count(smallestRun)} units, ${altTooling}).`;
+  const altTooling = alternative.toolingCostUsd.high === 0 ? "no one-time setup cost" : `${formatToolingRange(alternative.toolingCostUsd)} one-time setup cost`;
+  return `${tooling} Try ${processInSentence(alternative.process)} for smaller runs (about ${cents(altCost.mid)} each at ${count(smallestRun)} made, ${altTooling}).`;
 }
 
 function buildVerdict(paths: readonly ManufacturingPath[], tiers: TierResult[], inputs: BusinessCaseInputs, healthyFrom: number | null): Verdict {
   const price = dollars(inputs.retailPriceUsd);
+  const revenue = inputs.retailPriceUsd * inputs.revenueShare;
+  const perSale = (t: TierResult) => money(revenue - t.allIn.mid);
   const healthy = tiers.findIndex((t) => t.margin.mid >= MIN_HEALTHY_MARGIN);
   const first = tiers[0];
   const last = tiers[tiers.length - 1];
@@ -189,11 +193,11 @@ function buildVerdict(paths: readonly ManufacturingPath[], tiers: TierResult[], 
   if (healthy === 0) {
     return {
       tone: "good",
-      headline: `Profitable at every volume shown at ${price} retail.`,
+      headline: `Makes money at every run size shown at ${price}.`,
       detail:
         tiers.length > 1
-          ? `Est. margin ${formatMarginRange(first.margin)} at ${count(first.quantity)} units, ${formatMarginRange(last.margin)} at ${count(last.quantity)}.`
-          : `Est. margin ${formatMarginRange(first.margin)} at ${count(first.quantity)} units.`,
+          ? `About ${perSale(first)} per sale at ${count(first.quantity)} made, ${perSale(last)} at ${count(last.quantity)} (est.).`
+          : `About ${perSale(first)} per sale at ${count(first.quantity)} made (est.).`,
     };
   }
   if (healthy > 0) {
@@ -201,7 +205,7 @@ function buildVerdict(paths: readonly ManufacturingPath[], tiers: TierResult[], 
     const from = healthyFrom ?? tier.quantity;
     return {
       tone: "mixed",
-      headline: `Profitable at ${count(from)}+ units at ${price} retail (est. margin ${formatMarginRange(tier.margin)} at ${count(tier.quantity)}).`,
+      headline: `Makes money from about ${count(from)} made at ${price} (about ${perSale(tier)} per sale at ${count(tier.quantity)}, est.).`,
       detail: lowVolumeDetail(paths, from, first.quantity, inputs.retailPriceUsd * inputs.revenueShare),
     };
   }
@@ -210,14 +214,14 @@ function buildVerdict(paths: readonly ManufacturingPath[], tiers: TierResult[], 
   if (best.margin.mid >= 0) {
     return {
       tone: "mixed",
-      headline: `Thin margins at ${price} retail: at best est. ${formatMarginRange(best.margin)} at ${count(best.quantity)} units.`,
-      detail: `A retail price around ${needed} would give a ${pct(MIN_HEALTHY_MARGIN)} margin at ${count(best.quantity)} units.`,
+      headline: `At ${price} you'd only just make money: at best about ${perSale(best)} per sale at ${count(best.quantity)} made.`,
+      detail: `A price around ${needed} leaves room to spare at ${count(best.quantity)} made.`,
     };
   }
   return {
     tone: "bad",
-    headline: `Not profitable at any volume shown at ${price} retail.`,
-    detail: `The lowest estimated cost is ~${cents(best.allIn.mid)} per part, so retail would need to be about ${needed}.`,
+    headline: `Loses money at every run size shown at ${price}.`,
+    detail: `Each one costs at least about ${cents(best.allIn.mid)} to make, so the price would need to be about ${needed}.`,
   };
 }
 

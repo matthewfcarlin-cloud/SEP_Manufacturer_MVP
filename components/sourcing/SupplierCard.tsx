@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { AiErrorBanner } from "@/components/AiErrorBanner";
-import { FormError, inputClass } from "@/components/upload/UploadPickers";
+import { FormError } from "@/components/upload/UploadPickers";
+import { controlClasses } from "@/components/ui/Field";
 import { SUPPLIER_STATUSES } from "@/lib/schemas";
 import { draftOf } from "@/lib/sourcing/ops";
 import type { SourcingOp } from "@/lib/sourcing/schemas";
@@ -12,6 +13,7 @@ import type { Supplier, SupplierStatus } from "@/lib/types";
 import { CopyButton } from "./CopyButton";
 import { SupplierFields, fieldsFromSupplier, parseSupplierFields } from "./SupplierFields";
 import { useBusy } from "./useSourcing";
+import { buttonClasses } from "@/components/ui/classes";
 
 const STATUS_LABELS: Record<SupplierStatus, string> = {
   shortlisted: "Shortlisted",
@@ -22,9 +24,9 @@ const STATUS_LABELS: Record<SupplierStatus, string> = {
 };
 
 const STANDING: Record<QuoteStanding, { text: string; className: string }> = {
-  "at-target": { text: "At or under your target", className: "border-idle/50 bg-idle/10" },
-  negotiable: { text: "Above target, under your walk-away", className: "border-line bg-bg" },
-  "over-walk-away": { text: "Above your walk-away", className: "border-accent/50 bg-accent/10" },
+  "at-target": { text: "At or under your target", className: "border-green/50 bg-green/10" },
+  negotiable: { text: "Above target, under your walk-away", className: "border-border bg-bg" },
+  "over-walk-away": { text: "Above your walk-away", className: "bg-red-soft" },
 };
 
 type Props = {
@@ -74,16 +76,16 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft, isBe
   };
 
   return (
-    <li className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5">
+    <li className="flex flex-col gap-4 card card-pad">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h4 className="text-lg font-semibold">
             {supplier.name}
-            {isBest && <span className="ml-2 align-middle rounded-full bg-accent/15 px-2 py-0.5 text-xs font-normal text-accent">Best pick</span>}
+            {isBest && <span className="ml-2 align-middle rounded-pill bg-accent-soft px-2 py-0.5 text-[13px] font-normal text-accent-ink">Best pick</span>}
           </h4>
-          {supplier.email && <p className="truncate font-mono text-xs text-muted">{supplier.email}</p>}
+          {supplier.email && <p className="truncate text-[13px] text-ink-2">{supplier.email}</p>}
           {supplier.listingUrl && (
-            <a href={supplier.listingUrl} target="_blank" rel="noopener noreferrer" className="block truncate text-sm text-accent hover:underline">
+            <a href={supplier.listingUrl} target="_blank" rel="noopener noreferrer" className="block truncate text-sm text-accent-ink hover:underline">
               Open listing
             </a>
           )}
@@ -95,22 +97,22 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft, isBe
             value={supplier.status}
             disabled={busy !== null}
             onChange={(e) => run("status", () => edit({ op: "updateSupplier", supplierId: id, status: e.target.value as SupplierStatus }))}
-            className={`${inputClass} w-auto`}
+            className={`${controlClasses()} w-auto`}
           >
             {SUPPLIER_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
           </select>
-          <button type="button" onClick={() => setIsEditing((v) => !v)} className="rounded-lg border border-line px-3 py-2 text-sm hover:border-ink">
+          <button type="button" onClick={() => setIsEditing((v) => !v)} className={buttonClasses({ variant: "secondary", size: "sm" })}>
             {isEditing ? "Cancel" : "Edit"}
           </button>
         </div>
       </div>
 
       {isEditing ? (
-        <div className="flex flex-col gap-3 rounded-xl bg-bg p-4">
+        <div className="flex flex-col gap-3 rounded-card bg-bg p-4">
           <SupplierFields value={fields} onChange={setFields} idPrefix={`edit-${id}`} />
           <FormError message={fieldError} />
           <div className="flex flex-wrap justify-between gap-2">
-            <button type="button" onClick={saveFields} disabled={busy !== null} className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90 disabled:opacity-60">
+            <button type="button" onClick={saveFields} disabled={busy !== null} className={buttonClasses({ size: "sm" })}>
               Save supplier
             </button>
             <button
@@ -118,39 +120,39 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft, isBe
               onClick={() => {
                 if (confirm(`Remove ${supplier.name} and its messages from this list?`)) void run("remove", () => edit({ op: "removeSupplier", supplierId: id }));
               }}
-              className="text-sm text-muted hover:text-ink"
+              className="text-sm text-ink-2 hover:text-ink"
             >
               Remove supplier
             </button>
           </div>
         </div>
       ) : (
-        <dl className="grid grid-cols-2 gap-3 rounded-xl bg-bg p-4 text-sm sm:grid-cols-4">
+        <dl className="grid grid-cols-2 gap-3 rounded-card bg-bg p-4 text-sm @lg:grid-cols-4">
           {(
             [
-              ["Quoted per part", supplier.quote?.unitUsd !== undefined ? `$${supplier.quote.unitUsd.toFixed(2)}` : "—"],
-              ["MOQ", supplier.quote?.moq?.toLocaleString("en-US") ?? "—"],
+              ["Quoted, each", supplier.quote?.unitUsd !== undefined ? `$${supplier.quote.unitUsd.toFixed(2)}` : "—"],
+              ["Smallest order", supplier.quote?.moq?.toLocaleString("en-US") ?? "—"],
               ["One-time setup", supplier.quote?.toolingUsd !== undefined ? `$${supplier.quote.toolingUsd.toLocaleString("en-US")}` : "—"],
               ["How long it takes", supplier.quote?.leadDays !== undefined ? `${supplier.quote.leadDays} days` : "—"],
             ] as const
           ).map(([k, v]) => (
             <div key={k}>
-              <dt className="eyebrow text-muted">{k}</dt>
+              <dt className="text-[13px] font-medium text-ink-2">{k}</dt>
               <dd className="font-mono">{v}</dd>
             </div>
           ))}
-          {standing && <p className={`col-span-full rounded-lg border px-3 py-1.5 text-xs ${standing.className}`}>{standing.text} (est.)</p>}
-          {supplier.notes && <p className="col-span-full whitespace-pre-line text-muted">{supplier.notes}</p>}
+          {standing && <p className={`col-span-full rounded-control border px-3 py-1.5 text-[13px] ${standing.className}`}>{standing.text} (est.)</p>}
+          {supplier.notes && <p className="col-span-full whitespace-pre-line text-ink-2">{supplier.notes}</p>}
         </dl>
       )}
 
       <div className="flex flex-col gap-3">
         <h5 className="text-sm font-semibold">Conversation</h5>
-        {sent.length === 0 && <p className="text-sm text-muted">Nothing sent yet. Draft a first message, send it on Alibaba, then mark it sent here.</p>}
+        {sent.length === 0 && <p className="text-sm text-ink-2">Nothing sent yet. Draft a first message, send it on Alibaba, then mark it sent here.</p>}
         <ol className="flex flex-col gap-2">
           {sent.map((m) => (
-            <li key={m.id} className={`max-w-[92%] rounded-lg border border-line p-3 text-sm ${m.from === "me" ? "self-end bg-bg" : "self-start bg-surface"}`}>
-              <p className="eyebrow mb-1 text-muted">
+            <li key={m.id} className={`max-w-[92%] rounded-card p-3 text-[14px] ${m.from === "me" ? "self-end rounded-br-[4px] bg-ink text-bg" : "self-start rounded-bl-[4px] bg-bg"}`}>
+              <p className="text-[13px] font-medium mb-1 text-ink-2">
                 {m.from === "me" ? "You (sent)" : supplier.name} ·{" "}
                 {/* Server and browser can be in different time zones; the browser's reading wins. */}
                 <time dateTime={m.at} suppressHydrationWarning>
@@ -163,9 +165,9 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft, isBe
           ))}
         </ol>
 
-        <div className="flex flex-col gap-2 rounded-xl border border-dashed border-line p-4">
+        <div className="flex flex-col gap-2 rounded-card bg-bg p-4">
           <label htmlFor={`subject-${id}`} className="text-sm font-medium">
-            Your next email {current?.aiDrafted && !draftChanged && <span className="font-normal text-muted">· drafted by AI, not sent</span>}
+            Your next email {current?.aiDrafted && !draftChanged && <span className="font-medium text-ink-2">· drafted by AI, not sent</span>}
           </label>
           <input
             id={`subject-${id}`}
@@ -173,7 +175,7 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft, isBe
             onChange={(e) => setDraftSubject(e.target.value)}
             placeholder="Subject"
             aria-label="Subject"
-            className={inputClass}
+            className={controlClasses()}
           />
           <textarea
             id={`draft-${id}`}
@@ -181,28 +183,28 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft, isBe
             rows={draftText ? 8 : 3}
             value={draftText}
             onChange={(e) => setDraftText(e.target.value)}
-            placeholder="Write an email, or let the AI draft one from your RFQ, targets and the conversation."
-            className={inputClass}
+            placeholder="Write an email, or let the AI draft one from your quote request, targets and the conversation."
+            className={controlClasses()}
           />
-          {rationale && <p className="text-xs text-muted"><span className="font-medium text-ink">Why this message (for you only): </span>{rationale}</p>}
+          {rationale && <p className="text-[13px] text-ink-2"><span className="font-medium text-ink">Why this message (for you only): </span>{rationale}</p>}
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               disabled={busy !== null}
               onClick={() => run("ai", async () => setRationale(await askForDraft(id)))}
-              className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+              className={buttonClasses({ size: "sm" })}
             >
               {busy === "ai" ? "Drafting…" : current || sent.length ? "Draft next email with AI" : "Draft first email with AI"}
             </button>
             {draftText.trim() && draftChanged && (
-              <button type="button" disabled={busy !== null} onClick={() => run("save", () => edit({ op: "saveDraft", supplierId: id, text: draftText, subject: draftSubject }))} className="rounded-lg border border-line px-3 py-2 text-sm hover:border-ink">
+              <button type="button" disabled={busy !== null} onClick={() => run("save", () => edit({ op: "saveDraft", supplierId: id, text: draftText, subject: draftSubject }))} className={buttonClasses({ variant: "secondary", size: "sm" })}>
                 Save draft
               </button>
             )}
             {draftText.trim() && (
               <a
                 href={mailtoLink(supplier.email, draftSubject, draftText)}
-                className="rounded-lg border border-line bg-surface px-3 py-1.5 text-sm hover:border-ink"
+                className="card px-3 py-1.5 text-sm"
                 title={supplier.email ? `Opens a new email to ${supplier.email} in your email app` : "Opens a new email in your email app; add the supplier's address there"}
               >
                 Open in email
@@ -215,31 +217,31 @@ export function SupplierCard({ supplier, targets, edit, draft: askForDraft, isBe
                   type="button"
                   disabled={busy !== null}
                   onClick={() => run("sent", async () => { await edit({ op: "markSent", supplierId: id, messageId: current.id }); setRationale(null); })}
-                  className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90 disabled:opacity-60"
+                  className={buttonClasses({ size: "sm" })}
                 >
                   I sent this
                 </button>
-                <button type="button" disabled={busy !== null} onClick={() => run("discard", async () => { await edit({ op: "discardDraft", supplierId: id }); setRationale(null); })} className="text-sm text-muted hover:text-ink">
+                <button type="button" disabled={busy !== null} onClick={() => run("discard", async () => { await edit({ op: "discardDraft", supplierId: id }); setRationale(null); })} className="text-sm text-ink-2 hover:text-ink">
                   Discard
                 </button>
               </>
             )}
           </div>
-          <p className="text-xs text-muted">Moko doesn&apos;t send anything. &ldquo;Open in email&rdquo; starts the email in your own email app (or copy it into Alibaba chat). Send it there, then mark it sent.</p>
+          <p className="text-[13px] text-ink-2">Moko doesn&apos;t send anything. &ldquo;Open in email&rdquo; starts the email in your own email app (or copy it into Alibaba chat). Send it there, then mark it sent.</p>
         </div>
 
         <div className="flex flex-col gap-2">
           <label htmlFor={`reply-${id}`} className="text-sm font-medium">Paste their reply</label>
-          <textarea id={`reply-${id}`} rows={3} value={reply} onChange={(e) => setReply(e.target.value)} className={inputClass} placeholder="Paste the supplier's latest reply from your email or Alibaba." />
+          <textarea id={`reply-${id}`} rows={3} value={reply} onChange={(e) => setReply(e.target.value)} className={controlClasses()} placeholder="Paste the supplier's latest reply from your email or Alibaba." />
           <button
             type="button"
             disabled={busy !== null || !reply.trim()}
             onClick={() => run("reply", async () => { await edit({ op: "addReply", supplierId: id, text: reply }); setReply(""); })}
-            className="self-start rounded-lg border border-line px-3 py-2 text-sm hover:border-ink disabled:opacity-50"
+            className={buttonClasses({ variant: "secondary", size: "sm", className: "self-start" })}
           >
             Add their reply
           </button>
-          <p className="text-xs text-muted">Update the quoted numbers with Edit when they change, so the AI negotiates from the latest offer.</p>
+          <p className="text-[13px] text-ink-2">Update the quoted numbers with Edit when they change, so the AI negotiates from the latest offer.</p>
         </div>
       </div>
       {error && <AiErrorBanner message={error} status={errorStatus} />}

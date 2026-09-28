@@ -61,7 +61,7 @@ describe("nextStep", () => {
   test("asks for a price once analyzed", () => {
     const step = nextStep(withLatest(pedal, { businessCase: undefined }));
     expect(step.title).toMatch(/price/i);
-    expect(step.href).toContain("#business-case-heading");
+    expect(step.href).toBe(`/project/${pedal.id}/money?v=1#business-case-heading`);
   });
 
   test("with a price set, asks for quotes from the matched shops", () => {

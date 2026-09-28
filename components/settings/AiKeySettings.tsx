@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { AI_PROVIDERS, getKeyState, removeKey, saveKey, testKey, type AiProvider, type KeyState } from "@/lib/client/aiKey";
+import { buttonClasses } from "@/components/ui/classes";
+import { StatusPill } from "@/components/ui/StatusPill";
+import { controlClasses } from "@/components/ui/Field";
 
-const inputClass = "w-full border border-line bg-surface px-3 py-2 font-mono text-sm outline-none focus:border-ink";
 const TRUST_LINE = "Your key is encrypted and only used for your projects. Calls are billed to your provider account.";
 
 type Note = { tone: "ok" | "error"; text: string } | null;
@@ -25,7 +27,7 @@ export function AiKeySettings() {
   }, []);
 
   if (state === "loading") {
-    return <div aria-hidden className="h-72 animate-pulse border border-line bg-line/30 motion-reduce:animate-none" />;
+    return <div aria-hidden className="skeleton h-72 rounded-card" />;
   }
   const isAvailable = state.available;
   const saved = state.available ? state.saved : null;
@@ -55,19 +57,19 @@ export function AiKeySettings() {
   };
 
   return (
-    <section aria-labelledby="provider-heading" className="flex flex-col gap-5 border border-line bg-surface p-5 sm:p-6">
+    <section aria-labelledby="provider-heading" className="flex flex-col gap-5 card card-pad sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="provider-heading" className="font-semibold">Your key</h2>
-        {!isAvailable && <span className="eyebrow border border-line px-2 py-0.5 text-[10px] text-muted">Coming soon</span>}
+        {!isAvailable && <StatusPill>Coming soon</StatusPill>}
       </div>
 
       {saved ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 border border-line bg-bg px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-control bg-green-soft px-4 py-3">
           <div>
-            <p className="eyebrow text-[10px] text-muted">Saved key · {AI_PROVIDERS.find((p) => p.id === saved.provider)?.label} · since {new Date(saved.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
-            <p className="font-mono text-sm">{saved.maskedKey}</p>
+            <p className="text-[13px] font-medium text-ink-2">Saved key · {AI_PROVIDERS.find((p) => p.id === saved.provider)?.label} · since {new Date(saved.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+            <p className="text-[14px] font-medium">{saved.maskedKey}</p>
           </div>
-          <button type="button" disabled={busy !== null} onClick={() => run("remove")} className="border border-accent px-3 py-2 text-sm font-medium text-accent hover:bg-accent/10 disabled:opacity-50">
+          <button type="button" disabled={busy !== null} onClick={() => run("remove")} className="border border-accent px-3 py-2 text-sm font-medium text-accent-ink hover:bg-accent-soft disabled:opacity-50">
             {busy === "remove" ? "Removing…" : "Remove key"}
           </button>
         </div>
@@ -77,11 +79,11 @@ export function AiKeySettings() {
             <legend className="mb-1 text-sm font-medium">Provider</legend>
             <div className="flex flex-wrap gap-2">
               {AI_PROVIDERS.map((p) => (
-                <label key={p.id} className={`flex items-center gap-2 border border-line bg-bg px-3 py-2 text-sm has-[:checked]:border-accent ${p.isSupported ? "" : "text-muted"}`}>
+                <label key={p.id} className={`flex h-11 items-center gap-2 rounded-control border border-border bg-surface px-3 text-[14px] has-[:checked]:border-accent has-[:checked]:bg-accent-soft ${p.isSupported ? "" : "text-ink-2"}`}>
                   <input type="radio" name="provider" value={p.id} checked={provider === p.id} disabled={!p.isSupported} onChange={() => setProvider(p.id)} />
                   {p.label}
-                  {p.id === "anthropic" && <span className="text-xs text-muted">(default)</span>}
-                  {!p.isSupported && <span className="eyebrow border border-line px-1.5 py-0.5 text-[9px]">Coming soon</span>}
+                  {p.id === "anthropic" && <span className="text-[13px] text-ink-2">(default)</span>}
+                  {!p.isSupported && <StatusPill>Coming soon</StatusPill>}
                 </label>
               ))}
             </div>
@@ -95,7 +97,7 @@ export function AiKeySettings() {
               value={key}
               onChange={(e) => setKey(e.target.value)}
               placeholder={placeholder}
-              className={inputClass}
+              className={controlClasses()}
             />
           </label>
           <div className="flex flex-wrap gap-2">
@@ -103,7 +105,7 @@ export function AiKeySettings() {
               type="button"
               disabled={!isAvailable || !key.trim() || busy !== null}
               onClick={() => run("test")}
-              className="border border-line bg-bg px-4 py-2 text-sm font-medium hover:border-ink disabled:opacity-50"
+              className={buttonClasses({ variant: "secondary", size: "sm", className: "bg-bg" })}
             >
               {!isAvailable ? "Test key · Coming soon" : busy === "test" ? "Testing…" : "Test key"}
             </button>
@@ -111,7 +113,7 @@ export function AiKeySettings() {
               type="button"
               disabled={!isAvailable || !key.trim() || busy !== null}
               onClick={() => run("save")}
-              className="bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90 disabled:opacity-50"
+              className={buttonClasses({ size: "sm" })}
             >
               {!isAvailable ? "Save · Coming soon" : busy === "save" ? "Saving…" : "Save key"}
             </button>
@@ -120,11 +122,11 @@ export function AiKeySettings() {
       )}
 
       {note && (
-        <p role={note.tone === "error" ? "alert" : "status"} className={`text-sm ${note.tone === "error" ? "text-accent" : "text-idle"}`}>
+        <p role={note.tone === "error" ? "alert" : "status"} className={`text-sm ${note.tone === "error" ? "text-accent-ink" : "text-green-ink"}`}>
           {note.text}
         </p>
       )}
-      <p className="text-sm text-muted">{isAvailable ? TRUST_LINE : `When saving is live: ${TRUST_LINE.charAt(0).toLowerCase()}${TRUST_LINE.slice(1)} Until then, AI features use the demo budget.`}</p>
+      <p className="text-sm text-ink-2">{isAvailable ? TRUST_LINE : `When saving is live: ${TRUST_LINE.charAt(0).toLowerCase()}${TRUST_LINE.slice(1)} Until then, AI features use the demo budget.`}</p>
     </section>
   );
 }

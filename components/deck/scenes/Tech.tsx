@@ -70,7 +70,7 @@ export function Tech({ beat }: { beat: Beat }) {
         </div>
       </Show>
       <Show on={beat === "gateway"} delay={0.45} className="left-[600px] top-[360px] w-[820px] border-2 border-[#ff4a00] bg-[#1f130c] p-10">
-        <span className="display-type text-[48px] text-[#efeeec]">Gateway</span>
+        <span className="deck-display text-[48px] text-[#efeeec]">Gateway</span>
         <ul className="mt-6 flex flex-col gap-4">
           {GATEWAY.map((g, i) => (
             <motion.li
@@ -87,7 +87,7 @@ export function Tech({ beat }: { beat: Beat }) {
         </ul>
       </Show>
       <Show on={beat === "gateway"} delay={0.7} className="left-[1540px] top-[520px] w-[260px] border border-[#3a3936] bg-[#111110] p-8 text-center">
-        <span className="display-type text-[44px] text-[#efeeec]">Claude</span>
+        <span className="deck-display text-[44px] text-[#efeeec]">Claude</span>
         <p className="mt-2 font-mono text-[18px] uppercase tracking-[0.12em] text-[#8f8b83]">Anthropic API</p>
       </Show>
       <Pulse on={beat === "gateway"} from={490} to={590} y={600} />
@@ -102,7 +102,7 @@ export function Tech({ beat }: { beat: Beat }) {
             >
               {l.status}
             </span>
-            <span className="display-type mt-6 text-[40px] text-[#efeeec]">{l.step}</span>
+            <span className="deck-display mt-6 text-[40px] text-[#efeeec]">{l.step}</span>
             <span className="mt-4 text-[27px] leading-snug text-[#b9b5ac]">{l.detail}</span>
           </div>
         </Show>

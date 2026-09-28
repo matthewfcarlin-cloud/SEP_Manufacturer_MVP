@@ -28,15 +28,15 @@ export function HeaderAiPill() {
     <Link
       href="/settings"
       aria-label={pill?.kind === "key" ? "Using your own AI key. Open settings" : pill ? `Demo AI budget: $${pill.remainingUsd.toFixed(2)} left. Open settings` : "AI settings"}
-      className={`eyebrow flex min-w-[3.25rem] items-center justify-center gap-1.5 whitespace-nowrap border px-1 py-1.5 text-[10px] sm:min-w-[11rem] sm:px-2 ${
-        isLow ? "border-night-accent text-night-accent" : "border-night-line text-night-muted hover:text-night-ink"
+      className={`flex h-9 min-w-[3.25rem] items-center justify-center gap-1.5 whitespace-nowrap rounded-pill px-3 text-[13px] font-medium transition-colors sm:min-w-[11rem] ${
+        isLow ? "bg-amber-soft text-amber-ink" : "bg-surface text-ink-2 shadow-card hover:text-ink"
       }`}
     >
       {pill === null ? (
-        <span aria-hidden className="h-2 w-16 animate-pulse bg-night-line motion-reduce:animate-none" />
+        <span aria-hidden className="skeleton h-2 w-16" />
       ) : pill.kind === "key" ? (
         <>
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-night-idle" />
+          <span aria-hidden className="h-1.5 w-1.5 rounded-pill bg-green" />
           Your key
         </>
       ) : (

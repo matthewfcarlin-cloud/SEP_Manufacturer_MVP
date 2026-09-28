@@ -23,7 +23,7 @@ export default async function SharedPitchPage(props: PageProps<"/p/[token]">) {
   const shop = match ? getShopById(match.shopId) : undefined;
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12 print:max-w-none print:px-0 print:py-0">
+    <div className="@container mx-auto flex max-w-content flex-col gap-12 page-pad py-8 print:max-w-none print:px-0 print:py-0">
       <PitchDocument
         project={project}
         version={version}

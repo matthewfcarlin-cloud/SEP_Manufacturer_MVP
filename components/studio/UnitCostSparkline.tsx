@@ -11,7 +11,7 @@ const usd = (n: number) => `$${n < 10 ? n.toFixed(2) : Math.round(n).toLocaleStr
  */
 export function UnitCostSparkline({ points }: { points: TrendPoint[] }) {
   if (points.length === 0) {
-    return <p className="text-xs text-muted">Unit cost appears here after the first analysis.</p>;
+    return <p className="text-[13px] text-ink-2">The cost of each appears here after the first analysis.</p>;
   }
   const first = points[0];
   const last = points[points.length - 1];
@@ -19,13 +19,13 @@ export function UnitCostSparkline({ points }: { points: TrendPoint[] }) {
     // Nothing to trend yet: a baseline that invites the next version.
     return (
       <figure className="flex flex-col gap-1.5">
-        <figcaption className="eyebrow text-[10px] text-muted">Unit cost by version, est.</figcaption>
+        <figcaption className="text-[13px] font-medium text-ink-2">Cost of each by version, est.</figcaption>
         <div className="relative flex h-12 items-center">
-          <span aria-hidden className="absolute inset-x-0 top-1/2 border-t border-dashed border-line" />
-          <span aria-hidden className="relative h-2.5 w-2.5 rounded-full bg-accent" />
+          <span aria-hidden className="absolute inset-x-0 top-1/2 border-t border-dashed border-border" />
+          <span aria-hidden className="relative h-2.5 w-2.5 rounded-pill bg-accent" />
         </div>
-        <p className="flex justify-between gap-2 font-mono text-[11px] text-muted">
-          <span className="text-ink">v{first.version} {usd(first.mid)}</span>
+        <p className="flex justify-between gap-2 font-mono text-[12px] text-ink-2">
+          <span className="text-ink">Version {first.version}: {usd(first.mid)}</span>
           <span>Try a design tweak to bring this down</span>
         </p>
       </figure>
@@ -42,15 +42,15 @@ export function UnitCostSparkline({ points }: { points: TrendPoint[] }) {
   return (
     <figure className="flex flex-col gap-1.5">
       <figcaption className="flex items-baseline justify-between gap-2">
-        <span className="eyebrow text-[10px] text-muted">Unit cost by version, est.</span>
+        <span className="text-[13px] font-medium text-ink-2">Cost of each by version, est.</span>
         {points.length > 1 && change !== 0 && (
-          <span className={`font-mono text-xs font-semibold ${change < 0 ? "text-idle" : "text-accent"}`}>
+          <span className={`font-mono text-[13px] font-semibold ${change < 0 ? "text-green-ink" : "text-accent-ink"}`}>
             {change < 0 ? "−" : "+"}
             {Math.abs(change)}%
           </span>
         )}
       </figcaption>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={`Unit cost went from ${usd(first.mid)} in v${first.version} to ${usd(last.mid)} in v${last.version} (estimates).`}>
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={`The cost of each went from ${usd(first.mid)} in version ${first.version} to ${usd(last.mid)} in v${last.version} (estimates).`}>
         {points.length > 1 && <polygon points={band} className="fill-ink/5" />}
         {points.length > 1 && (
           <polyline points={points.map((p, i) => `${x(i)},${y(p.mid)}`).join(" ")} fill="none" className="stroke-ink" strokeWidth={2} />
@@ -61,9 +61,9 @@ export function UnitCostSparkline({ points }: { points: TrendPoint[] }) {
           </circle>
         ))}
       </svg>
-      <p className="flex justify-between font-mono text-[11px] text-muted">
-        <span>v{first.version} {usd(first.mid)}</span>
-        {points.length > 1 ? <span className="text-ink">v{last.version} {usd(last.mid)}</span> : <span>One version so far</span>}
+      <p className="flex justify-between font-mono text-[12px] text-ink-2">
+        <span>Version {first.version}: {usd(first.mid)}</span>
+        {points.length > 1 ? <span className="text-ink">Version {last.version}: {usd(last.mid)}</span> : <span>One version so far</span>}
       </p>
     </figure>
   );

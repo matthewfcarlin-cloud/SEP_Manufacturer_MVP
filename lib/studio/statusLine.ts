@@ -28,3 +28,12 @@ export function statusLine(project: Project): string {
       return "Ready to write the listing";
   }
 }
+
+export type StatusTone = "green" | "accent" | "neutral";
+
+/** The pill color for a status line: green when ready to sell, orange when something is waiting on the creator. */
+export function statusTone(status: string): StatusTone {
+  if (/^Ready to sell/.test(status)) return "green";
+  if (/waiting|Ready to get quotes|Ready to see/.test(status)) return "accent";
+  return "neutral";
+}

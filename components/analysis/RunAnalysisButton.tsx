@@ -6,12 +6,13 @@ import { AiErrorBanner } from "@/components/AiErrorBanner";
 import type { ApiResponse } from "@/lib/api";
 import { AiCallError } from "@/lib/client/aiError";
 import type { Analysis } from "@/lib/types";
+import { buttonClasses } from "@/components/ui/classes";
 
 // Shown in turn while the request runs. They describe what the analysis is
 // doing in general; they are not live progress from the server.
 const STAGES = [
   "Reading your photos and notes…",
-  "Checking the geometry…",
+  "Measuring your part…",
   "Comparing manufacturing processes…",
   "Estimating costs at your quantity…",
   "Looking for design tweaks…",
@@ -54,20 +55,15 @@ export function RunAnalysisButton({ projectId, version, variant = "primary" }: P
     }
   };
 
-  const base = "rounded-lg px-5 py-3 font-medium disabled:cursor-wait disabled:opacity-70";
-  const look =
-    variant === "primary"
-      ? "bg-accent text-accent-ink hover:opacity-90"
-      : "border border-line bg-surface hover:border-ink";
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <button type="button" onClick={run} disabled={running} className={`${base} ${look}`}>
+        <button type="button" onClick={run} disabled={running} className={buttonClasses({ variant, size: variant === "secondary" ? "sm" : "md", className: "disabled:cursor-wait" })}>
           {running ? "Analyzing…" : variant === "primary" ? "Analyze manufacturing" : "Re-run analysis"}
         </button>
         {running && (
-          <p className="text-sm text-muted" aria-live="polite">
+          <p className="text-[14px] text-ink-2" aria-live="polite">
             {STAGES[stage]} <span className="whitespace-nowrap">This usually takes 1–2 minutes.</span>
           </p>
         )}

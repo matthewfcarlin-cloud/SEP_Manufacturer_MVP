@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 export const ModelViewer = dynamic(() => import("./ModelViewer"), {
   ssr: false,
   loading: () => (
-    <div className="grid h-full min-h-[320px] place-items-center rounded-xl border border-line bg-surface text-sm text-muted">
+    <div className="grid h-full min-h-[320px] place-items-center card text-sm text-ink-2">
       Loading viewer…
     </div>
   ),

@@ -1,11 +1,18 @@
 "use client";
 
+import { Copy, FolderOpen, Pencil, Share2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { DemoBadge } from "@/components/Badges";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Field";
+import { Menu, type MenuItem } from "@/components/ui/Menu";
+import { StatusPill } from "@/components/ui/StatusPill";
+import { useToast } from "@/components/ui/Toast";
 import type { ApiResponse } from "@/lib/api";
 import type { StageStatus } from "@/lib/studio/stage";
+import { statusTone } from "@/lib/studio/statusLine";
 import type { Stage } from "@/lib/types";
 import { StepBar } from "./StepBar";
 import { StudioModel } from "./StudioModel";
@@ -23,11 +30,9 @@ export type ProductSummary = {
   statuses: Record<Stage, StageStatus>;
   canSharePitch: boolean;
   updatedAt: string;
+  /** "Edited 2h ago", worked out on the server when the page is built. */
+  edited: string;
 };
-
-type Tone = "good" | "action" | "neutral";
-const STATUS_TONE: Record<Tone, string> = { good: "bg-idle-soft text-idle", action: "bg-accent/10 text-accent", neutral: "bg-bg text-muted border border-line" };
-const toneFor = (status: string): Tone => (/^Ready to sell/.test(status) ? "good" : /waiting|Ready to get quotes|Ready to see/.test(status) ? "action" : "neutral");
 
 async function send(url: string, method: "POST" | "PATCH" | "DELETE", body?: object): Promise<void> {
   const res = await fetch(url, { method, headers: body ? { "Content-Type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
@@ -35,7 +40,7 @@ async function send(url: string, method: "POST" | "PATCH" | "DELETE", body?: obj
   if (!json?.success) throw new Error(json?.error ?? "Something went wrong. Please try again.");
 }
 
-type Mode = "idle" | "menu" | "rename" | "delete";
+type Mode = "idle" | "rename" | "delete";
 
 /** One product in "My products": render, name, one status line, progress dots, and a ⋯ menu. */
 export function ProductCard({ product }: { product: ProductSummary }) {
@@ -44,28 +49,16 @@ export function ProductCard({ product }: { product: ProductSummary }) {
   const [name, setName] = useState(product.name);
   const [isBusy, setIsBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
   const href = `/project/${product.id}`;
 
-  useEffect(() => {
-    if (mode !== "menu") return;
-    const close = (e: MouseEvent | KeyboardEvent) => {
-      if (e instanceof KeyboardEvent ? e.key === "Escape" : !menuRef.current?.contains(e.target as Node)) setMode("idle");
-    };
-    document.addEventListener("mousedown", close);
-    document.addEventListener("keydown", close);
-    return () => {
-      document.removeEventListener("mousedown", close);
-      document.removeEventListener("keydown", close);
-    };
-  }, [mode]);
-
-  const run = async (action: () => Promise<void>) => {
+  const run = async (action: () => Promise<void>, done?: string) => {
     setIsBusy(true);
     setError(null);
     try {
       await action();
       setMode("idle");
+      if (done) toast({ message: done });
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -79,104 +72,76 @@ export function ProductCard({ product }: { product: ProductSummary }) {
     void run(() => send(`/api/projects/${product.id}`, "PATCH", { name }));
   };
 
-  const item = "block w-full px-3 py-2 text-left text-sm hover:bg-bg disabled:text-muted";
+  const menuItems: MenuItem[] = [
+    { label: "Open", icon: FolderOpen, onSelect: () => router.push(href) },
+    ...(product.isExample ? [] : [{ label: "Rename", icon: Pencil, onSelect: () => setMode("rename") }]),
+    { label: product.isExample ? "Make my own copy" : "Duplicate", icon: Copy, isDisabled: isBusy, onSelect: () => void run(() => send(`/api/projects/${product.id}/duplicate`, "POST"), "Copy made") },
+    ...(product.isExample ? [] : [{ label: "Share pitch", icon: Share2, isDisabled: !product.canSharePitch, onSelect: () => router.push(`${href}/pitch#share`) }]),
+    ...(product.isExample ? [] : [{ label: "Delete…", icon: Trash2, isDanger: true, onSelect: () => setMode("delete") }]),
+  ];
 
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition-shadow hover:shadow-lg motion-reduce:transition-none">
-      <StudioModel url={product.cadUrl} still={product.still} name={product.name} />
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="flex items-start justify-between gap-2">
-          <h2 className="line-clamp-2 min-w-0 break-words text-lg font-semibold leading-snug">
-            {/* The link covers the whole card; the ⋯ menu sits above it. */}
-            <Link href={href} className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:outline-accent">
-              {product.name}
-            </Link>
-          </h2>
-          <div ref={menuRef} className="relative z-10 shrink-0">
-            <button
-              type="button"
-              onClick={() => setMode(mode === "menu" ? "idle" : "menu")}
-              aria-label={`More actions for ${product.name}`}
-              aria-haspopup="menu"
-              aria-expanded={mode === "menu"}
-              className="grid h-8 w-8 place-items-center border border-transparent text-lg leading-none text-muted hover:border-line hover:text-ink"
-            >
-              ⋯
-            </button>
-            {mode === "menu" && (
-              <div role="menu" aria-label={`${product.name} actions`} className="absolute right-0 top-9 w-52 border border-line bg-surface py-1 shadow-lg">
-                <Link role="menuitem" href={href} className={item}>Open</Link>
-                {!product.isExample && (
-                  <button role="menuitem" type="button" className={item} onClick={() => setMode("rename")}>Rename</button>
-                )}
-                <button role="menuitem" type="button" className={item} disabled={isBusy} onClick={() => run(() => send(`/api/projects/${product.id}/duplicate`, "POST"))}>
-                  {product.isExample ? "Make my own copy" : "Duplicate"}
-                </button>
-                {!product.isExample &&
-                  (product.canSharePitch ? (
-                    <Link role="menuitem" href={`${href}/pitch#share`} className={item}>Share pitch</Link>
-                  ) : (
-                    <button role="menuitem" type="button" disabled className={item} title="See how it's made first">Share pitch</button>
-                  ))}
-                {!product.isExample && (
-                  <button role="menuitem" type="button" className={`${item} text-accent`} onClick={() => setMode("delete")}>Delete…</button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+    <article className="card lift group relative flex h-full flex-col overflow-hidden">
+      {/* Render area: 200px on the warm sidebar color, the model centered. */}
+      <div className="bg-sidebar">
+        <StudioModel url={product.cadUrl} still={product.still} name={product.name} className="h-[200px]" />
+      </div>
+      <div className="absolute right-3 top-3 z-10">
+        <Menu label={`More actions for ${product.name}`} items={menuItems} className="rounded-control bg-surface/90 shadow-card" />
+      </div>
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <h2 className="type-h3 line-clamp-2 min-w-0 break-words">
+          {/* The link covers the whole card; the ⋯ menu sits above it. */}
+          <Link href={href} className="after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:rounded-card focus-visible:after:outline focus-visible:after:outline-2 focus-visible:after:outline-accent">
+            {product.name}
+          </Link>
+        </h2>
 
-        <p className="self-start"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_TONE[toneFor(product.status)]}`}>{product.status}</span></p>
-
-        <div className="mt-auto flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <StepBar statuses={product.statuses} stageIndex={product.stageIndex} />
-          </div>
+        <p className="flex flex-wrap gap-1.5">
+          <StatusPill tone={statusTone(product.status)}>{product.status}</StatusPill>
           {product.isExample && <DemoBadge label="Example" title="A shared demo product anyone can open" />}
+        </p>
+
+        <div className="mt-auto flex flex-col gap-2 pt-1">
+          <StepBar statuses={product.statuses} stageIndex={product.stageIndex} showStage={false} className="" />
+          <p className="type-small text-muted">{product.edited}</p>
         </div>
 
-        {isBusy && mode === "menu" && <p className="text-xs text-muted" aria-live="polite">Making a copy…</p>}
+        {isBusy && mode === "idle" && <p className="type-small text-muted" aria-live="polite">Making a copy…</p>}
 
         {mode === "rename" && (
-          <form onSubmit={rename} className="relative z-10 flex flex-col gap-2 border-t border-line pt-3">
-            <label className="text-xs font-medium" htmlFor={`rename-${product.id}`}>New name</label>
-            <input
-              id={`rename-${product.id}`}
-              autoFocus
-              maxLength={120}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="border border-line bg-bg px-3 py-2 text-sm outline-none focus:border-ink"
-            />
+          <form onSubmit={rename} className="relative z-10 flex flex-col gap-2 border-t border-border pt-3">
+            <label className="text-[14px] font-medium" htmlFor={`rename-${product.id}`}>New name</label>
+            <Input id={`rename-${product.id}`} autoFocus maxLength={120} value={name} onChange={(e) => setName(e.target.value)} />
             <div className="flex gap-2">
-              <button type="submit" disabled={isBusy || !name.trim()} className="bg-ink px-3 py-1.5 text-sm font-medium text-bg disabled:opacity-50">
+              <Button type="submit" size="sm" disabled={isBusy || !name.trim()}>
                 {isBusy ? "Saving…" : "Save"}
-              </button>
-              <button type="button" onClick={() => { setName(product.name); setMode("idle"); setError(null); }} className="border border-line px-3 py-1.5 text-sm">
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => { setName(product.name); setMode("idle"); setError(null); }}>
                 Cancel
-              </button>
+              </Button>
             </div>
           </form>
         )}
 
         {mode === "delete" && (
-          <div role="alertdialog" aria-label={`Delete ${product.name}?`} className="relative z-10 flex flex-col gap-2 border-t border-accent/40 pt-3">
-            <p className="text-sm">
+          <div role="alertdialog" aria-label={`Delete ${product.name}?`} className="relative z-10 flex flex-col gap-2 rounded-control bg-red-soft p-3">
+            <p className="text-[14px]">
               <span className="font-semibold">Delete {product.name}?</span> Its files and every version leave this server for good.
             </p>
             <div className="flex gap-2">
-              <button type="button" disabled={isBusy} onClick={() => run(() => send(`/api/projects/${product.id}`, "DELETE"))} className="bg-accent px-3 py-1.5 text-sm font-medium text-accent-ink disabled:opacity-50">
+              <Button variant="danger" size="sm" icon={Trash2} disabled={isBusy} onClick={() => run(() => send(`/api/projects/${product.id}`, "DELETE"), "Product deleted")}>
                 {isBusy ? "Deleting…" : "Delete for good"}
-              </button>
-              <button type="button" onClick={() => setMode("idle")} className="border border-line px-3 py-1.5 text-sm">
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setMode("idle")}>
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         )}
 
         {error && (
-          <p role="alert" className="relative z-10 text-sm text-accent">
+          <p role="alert" className="relative z-10 text-[14px] text-red-ink">
             {error}
           </p>
         )}

@@ -70,7 +70,7 @@ export function Printify({ beat }: { beat: Beat }) {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ ...fade, delay: 0.1 + i * 0.1 }}
               >
-                <span className="display-type text-[44px] text-[#efeeec]">{card.who}</span>
+                <span className="deck-display text-[44px] text-[#efeeec]">{card.who}</span>
                 <span className="mt-4 text-[30px] leading-snug text-[#b9b5ac]">{card.does}</span>
                 {card.money && (
                   <span className="mt-auto font-mono text-[22px] uppercase tracking-[0.1em] text-[#efeeec]">{card.money}</span>

@@ -1,6 +1,9 @@
 "use client";
 
+import { Plus, Search } from "lucide-react";
 import Link from "next/link";
+import { inputClasses, Select } from "@/components/ui/Field";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useMemo, useState } from "react";
 import { ProductCard, type ProductSummary } from "./ProductCard";
 
@@ -28,30 +31,25 @@ export function ProductGrid({ products }: { products: readonly ProductSummary[] 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="relative flex-1 sm:max-w-sm">
           <span className="sr-only">Search products</span>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search products"
-            className="w-full border border-line bg-surface px-3 py-2.5 text-sm outline-none focus:border-ink"
-          />
+          <Search aria-hidden size={18} strokeWidth={1.75} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search products" className={inputClasses("pl-10")} />
         </label>
-        <label className="flex items-center gap-2 text-sm">
-          <span className="eyebrow text-[11px] text-muted">Sort</span>
-          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="border border-line bg-surface px-3 py-2.5 text-sm">
+        <label className="flex items-center gap-2">
+          <span className="text-[14px] font-medium text-ink-2">Sort</span>
+          <Select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="w-auto">
             {Object.entries(SORTS).map(([key, s]) => (
               <option key={key} value={key}>
                 {s.label}
               </option>
             ))}
-          </select>
+          </Select>
         </label>
       </div>
 
       {shown.length === 0 ? (
-        <p className="border border-dashed border-line p-8 text-center text-sm text-muted">No products match &ldquo;{query}&rdquo;.</p>
+        <EmptyState illustration="spark" title="Nothing matches that search" sentence={<>No products match &ldquo;{query}&rdquo;. Try a different word.</>} />
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 [&>*]:min-w-0">
+        <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
           {shown.map((p) => (
             <li key={p.id}>
               <ProductCard product={p} />
@@ -61,13 +59,13 @@ export function ProductGrid({ products }: { products: readonly ProductSummary[] 
             <li>
               <Link
                 href="/new"
-                className="group flex h-full min-h-64 flex-col items-center justify-center gap-3 border border-dashed border-line p-6 text-center transition-colors hover:border-ink motion-reduce:transition-none"
+                className="group flex h-full min-h-64 flex-col items-center justify-center gap-3 rounded-card bg-bg p-6 text-center transition-colors hover:border-accent hover:bg-accent-soft"
               >
-                <span aria-hidden className="grid h-12 w-12 place-items-center border border-line text-2xl text-muted group-hover:border-ink group-hover:text-ink">
-                  +
+                <span aria-hidden className="grid h-12 w-12 place-items-center rounded-pill bg-accent-soft text-accent-ink">
+                  <Plus size={22} strokeWidth={1.75} />
                 </span>
-                <span className="display-type text-xl">Start a product</span>
-                <span className="max-w-xs text-sm text-muted">Upload a 3D file (STL or STEP), plus any photos or sketches.</span>
+                <span className="type-h3">Start a product</span>
+                <span className="type-small max-w-xs text-ink-2">Upload a 3D file (STL or STEP), plus any photos or sketches.</span>
               </Link>
             </li>
           )}

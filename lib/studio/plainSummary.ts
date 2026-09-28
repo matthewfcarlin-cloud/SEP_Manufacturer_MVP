@@ -1,10 +1,10 @@
-import { buildBusinessCase, MIN_HEALTHY_MARGIN, retailNeededFor } from "../businessCase";
 import { formatUnitCostRange } from "../format";
 import { matchVersion } from "../match";
 import { processInSentence } from "../processes";
 import { etsySale } from "../sell/fees";
 import { getShopById } from "../shops";
 import type { ProjectVersion } from "../types";
+import { moneyReadout } from "./money";
 
 // Plain-English summaries for everyday people: numbers become verdicts.
 // The exact figures stay on the page, behind "Show details".
@@ -12,25 +12,14 @@ import type { ProjectVersion } from "../types";
 export type Tone = "good" | "warn" | "bad" | "neutral";
 export type MoneyVerdict = { tone: Tone; text: string };
 
-const dollars = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 const price = (n: number) => (Number.isInteger(n) ? `$${n}` : `$${n.toFixed(2)}`);
 
 /** Whether this version makes money at its target quantity, in one or two sentences. */
 export function moneyVerdict(version: ProjectVersion): MoneyVerdict | null {
   if (!version.analysis) return null;
-  const bc = version.businessCase;
-  if (!bc) return { tone: "neutral", text: "Set a price to see whether it makes money." };
-  const [tier] = buildBusinessCase(version.analysis.paths, { ...bc, quantityTiers: [version.targetQuantity] }).tiers;
-  const at = `At ${price(bc.retailPriceUsd)}`;
-  const fairPrice = dollars(retailNeededFor(tier.allIn.mid, bc.revenueShare));
-  const perSale = bc.retailPriceUsd * bc.revenueShare - tier.allIn.mid;
-  if (tier.margin.mid < 0) {
-    return { tone: "bad", text: `${at} you'd lose money on each one. Try a design tweak, or raise the price to about ${fairPrice}.` };
-  }
-  if (tier.margin.mid < MIN_HEALTHY_MARGIN) {
-    return { tone: "warn", text: `${at} you'd only just make money, about ${dollars(perSale)} on each one. A price near ${fairPrice} leaves room to spare.` };
-  }
-  return { tone: "good", text: `${at} you'd make about ${dollars(perSale)} on each one (est.).` };
+  const r = moneyReadout(version.analysis.paths, version.businessCase, version.targetQuantity);
+  if (r.tone === "neutral") return { tone: "neutral", text: "Set a price to see whether it makes money." };
+  return { tone: r.tone, text: `${r.title} ${r.explanation}` };
 }
 
 export type TabKey = "design" | "make" | "plan" | "pitch" | "sell";

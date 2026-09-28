@@ -1,30 +1,51 @@
 @import "tailwindcss";
 
 /*
- * Industrial palette: warm off-white by day, near-black by night.
- * Accent (safety orange) and idle green are the only chromatic colors
- * outside charts, and they're used sparingly.
+ * "The Workshop" (design/DESIGN.md §2): warm paper, white cards lifted by a
+ * soft shadow, one orange accent. Light and dark values for every token.
  */
 :root {
-  --bg: #efeeec;
-  --surface: #f8f7f5;
-  --ink: #0d0d0c;
-  --muted: #5c5a55;
-  --line: #d6d3cc;
-  --accent: #c8440f;
-  --accent-ink: #ffffff;
-  --idle: #13703f;
-  --idle-soft: #dcefe3;
-  --demo: #7a4f00;
-  --demo-soft: #f5e7c4;
-  /* Always-dark surfaces (hero, statement bands) regardless of theme. */
-  --night: #0a0a0a;
-  --night-ink: #efeeec;
-  --night-muted: #8f8b83;
-  --night-line: #232321;
-  --night-idle: #5fd39a;
-  --night-surface: #111110;
-  --night-accent: #ff6a2b;
+  --bg: #faf8f5;
+  --surface: #ffffff;
+  --sidebar: #f3f1ec;
+  --ink: #1c1917;
+  --ink-2: #57534e;
+  /* Spec #A8A29E is 2.4:1 on paper; darkened to pass 4.5:1 as text (placeholders, meta). */
+  --muted: #706b68;
+  --border: #ece9e4;
+  /* Form-field edges must reach 3:1 (WCAG 1.4.11); hairlines stay --border. */
+  --control-border: #8c8985;
+  /* Dashed dropzone edge (§4, /new). */
+  --border-strong: #d6d3ce;
+  --hover: #f5f3ef;
+  --accent: #f25c2a;
+  --accent-hover: #dd4a19;
+  --accent-soft: #ffefe7;
+  /* Text-safe variants (4.5:1 on paper, white and their soft tints). The base
+     colors stay for fills, dots, rings, bars and icons. */
+  --accent-ink: #ba4720;
+  --green-ink: #117c38;
+  --amber-ink: #a35905;
+  --red-ink: #d12424;
+  --blue-ink: #2563eb;
+  /* White button text on the spec's orange is 3.3:1, so filled buttons use a deeper orange (4.6:1). */
+  --accent-button: #c94c23;
+  --accent-button-hover: #b0421e;
+  --green: #16a34a;
+  --green-soft: #e8f7ee;
+  --amber: #d97706;
+  --amber-soft: #fef4e2;
+  --red: #dc2626;
+  --red-soft: #fdecec;
+  --blue: #2563eb;
+  --blue-soft: #eaf1fe;
+
+  /* Cards: shadow, no border, in light mode; a border and no shadow in dark. */
+  --shadow-card: 0 1px 2px rgba(28, 25, 23, 0.04), 0 4px 16px rgba(28, 25, 23, 0.04);
+  --shadow-hover: 0 8px 28px rgba(28, 25, 23, 0.1);
+  --shadow-pop: 0 16px 48px rgba(28, 25, 23, 0.16);
+  --card-border: transparent;
+
   /* Chart series, fixed order (validated: dataviz reference palette, slots 1-4). */
   --series-1: #2a78d6;
   --series-2: #eb6834;
@@ -34,17 +55,31 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0a0a0a;
-    --surface: #131312;
-    --ink: #efeeec;
-    --muted: #9a968d;
-    --line: #262624;
-    --accent: #ff6a2b;
-    --accent-ink: #0a0a0a;
-    --idle: #5fd39a;
-    --idle-soft: #12291d;
-    --demo: #f2c36b;
-    --demo-soft: #2e2410;
+    --bg: #141210;
+    --surface: #1e1b18;
+    --sidebar: #191714;
+    --ink: #f5f5f4;
+    --ink-2: #c8c3bd;
+    --muted: #99948e;
+    --border: #2e2a26;
+    --control-border: #716d69;
+    --border-strong: #45403a;
+    --hover: #26221e;
+    --accent: #ff6b3a;
+    --accent-hover: #ff8660;
+    --accent-soft: #3a2218;
+    --accent-ink: #ff6b3a;
+    --green-ink: #24a955;
+    --amber-ink: #db7e12;
+    --red-ink: #e66565;
+    --blue-ink: #5e8cf0;
+    /* Soft semantic colors: 15% of their base. */
+    --green-soft: rgb(22 163 74 / 0.15);
+    --amber-soft: rgb(217 119 6 / 0.15);
+    --red-soft: rgb(220 38 38 / 0.15);
+    --blue-soft: rgb(37 99 235 / 0.15);
+    --shadow-card: none;
+    --card-border: var(--border);
     --series-1: #3987e5;
     --series-2: #d95926;
     --series-3: #199e70;
@@ -55,62 +90,171 @@
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
+  --color-sidebar: var(--sidebar);
   --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
   --color-muted: var(--muted);
-  --color-line: var(--line);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-hover: var(--hover);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
-  --color-idle: var(--idle);
-  --color-idle-soft: var(--idle-soft);
-  --color-demo: var(--demo);
-  --color-demo-soft: var(--demo-soft);
-  --color-night: var(--night);
-  --color-night-ink: var(--night-ink);
-  --color-night-muted: var(--night-muted);
-  --color-night-line: var(--night-line);
-  --color-night-idle: var(--night-idle);
-  --color-night-surface: var(--night-surface);
-  --color-night-accent: var(--night-accent);
+  --color-accent-button: var(--accent-button);
+  --color-accent-button-hover: var(--accent-button-hover);
+  --color-green-ink: var(--green-ink);
+  --color-amber-ink: var(--amber-ink);
+  --color-red-ink: var(--red-ink);
+  --color-blue-ink: var(--blue-ink);
+  --color-control-border: var(--control-border);
+  --color-green: var(--green);
+  --color-green-soft: var(--green-soft);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-red: var(--red);
+  --color-red-soft: var(--red-soft);
+  --color-blue: var(--blue);
+  --color-blue-soft: var(--blue-soft);
+  --shadow-card: var(--shadow-card);
+  --shadow-hover: var(--shadow-hover);
+  --shadow-pop: var(--shadow-pop);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-archivo);
+  --font-heading: var(--font-bricolage);
 }
 
-/* Machined, not bubbly: every rounded-* in the app gets a tighter radius. */
 @theme {
-  --radius-md: 0.25rem;
-  --radius-lg: 0.375rem;
-  --radius-xl: 0.5rem;
-  --radius-2xl: 0.625rem;
+  --radius-card: 16px;
+  --radius-control: 10px;
+  --radius-pill: 999px;
+  --container-content: 1180px;
+  --default-transition-duration: 160ms;
+  --default-transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-workshop: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Huge, tight, uppercase industrial headlines. */
-@utility display-type {
-  font-family: var(--font-display);
+/* Type scale (§2). Headings are sentence case; mono is for prices and quantities only. */
+@utility type-display {
+  font-family: var(--font-heading);
   font-weight: 700;
-  font-stretch: 112%;
-  text-transform: uppercase;
-  letter-spacing: -0.025em;
-  line-height: 0.92;
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  @media (width >= 40rem) {
+    font-size: 64px;
+  }
 }
-
-/* Small monospace spec-sheet captions ("CNC MILLING · 6 IDLE"). */
-@utility eyebrow {
+@utility type-h1 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+@utility type-h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 22px;
+  line-height: 1.3;
+}
+@utility type-h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.4;
+}
+@utility type-body {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.6;
+}
+@utility type-small {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.5;
+}
+@utility type-price-lg {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
+  font-size: 28px;
+  line-height: 1.1;
 }
 
-body {
-  background: var(--bg);
-  color: var(--ink);
+/* Surfaces and spacing (§2): a card, its padding, and the page gutter. */
+@utility card {
+  background: var(--surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--card-border);
+}
+@utility card-pad {
+  padding: 20px;
+  @media (width >= 40rem) {
+    padding: 24px;
+  }
+}
+@utility page-pad {
+  padding-inline: 16px;
+  @media (width >= 48rem) {
+    padding-inline: 40px;
+  }
+}
+/* Hover lift for clickable cards; none when motion is reduced. */
+@utility lift {
+  transition: box-shadow 160ms var(--ease-workshop), transform 160ms var(--ease-workshop);
+  &:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &:hover {
+      transform: none;
+    }
+  }
+}
+/* Loading placeholder with a shimmer; a flat block when motion is reduced. */
+@utility skeleton {
+  border-radius: var(--radius-control);
+  background: linear-gradient(90deg, var(--border) 25%, var(--hover) 50%, var(--border) 75%) 0 0 / 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@layer base {
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  h1,
+  h2 {
+    font-family: var(--font-heading);
+    color: var(--ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  ::placeholder {
+    color: var(--muted);
+  }
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--accent-soft);
+  color: var(--ink);
 }
 
 @media print {
@@ -148,12 +292,47 @@ body {
   }
 }
 
+/* Stage stepper (§3): the current stage's dot pulses; a finished stage pops to its check. */
+@keyframes stepper-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.55;
+  }
+}
 
-/* Product spotlight: the model pops in, then the callout lines draw toward it. */
-@keyframes spotlight-pop {
+@keyframes stepper-done {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes toast-in {
   from {
     opacity: 0;
-    transform: scale(0.86) translateY(12px);
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* A loading line rises into place. */
+@keyframes line-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -161,59 +340,16 @@ body {
   }
 }
 
-.spotlight-animate {
-  animation: spotlight-pop 0.7s cubic-bezier(0.2, 0.7, 0.1, 1) both;
-}
-
-.spotlight-connector {
-  animation: spotlight-grow 0.5s ease-out both;
-}
-
-@keyframes spotlight-grow {
-  from {
-    transform: scaleX(0);
+/* Ask Moko is typing: three dots bounce in turn (motion-safe only). */
+@keyframes typing-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
   }
-  to {
-    transform: scaleX(1);
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
   }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spotlight-connector {
-    animation: none;
-  }
-}
-
-/*
- * App screens (everything inside the sidebar shell) read friendlier than the
- * marketing pages: sentence-case bold headings, plain gray labels, 8px
- * corners and pill-shaped primary buttons. The home page, the deck and the
- * printable pitch keep the big uppercase display type. Unlayered on purpose,
- * so these win over utility classes.
- */
-.app-ui .display-type:not(.pitch-doc *) {
-  font-family: var(--font-sans);
-  font-stretch: normal;
-  text-transform: none;
-  letter-spacing: -0.025em;
-  line-height: 1.15;
-}
-.app-ui h1.display-type:not(.pitch-doc *) {
-  font-size: clamp(1.875rem, 3.2vw, 2.5rem);
-}
-.app-ui :is(h2, h3).display-type:not(.pitch-doc *) {
-  font-size: clamp(1.375rem, 2.2vw, 1.75rem);
-}
-.app-ui .eyebrow:not(.pitch-doc *) {
-  font-family: var(--font-sans);
-  font-size: 0.8125rem;
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.app-ui :is([class~="border"], button, input, textarea, select, details):not(.pitch-doc *) {
-  border-radius: 0.5rem;
-}
-.app-ui :is(a, button):is([class~="bg-ink"], [class~="bg-accent"], [class~="bg-night-accent"]):not(.pitch-doc *) {
-  border-radius: 9999px;
 }

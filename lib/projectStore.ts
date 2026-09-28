@@ -53,7 +53,8 @@ type UploadedFiles = {
   images: { type: ImageType; bytes: Uint8Array }[];
 };
 
-export type NewProjectInput = UploadedFiles & { fields: ProjectFields; ownerKeyHash: string };
+/** A new product's 3D file is optional: a description can be enough to start. */
+export type NewProjectInput = Omit<UploadedFiles, "stl" | "geometry"> & Partial<Pick<UploadedFiles, "stl" | "geometry">> & { fields: ProjectFields; ownerKeyHash: string };
 
 export type NewVersionInput = UploadedFiles & {
   fields: VersionFields;
@@ -64,13 +65,13 @@ export type NewVersionInput = UploadedFiles & {
 };
 
 /** Writes a version's CAD file and photos and returns their URLs. */
-async function writeVersionFiles(id: string, number: number, files: UploadedFiles) {
+async function writeVersionFiles(id: string, number: number, files: Pick<UploadedFiles, "images"> & { stl?: Uint8Array }) {
   const dir = projectDir(id);
   const stlName = versionFileName(number, STL_FILE);
   const imageNames = files.images.map((img, i) => versionFileName(number, `image-${i}.${img.type}`));
-  await writeAtomic(path.join(dir, stlName), files.stl);
+  if (files.stl) await writeAtomic(path.join(dir, stlName), files.stl);
   await Promise.all(files.images.map((img, i) => writeAtomic(path.join(dir, imageNames[i]), img.bytes)));
-  return { cadFileUrl: fileUrl(id, stlName), imageUrls: imageNames.map((name) => fileUrl(id, name)) };
+  return { ...(files.stl && { cadFileUrl: fileUrl(id, stlName) }), imageUrls: imageNames.map((name) => fileUrl(id, name)) };
 }
 
 /** Copies another version's photos under this version's names. */
@@ -104,7 +105,7 @@ export async function createProject(input: NewProjectInput): Promise<Project> {
         createdAt,
         ...briefFields(input.fields),
         ...(await writeVersionFiles(id, 1, input)),
-        geometry: input.geometry,
+        ...(input.geometry && { geometry: input.geometry }),
       },
     ],
   };

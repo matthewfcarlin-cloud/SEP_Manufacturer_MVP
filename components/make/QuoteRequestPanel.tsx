@@ -7,6 +7,7 @@ import { FormError } from "@/components/upload/UploadPickers";
 import type { ApiResponse } from "@/lib/api";
 import type { Outreach, ShareLevel, SpecSheet } from "@/lib/types";
 import { SpecSheetCard } from "./SpecSheetCard";
+import { buttonClasses } from "@/components/ui/classes";
 
 export type MatchSummary = { shopId: string; name: string; neighborhood: string; machine: string; idle: boolean; idleHours?: number };
 
@@ -51,24 +52,24 @@ export function QuoteRequestPanel({ projectId, version, shops, sheets, requested
   };
 
   return (
-    <section aria-labelledby="request-heading" className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+    <section aria-labelledby="request-heading" className="grid gap-6 @3xl:grid-cols-[1fr_1.1fr]">
       <div className="flex flex-col gap-5">
         <div>
-          <h2 id="request-heading" className="display-type text-[clamp(1.8rem,3.5vw,2.6rem)]">
+          <h2 id="request-heading" className="type-h2">
             Request quotes
           </h2>
-          <p className="mt-1 text-sm text-muted">
-            Sends v{version}&apos;s spec sheet to your top {shops.length} matches. They&apos;re demo shops, so the quotes that come back are
+          <p className="mt-1 text-sm text-ink-2">
+            Sends version {version}&apos;s spec sheet to your top {shops.length} matches. They&apos;re demo shops, so the quotes that come back are
             simulated inside your analysis cost range.
           </p>
         </div>
-        <ol className="flex flex-col border border-line bg-surface">
-          {shops.map((s, i) => (
-            <li key={s.shopId} className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 last:border-0">
+        <ol className="flex flex-col card">
+          {shops.map((s) => (
+            <li key={s.shopId} className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3 last:border-0">
               <span className="min-w-0">
-                <span className="eyebrow mr-2 text-[10px] text-muted">{String(i + 1).padStart(2, "0")}</span>
+                
                 <span className="font-medium">{s.name}</span>
-                <span className="block text-xs text-muted">
+                <span className="block text-[13px] text-ink-2">
                   {s.neighborhood} · {s.machine}
                 </span>
               </span>
@@ -82,11 +83,11 @@ export function QuoteRequestPanel({ projectId, version, shops, sheets, requested
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium">What the shops receive</legend>
           {LEVELS.map((l) => (
-            <label key={l.value} className="flex gap-3 border border-line bg-surface px-3 py-2.5 text-sm has-[:checked]:border-accent">
+            <label key={l.value} className="flex gap-3 card px-3 py-2.5 text-sm has-[:checked]:border-accent">
               <input type="radio" name="share-level" value={l.value} checked={level === l.value} onChange={() => setLevel(l.value)} className="mt-1" />
               <span>
                 <span className="font-medium">{l.label}</span>
-                <span className="block text-xs text-muted">{l.detail}</span>
+                <span className="block text-[13px] text-ink-2">{l.detail}</span>
               </span>
             </label>
           ))}
@@ -96,11 +97,11 @@ export function QuoteRequestPanel({ projectId, version, shops, sheets, requested
             type="button"
             onClick={send}
             disabled={isSending}
-            className="bg-accent px-5 py-3 font-medium text-accent-ink hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+            className={buttonClasses()}
           >
             {isSending ? "Sending…" : requestedAt ? "Request new quotes" : `Request quotes from ${shops.length} shops`}
           </button>
-          {requestedAt && <span className="text-xs text-muted">Last requested {new Date(requestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
+          {requestedAt && <span className="text-[13px] text-ink-2">Last requested {new Date(requestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>}
         </div>
         <FormError message={error} />
       </div>

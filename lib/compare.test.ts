@@ -46,41 +46,42 @@ describe("compareVersions", () => {
   });
 
   test("the summary reads like a person wrote it", () => {
-    expect(cmp.summary).toBe("Unit cost −40%, tooling −$17.9k, switched from injection molding to sheet metal, fit score +20.");
+    expect(cmp.summary).toBe("Each one costs 40% less, the one-time setup cost is $17.9k lower, it's made by sheet metal instead of injection molding, and it fits 20 points better.");
   });
 
   test("keeps acronyms when naming a process mid-sentence", () => {
     const milled = version(3, { process: "cnc_milling", fitScore: 88, unitCostUsd: { low: 5, high: 7 }, toolingCostUsd: { low: 0, high: 300 } });
-    expect(compareVersions(summarizeVersion(bent), summarizeVersion(milled)).summary).toBe("Switched from sheet metal to CNC milling.");
+    expect(compareVersions(summarizeVersion(bent), summarizeVersion(milled)).summary).toBe("It's made by CNC milling instead of sheet metal.");
   });
 
   test("a worse version is marked worse", () => {
     const back = compareVersions(summarizeVersion(bent), summarizeVersion(molded));
     expect(back.rows.find((r) => r.key === "unitCost")!.direction).toBe("worse");
-    expect(back.summary).toMatch(/^Unit cost \+67%/);
+    expect(back.summary).toMatch(/^Each one costs 67% more/);
   });
 
   test("identical versions say nothing meaningful changed", () => {
     const same = compareVersions(summarizeVersion(bent), summarizeVersion({ ...bent, number: 3 }));
-    expect(same.summary).toBe("No meaningful change in cost, tooling, or process.");
+    expect(same.summary).toBe("No real change in what it costs or how it's made.");
     expect(same.rows.every((r) => r.direction === "same")).toBe(true);
   });
 
-  test("margin row compares each version's own business case at its target quantity", () => {
+  test("the per-sale row compares what you keep on each sale, in dollars, from each version's own price", () => {
     const priced = (v: ProjectVersion) => ({ ...v, businessCase: { retailPriceUsd: 40, priceSource: "user" as const, quantityTiers: [100], revenueShare: 0.5 } });
     const withMargins = compareVersions(summarizeVersion(priced(molded)), summarizeVersion(priced(bent)));
-    const margin = withMargins.rows.find((r) => r.key === "margin")!;
-    expect(margin.a).toMatch(/%$/);
-    expect(margin.change).toMatch(/^\+\d+ pts$/);
-    expect(margin.direction).toBe("better");
-    expect(withMargins.summary).toContain("margin +");
+    const perSale = withMargins.rows.find((r) => r.key === "perSale")!;
+    expect(perSale.a).toMatch(/^−?\$[\d.,]+$/);
+    expect(perSale.change).toMatch(/^\+\$[\d.,]+$/);
+    expect(perSale.direction).toBe("better");
+    expect(withMargins.summary).toMatch(/you keep \$[\d.,]+ more per sale/);
+    expect(withMargins.summary).not.toMatch(/margin|%.*pts/);
   });
 
-  test("margin row stays empty unless both versions have a business case", () => {
-    const margin = cmp.rows.find((r) => r.key === "margin")!;
-    expect(margin.change).toBeNull();
-    expect(margin.a).toBe("—");
-    expect(cmp.summary).not.toContain("margin");
+  test("the per-sale row stays empty unless both versions have a price", () => {
+    const perSale = cmp.rows.find((r) => r.key === "perSale")!;
+    expect(perSale.change).toBeNull();
+    expect(perSale.a).toBe("—");
+    expect(cmp.summary).not.toContain("per sale");
   });
 
   test("flags when target quantities differ", () => {
@@ -93,6 +94,6 @@ describe("compareVersions", () => {
     const pending = compareVersions(summarizeVersion(molded), summarizeVersion(version(2, null)));
     expect(pending.bothAnalyzed).toBe(false);
     expect(pending.rows.every((r) => r.change === null)).toBe(true);
-    expect(pending.summary).toBe("Analyze v2 to compare it with v1.");
+    expect(pending.summary).toBe("See how version 2 is made to compare it with version 1.");
   });
 });

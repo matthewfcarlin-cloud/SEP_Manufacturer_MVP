@@ -4,26 +4,24 @@ import { AtAGlance } from "./AtAGlance";
 import { CostByVolumeChart } from "./CostByVolumeChart";
 import { PathCard, type TweakLink } from "./PathCard";
 import { PathComparison } from "./PathComparison";
+import { DetailsAccordion } from "@/components/ui/DetailsAccordion";
 
 function Storyboard({ shots }: { shots: Analysis["storyboard"] }) {
   const total = shots.reduce((sum, s) => sum + s.seconds, 0);
   return (
-    <details className="rounded-xl border border-line bg-surface p-5">
-      <summary className="cursor-pointer font-semibold">
-        30-second commercial storyboard <span className="font-normal text-muted">({shots.length} shots, {total}s)</span>
-      </summary>
-      <ol className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <DetailsAccordion label={`30-second commercial storyboard (${shots.length} shots, ${total}s)`} className="card card-pad">
+      <ol className="grid gap-3 @lg:grid-cols-2 @3xl:grid-cols-3">
         {shots.map((s) => (
-          <li key={s.shot} className="flex flex-col gap-2 rounded-lg bg-bg p-3 text-sm">
-            <span className="font-mono text-xs text-muted">
+          <li key={s.shot} className="flex flex-col gap-2 rounded-control bg-bg p-3 text-sm">
+            <span className="text-[13px] font-medium text-ink-2">
               Shot {s.shot} · {s.seconds}s
             </span>
             <p>{s.visual}</p>
-            <p className="italic text-muted">&ldquo;{s.voiceover}&rdquo;</p>
+            <p className="italic text-ink-2">&ldquo;{s.voiceover}&rdquo;</p>
           </li>
         ))}
       </ol>
-    </details>
+    </DetailsAccordion>
   );
 }
 
@@ -43,19 +41,19 @@ export function AnalysisResults({ analysis, quantity, topMatch, tweakLink }: Pro
     <div className="flex flex-col gap-6">
       <AtAGlance analysis={analysis} quantity={quantity} topMatch={topMatch} />
 
-      <section className="grid items-start gap-4 lg:grid-cols-[1.5fr_1fr]">
-        <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-5">
+      <section className="grid items-start gap-4 @3xl:grid-cols-[1.5fr_1fr]">
+        <div className="flex flex-col gap-3 card card-pad">
           <h3 className="font-semibold">Recommendation</h3>
           <p>{analysis.topRecommendation}</p>
-          <p className="text-sm text-muted">{analysis.productSummary}</p>
+          <p className="text-sm text-ink-2">{analysis.productSummary}</p>
         </div>
-        <div className="flex flex-col gap-4 rounded-xl border border-line bg-surface p-5">
+        <div className="flex flex-col gap-4 card card-pad">
           {analysis.detectedFeatures.length > 0 && (
             <div>
               <h3 className="mb-2 text-sm font-semibold">Detected features</h3>
               <ul className="flex flex-wrap gap-1.5">
                 {analysis.detectedFeatures.map((f) => (
-                  <li key={f} className="rounded-full border border-line px-2 py-0.5 text-xs">
+                  <li key={f} className="rounded-pill bg-hover px-2.5 py-0.5 text-[13px] text-ink-2">
                     {f}
                   </li>
                 ))}
@@ -78,7 +76,7 @@ export function AnalysisResults({ analysis, quantity, topMatch, tweakLink }: Pro
       {hasCurves ? (
         <CostByVolumeChart curves={curves} targetQuantity={quantity} />
       ) : (
-        <p className="rounded-xl border border-dashed border-line p-4 text-sm text-muted">
+        <p className="rounded-card bg-bg p-4 text-sm text-ink-2">
           This analysis predates the cost-by-quantity chart. Re-run the analysis to see how each process&apos;s cost changes with volume.
         </p>
       )}
@@ -86,7 +84,7 @@ export function AnalysisResults({ analysis, quantity, topMatch, tweakLink }: Pro
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="text-lg font-semibold">Manufacturing paths</h3>
-          <p className="text-xs text-muted">All costs are AI estimates in USD, shown as ranges.</p>
+          <p className="text-[13px] text-ink-2">All costs are AI estimates in USD, shown as ranges.</p>
         </div>
         <PathComparison paths={analysis.paths} quantity={quantity} />
         <div className="flex flex-col gap-3">

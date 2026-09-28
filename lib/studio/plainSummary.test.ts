@@ -12,14 +12,14 @@ describe("moneyVerdict", () => {
   test("says plainly when a price loses money, and what price would work", () => {
     const verdict = moneyVerdict(withPrice(pedal, 32))!;
     expect(verdict.tone).toBe("bad");
-    expect(verdict.text).toMatch(/^At \$32 you'd lose money on each one\. Try a design tweak, or raise the price to about \$\d[\d,]*\.$/);
+    expect(verdict.text).toMatch(/^At \$32 you'd lose money on each sale\. Try a design tweak, or raise the price to about \$\d[\d,]*\.$/);
     expect(verdict.text).not.toMatch(/%/);
   });
 
   test("a price with room to spare reads as good, with money per sale", () => {
     const verdict = moneyVerdict(withPrice(pedal, 400))!;
     expect(verdict.tone).toBe("good");
-    expect(verdict.text).toMatch(/^At \$400 you'd make about \$\d+ on each one \(est\.\)\.$/);
+    expect(verdict.text).toMatch(/^At \$400 you'd make about \$\d+ per sale\. Estimated for 250 made, after the cost of making each one\.$/);
   });
 
   test("asks for a price when there isn't one, and says nothing before the analysis", () => {

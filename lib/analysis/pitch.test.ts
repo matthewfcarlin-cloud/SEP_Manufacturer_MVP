@@ -22,14 +22,14 @@ describe("buildPitchBrief", () => {
     expect(brief).toContain(pedal.name);
     expect(brief).toContain(pedal.versions[0].analysis!.productSummary);
     expect(brief).toMatch(/Recommended process: \w+/);
-    expect(brief).toMatch(/Business case \(estimate\): (Profitable|Thin|Not profitable)/);
+    expect(brief).toMatch(/Business case \(estimate\): (Makes money|At \$[\d.]+ you.d only just|Loses money)/);
   });
 
   test("includes how the design improved across versions", () => {
     const brief = buildPitchBrief(brackets, brackets.versions[1]);
     expect(brief).toContain("Design history:");
     expect(brief).toContain("v1 → v2");
-    expect(brief).toContain("Unit cost −14%");
+    expect(brief).toContain("Each one costs 14% less");
   });
 
   test("says there's no business case yet rather than inventing numbers", () => {

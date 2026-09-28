@@ -50,7 +50,7 @@ function dated(steps: Step[], start: string): Milestone[] {
 function withFacts(steps: Step[], facts: ProductionFacts): Step[] {
   return steps.map((s) => {
     if (s.key === "production") return { ...s, durationDays: facts.leadDays, budgetUsd: facts.budget };
-    if (s.key === "tooling" && !facts.hasTooling) return { ...s, durationDays: 0, budgetUsd: { low: 0, high: 0 }, note: "No tooling needed for this process." };
+    if (s.key === "tooling" && !facts.hasTooling) return { ...s, durationDays: 0, budgetUsd: { low: 0, high: 0 }, note: "No one-time setup needed for this way of making it." };
     if (s.key === "launch") return { ...s, durationDays: Math.max(1, s.durationDays) };
     return s;
   });

@@ -2,11 +2,11 @@ import { currentOwnerHash } from "@/lib/access";
 import { fail, ok } from "@/lib/api";
 import { parseProjectFields } from "@/lib/projectInput";
 import { createProject } from "@/lib/projectStore";
-import { readTextFields, readUploadedParts } from "@/lib/uploadForm";
+import { readProjectParts, readTextFields } from "@/lib/uploadForm";
 
 const TEXT_FIELDS = ["name", "notes", "targetQuantity", "budgetUsd", "materialHints"] as const;
 
-/** Creates a project from the upload form: validates, measures the STL, stores everything as version 1. */
+/** Creates a project from the new-product flow: validates, measures the 3D file if there is one, stores everything as version 1. */
 export async function POST(request: Request): Promise<Response> {
   let form: FormData;
   try {
@@ -18,7 +18,7 @@ export async function POST(request: Request): Promise<Response> {
   const fields = parseProjectFields(readTextFields(form, TEXT_FIELDS));
   if (!fields.success) return fail(fields.error, 400);
 
-  const parts = await readUploadedParts(form, "api/projects");
+  const parts = await readProjectParts(form, "api/projects");
   if (!parts.ok) return fail(parts.error, parts.status);
 
   // proxy.ts gives every browser an owner key; without one the project would belong to no one.

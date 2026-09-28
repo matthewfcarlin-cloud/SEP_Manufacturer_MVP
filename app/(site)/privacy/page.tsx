@@ -47,21 +47,20 @@ const POINTS: { title: string; body: React.ReactNode }[] = [
 
 export default function PrivacyPage() {
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-10 px-4 py-12 sm:px-6 sm:py-16">
-      <PageHeader eyebrow="How your data is handled" title="Privacy" description="Private by default, in plain words, including what this early version can't do yet." />
-      <ol className="flex flex-col gap-6">
-        {POINTS.map((p, i) => (
-          <li key={p.title} className="grid gap-2 border-b border-line pb-6 sm:grid-cols-[3rem_1fr]">
-            <span className="font-mono text-sm text-muted">{String(i + 1).padStart(2, "0")}</span>
+    <div className="mx-auto flex max-w-3xl flex-col gap-8 page-pad py-12">
+      <PageHeader title="Privacy" description="Private by default, in plain words, including what this early version can't do yet." />
+      <ul className="flex flex-col gap-5">
+        {POINTS.map((p) => (
+          <li key={p.title} className="card card-pad">
             <div>
-              <h2 className="font-semibold">{p.title}</h2>
-              <p className="mt-1 leading-relaxed text-muted">{p.body}</p>
+              <h2 className="type-h3">{p.title}</h2>
+              <p className="mt-1 leading-relaxed text-ink-2">{p.body}</p>
             </div>
           </li>
         ))}
-      </ol>
-      <p className="text-sm text-muted">
-        Questions or a deletion request? <Link href="/studio" className="underline">Open your product</Link> and use Delete, or contact the team running this demo.
+      </ul>
+      <p className="type-small text-ink-2">
+        Questions or a deletion request? <Link href="/studio" className="font-medium text-blue-ink hover:underline">Open your product</Link> and use Delete, or contact the team running this demo.
       </p>
     </div>
   );

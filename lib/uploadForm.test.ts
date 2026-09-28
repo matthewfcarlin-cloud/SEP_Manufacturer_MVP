@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { readUploadedParts } from "./uploadForm";
+import { readProjectParts, readUploadedParts } from "./uploadForm";
 
 const form = (units?: string) => {
   const data = new FormData();
@@ -32,5 +32,36 @@ describe("readUploadedParts units", () => {
     data.set("units", "in");
     const result = await readUploadedParts(data, "test");
     expect(result.ok && result.data.geometry.boundingBoxMm).toEqual({ x: 10, y: 10, z: 10 });
+  });
+});
+
+describe("readProjectParts (new products)", () => {
+  test("accepts a new product with no 3D file: photos only, no geometry", async () => {
+    // Arrange
+    const data = new FormData();
+    // Act
+    const result = await readProjectParts(data, "test");
+    // Assert
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.data.stl).toBeUndefined();
+    expect(result.data.geometry).toBeUndefined();
+    expect(result.data.images).toEqual([]);
+  });
+
+  test("still measures a 3D file when one is attached", async () => {
+    const result = await readProjectParts(form(), "test");
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.data.geometry?.boundingBoxMm.x).toBeGreaterThan(0);
+  });
+
+  test("still rejects a file that isn't STL or STEP", async () => {
+    const data = new FormData();
+    data.set("stl", new File(["hello"], "notes.txt"));
+    expect((await readProjectParts(data, "test")).ok).toBe(false);
+  });
+
+  test("new versions still require a 3D file", async () => {
+    expect((await readUploadedParts(new FormData(), "test")).ok).toBe(false);
   });
 });

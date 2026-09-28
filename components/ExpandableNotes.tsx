@@ -13,7 +13,7 @@ export function ExpandableNotes({ text }: { text: string }) {
     <div className="flex flex-col gap-2">
       <span className={`whitespace-pre-line ${isLong && !isOpen ? "line-clamp-[10]" : ""}`}>{text}</span>
       {isLong && (
-        <button type="button" onClick={() => setIsOpen((o) => !o)} className="self-start text-xs font-medium text-accent hover:underline">
+        <button type="button" onClick={() => setIsOpen((o) => !o)} className="self-start text-[13px] font-semibold text-accent-ink hover:underline">
           {isOpen ? "Show less" : "Show all notes"}
         </button>
       )}

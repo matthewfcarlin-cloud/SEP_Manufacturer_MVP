@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import bracket from "@/demo/bracket-project.json";
 import sample from "@/demo/sample-project.json";
 import type { Project, ProjectVersion } from "../types";
-import { statusLine } from "./statusLine";
+import { statusLine, statusTone } from "./statusLine";
 
 const withLatest = (project: Project, edit: (v: ProjectVersion) => ProjectVersion): Project => ({
   ...project,
@@ -28,5 +28,13 @@ describe("statusLine", () => {
 
   test("the pedal example reads naturally", () => {
     expect(statusLine(sample as Project)).toMatch(/^(Ready|\d+ quotes? waiting)/);
+  });
+});
+
+describe("statusTone", () => {
+  test("green when ready to sell, orange when something waits on the creator, neutral otherwise", () => {
+    expect(statusTone("Ready to sell")).toBe("green");
+    expect(statusTone("5 quotes waiting")).toBe("accent");
+    expect(statusTone("Ready to set a price")).toBe("neutral");
   });
 });

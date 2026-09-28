@@ -4,9 +4,10 @@ import { useState } from "react";
 import { mailtoLink } from "@/lib/sourcing/email";
 import { DemoBadge } from "@/components/Badges";
 import { CopyButton } from "@/components/sourcing/CopyButton";
-import { inputClass } from "@/components/upload/UploadPickers";
+import { controlClasses } from "@/components/ui/Field";
 import type { OrderOp } from "@/lib/orders/schemas";
 import type { OrderMessage, OrderMessagePurpose, OrderRecipient } from "@/lib/types";
+import { buttonClasses } from "@/components/ui/classes";
 
 type Props = {
   to: OrderRecipient;
@@ -46,17 +47,17 @@ export function OrderMessageCard({ to, email, purpose, label, isDemo, draft, sen
   const isBusy = busy !== null;
 
   return (
-    <li className="flex flex-col gap-3 border border-line bg-surface p-5">
+    <li className="flex flex-col gap-3 card card-pad">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="eyebrow text-muted">{PURPOSE[purpose]}</p>
+          <p className="text-[13px] font-medium text-ink-2">{PURPOSE[purpose]}</p>
           <h4 className="truncate font-semibold">{label}</h4>
         </div>
         {isDemo && <DemoBadge label="Demo shop" title="Fictional shop: it receives nothing" />}
       </div>
 
       {sent.length > 0 && (
-        <ul className="flex flex-col gap-1 text-sm text-muted">
+        <ul className="flex flex-col gap-1 text-sm text-ink-2">
           {sent.map((m) => (
             <li key={m.id}>
               Sent {time(m.at)}: <span className="text-ink">{m.subject}</span>
@@ -66,7 +67,7 @@ export function OrderMessageCard({ to, email, purpose, label, isDemo, draft, sen
       )}
 
       <label className="sr-only" htmlFor={`subject-${key}`}>Subject</label>
-      <input id={`subject-${key}`} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" className={inputClass} />
+      <input id={`subject-${key}`} value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Subject" className={controlClasses()} />
       <label className="sr-only" htmlFor={`body-${key}`}>Email</label>
       <textarea
         id={`body-${key}`}
@@ -74,11 +75,11 @@ export function OrderMessageCard({ to, email, purpose, label, isDemo, draft, sen
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="Write the email, or let the AI draft it from the plan."
-        className={inputClass}
+        className={controlClasses()}
       />
-      {draft?.aiDrafted && !changed && <p className="text-xs text-muted">Drafted by AI from the plan. Check every number before you send it.</p>}
+      {draft?.aiDrafted && !changed && <p className="text-[13px] text-ink-2">Drafted by AI from the plan. Check every number before you send it.</p>}
       {rationale && (
-        <p className="text-xs text-muted">
+        <p className="text-[13px] text-ink-2">
           <span className="font-medium text-ink">Why this email (for you only): </span>
           {rationale}
         </p>
@@ -89,7 +90,7 @@ export function OrderMessageCard({ to, email, purpose, label, isDemo, draft, sen
           type="button"
           disabled={isBusy}
           onClick={() => run(`ai:${key}`, async () => setRationale(await askAi(to, purpose)))}
-          className="bg-accent px-4 py-2 text-sm font-medium text-accent-ink hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+          className={buttonClasses({ size: "sm" })}
         >
           {busy === `ai:${key}` ? "Drafting…" : draft ? "Redraft with AI" : "Draft with AI"}
         </button>
@@ -98,14 +99,14 @@ export function OrderMessageCard({ to, email, purpose, label, isDemo, draft, sen
             type="button"
             disabled={isBusy}
             onClick={() => run(`save:${key}`, () => edit({ op: "saveDraft", to, purpose, subject, text }))}
-            className="border border-line px-3 py-2 text-sm hover:border-ink disabled:opacity-60"
+            className={buttonClasses({ variant: "secondary", size: "sm" })}
           >
             Save draft
           </button>
         )}
         {text.trim() && <CopyButton text={`Subject: ${subject}\n\n${text}`} />}
         {text.trim() && (
-          <a href={mailto} className="border border-line px-3 py-1.5 text-sm hover:border-ink">
+          <a href={mailto} className={buttonClasses({ variant: "secondary", size: "sm" })}>
             Open in email
           </a>
         )}
@@ -115,7 +116,7 @@ export function OrderMessageCard({ to, email, purpose, label, isDemo, draft, sen
               type="button"
               disabled={isBusy}
               onClick={() => run(`sent:${key}`, async () => { await edit({ op: "markSent", messageId: draft.id }); setRationale(null); })}
-              className="bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90 disabled:opacity-60"
+              className={buttonClasses({ size: "sm" })}
             >
               I sent this
             </button>
@@ -123,7 +124,7 @@ export function OrderMessageCard({ to, email, purpose, label, isDemo, draft, sen
               type="button"
               disabled={isBusy}
               onClick={() => run(`discard:${key}`, async () => { await edit({ op: "discardDraft", messageId: draft.id }); setRationale(null); })}
-              className="text-sm text-muted hover:text-ink"
+              className="text-sm text-ink-2 hover:text-ink"
             >
               Discard
             </button>

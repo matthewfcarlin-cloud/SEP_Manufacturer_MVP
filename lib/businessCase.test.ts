@@ -122,22 +122,25 @@ describe("buildBusinessCase", () => {
   test("verdict: profitable everywhere", () => {
     const { verdict } = buildBusinessCase(paths, inputs(200));
     expect(verdict.tone).toBe("good");
-    expect(verdict.headline).toBe("Profitable at every volume shown at $200 retail.");
+    expect(verdict.headline).toBe("Makes money at every run size shown at $200.");
+    expect(verdict.detail).toMatch(/^About \$[\d.,]+ per sale at 100 made, \$[\d.,]+ at 10,000 \(est\.\)\.$/);
+    expect(`${verdict.headline} ${verdict.detail}`).not.toMatch(/margin|%/i);
   });
 
   test("verdict: tooling makes small runs unprofitable, and suggests a process that works there", () => {
     const { verdict } = buildBusinessCase(paths, inputs(40));
     expect(verdict.tone).toBe("mixed");
-    expect(verdict.headline).toMatch(/^Profitable at [\d,]+\+ units at \$40 retail \(est\. margin \d+–\d+% at 1,000\)\.$/);
-    expect(verdict.detail).toMatch(/^Tooling makes this unprofitable under ~[\d,]+ units: injection molding needs \$8,000–\$12,000 up front\./);
-    expect(verdict.detail).toContain("Consider FDM printing for smaller runs (est. $18.50 per part at 100 units, no tooling).");
+    expect(verdict.headline).toMatch(/^Makes money from about [\d,]+ made at \$40 \(about \$[\d.,]+ per sale at 1,000, est\.\)\.$/);
+    expect(verdict.detail).toMatch(/^The one-time setup cost is too big to pay back under about [\d,]+ made: injection molding needs \$8,000–\$12,000 up front\./);
+    expect(verdict.detail).toContain("Try FDM printing for smaller runs (about $18.50 each at 100 made, no one-time setup cost).");
+    expect(verdict.detail).not.toMatch(/tooling/i);
   });
 
   test("verdict: never suggests an alternative that also loses money", () => {
     const { verdict } = buildBusinessCase(paths, inputs(30));
     expect(verdict.tone).toBe("mixed");
-    expect(verdict.detail).toMatch(/^Tooling makes this unprofitable/);
-    expect(verdict.detail).toContain("No other process shown covers its cost at 100 units at this price");
+    expect(verdict.detail).toMatch(/^The one-time setup cost is too big to pay back/);
+    expect(verdict.detail).toContain("No other way shown covers its cost at 100 made at this price");
     expect(verdict.detail).not.toContain("FDM");
   });
 
@@ -145,23 +148,23 @@ describe("buildBusinessCase", () => {
     const flatOnly = [{ ...printed, unitCostAtVolume: curve([[10, 40, 50], [100, 30, 40], [1000, 10, 12], [10000, 8, 10]]) }];
     const { verdict } = buildBusinessCase(flatOnly, inputs(40, [100, 1000]));
     expect(verdict.tone).toBe("mixed");
-    expect(verdict.detail).toContain("per-part cost is too high");
+    expect(verdict.detail).toContain("the cost of each one is too high");
     expect(verdict.detail).toContain("Hollow the base to a 2 mm shell");
   });
 
   test("verdict: thin margins say what price would work", () => {
     const { verdict } = buildBusinessCase(paths, inputs(7));
     expect(verdict.tone).toBe("mixed");
-    expect(verdict.headline).toMatch(/^Thin margins at \$7 retail/);
+    expect(verdict.headline).toMatch(/^At \$7 you'd only just make money: at best about \$0\.50 per sale at 10,000 made\.$/);
     // Best all-in mid is $3.00 at 10k units: 3 / 0.5 / 0.7 = $8.57, rounded up.
-    expect(verdict.detail).toBe("A retail price around $9 would give a 30% margin at 10,000 units.");
+    expect(verdict.detail).toBe("A price around $9 leaves room to spare at 10,000 made.");
   });
 
   test("verdict: not profitable at any volume", () => {
     const { verdict } = buildBusinessCase(paths, inputs(4));
     expect(verdict.tone).toBe("bad");
-    expect(verdict.headline).toBe("Not profitable at any volume shown at $4 retail.");
-    expect(verdict.detail).toBe("The lowest estimated cost is ~$3.00 per part, so retail would need to be about $9.");
+    expect(verdict.headline).toBe("Loses money at every run size shown at $4.");
+    expect(verdict.detail).toBe("Each one costs at least about $3.00 to make, so the price would need to be about $9.");
   });
 });
 

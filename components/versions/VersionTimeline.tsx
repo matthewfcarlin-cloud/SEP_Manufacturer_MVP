@@ -2,6 +2,8 @@ import Link from "next/link";
 import { formatUnitCostRange } from "@/lib/format";
 import { PROCESS_LABELS } from "@/lib/processes";
 import type { Project, ProjectVersion } from "@/lib/types";
+import { buttonClasses } from "@/components/ui/classes";
+import { ArrowRight } from "lucide-react";
 
 const shortDate = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
@@ -13,32 +15,28 @@ function VersionChip({ projectId, version, isSelected, isFirst }: ChipProps) {
   return (
     <li className="flex shrink-0 items-stretch gap-3">
       {!isFirst && (
-        <span aria-hidden className="self-center text-muted">
-          →
-        </span>
+        <ArrowRight aria-hidden size={18} strokeWidth={1.75} className="self-center text-muted" />
       )}
       <Link
-        href={`/project/${projectId}?v=${version.number}`}
+        href={`/project/${projectId}/idea?v=${version.number}`}
         aria-current={isSelected ? "page" : undefined}
-        className={`flex w-64 flex-col gap-2 rounded-lg border p-4 transition-colors ${
-          isSelected ? "border-accent bg-surface" : "border-line hover:border-ink"
-        }`}
+        className={`card lift flex w-64 flex-col gap-2 rounded-[12px] p-4 ${isSelected ? "ring-2 ring-accent" : ""}`}
       >
         <div className="flex items-baseline justify-between gap-2">
-          <span className="display-type text-2xl">v{version.number}</span>
-          <span className="eyebrow text-muted">{shortDate(version.createdAt)}</span>
+          <span className="type-h3">Version {version.number}</span>
+          <span className="type-small text-muted">{shortDate(version.createdAt)}</span>
         </div>
         {best ? (
           <p className="text-sm">
             <span className="font-medium">{PROCESS_LABELS[best.process]}</span>
-            <span className="text-muted"> · </span>
+            <span className="text-ink-2"> · </span>
             <span className="font-mono">{formatUnitCostRange(best.unitCostUsd)}</span>
-            <span className="text-muted">/part est.</span>
+            <span className="text-ink-2"> each, est.</span>
           </p>
         ) : (
-          <p className="text-sm text-muted">Not analyzed yet</p>
+          <p className="text-sm text-ink-2">Not analyzed yet</p>
         )}
-        <p className="line-clamp-2 text-xs text-muted">{reason ?? (version.number === 1 ? "Original upload" : "No change note")}</p>
+        <p className="line-clamp-2 text-[13px] text-ink-2">{reason ?? (version.number === 1 ? "Original upload" : "No change note")}</p>
       </Link>
     </li>
   );
@@ -52,27 +50,27 @@ export function VersionTimeline({ project, selected }: { project: Project; selec
   return (
     <section aria-labelledby="versions-heading" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="versions-heading" className="eyebrow text-muted">
-          Versions · {project.versions.length}
+        <h2 id="versions-heading" className="type-h3">
+          Versions ({project.versions.length})
         </h2>
         <div className="flex flex-wrap items-center gap-2">
           {hasMany && previous && (
             <Link
               href={`/project/${project.id}/compare?a=${Math.min(previous.number, selected)}&b=${Math.max(previous.number, selected)}`}
-              className="rounded-lg border border-line px-3 py-1.5 text-sm font-medium hover:border-ink"
+              className={buttonClasses({ variant: "secondary", size: "sm" })}
             >
               Compare versions
             </Link>
           )}
           <Link
             href={`/project/${project.id}/versions/new?from=${selected}`}
-            className="rounded-lg bg-ink px-3 py-1.5 text-sm font-medium text-bg hover:opacity-90"
+            className={buttonClasses({ size: "sm" })}
           >
             New version
           </Link>
         </div>
       </div>
-      <ol className="flex gap-3 overflow-x-auto pb-1">
+      <ol className="flex gap-3 overflow-x-auto p-1 pb-2">
         {project.versions.map((v, i) => (
           <VersionChip key={v.number} projectId={project.id} version={v} isSelected={v.number === selected} isFirst={i === 0} />
         ))}

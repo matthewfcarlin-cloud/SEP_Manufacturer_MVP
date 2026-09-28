@@ -1,6 +1,6 @@
 "use client";
 
-import { inputClass } from "@/components/upload/UploadPickers";
+import { controlClasses } from "@/components/ui/Field";
 import { supplierFieldsSchema } from "@/lib/sourcing/schemas";
 import type { z } from "zod";
 
@@ -36,7 +36,7 @@ export function parseSupplierFields(d: FieldDraft): { error: string } | { suppli
     const field = String(issue?.path.at(-1) ?? "");
     const friendly: Record<string, string> = {
       unitUsd: "Enter the per-part price as a number, like 3.40.",
-      moq: "Enter the MOQ as a whole number.",
+      moq: "Enter the smallest order as a whole number.",
       toolingUsd: "Enter the one-time setup cost as a number of dollars.",
       leadDays: "Enter how long it takes as a whole number of days.",
     };
@@ -52,23 +52,23 @@ export function SupplierFields({ value, onChange, idPrefix }: Props) {
   const field = (key: keyof FieldDraft, label: string, placeholder: string, inputMode?: "decimal" | "numeric") => (
     <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor={`${idPrefix}-${key}`}>
       {label}
-      <input id={`${idPrefix}-${key}`} value={value[key]} onChange={set(key)} placeholder={placeholder} inputMode={inputMode} className={inputClass} />
+      <input id={`${idPrefix}-${key}`} value={value[key]} onChange={set(key)} placeholder={placeholder} inputMode={inputMode} className={controlClasses()} />
     </label>
   );
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-3 @lg:grid-cols-2">
       {field("name", "Supplier name", "e.g. Ningbo die-casting factory")}
       {field("email", "Sales email (optional)", "sales@factory.example")}
-      <div className="sm:col-span-2">{field("listingUrl", "Listing or website link (optional)", "https://www.alibaba.com/product-detail/…")}</div>
-      <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:grid-cols-4">
+      <div className="@lg:col-span-2">{field("listingUrl", "Listing or website link (optional)", "https://www.alibaba.com/product-detail/…")}</div>
+      <div className="grid grid-cols-2 gap-3 @lg:col-span-2 @lg:grid-cols-4">
         {field("unitUsd", "Quoted $/part", "3.40", "decimal")}
-        {field("moq", "MOQ", "500", "numeric")}
+        {field("moq", "Smallest order", "500", "numeric")}
         {field("toolingUsd", "One-time setup cost $", "1200", "decimal")}
         {field("leadDays", "How long it takes (days)", "30", "numeric")}
       </div>
-      <label className="flex flex-col gap-1.5 text-sm font-medium sm:col-span-2" htmlFor={`${idPrefix}-notes`}>
+      <label className="flex flex-col gap-1.5 text-sm font-medium @lg:col-span-2" htmlFor={`${idPrefix}-notes`}>
         Notes (optional)
-        <textarea id={`${idPrefix}-notes`} rows={2} value={value.notes} onChange={set("notes")} placeholder="Trade Assurance, years on Alibaba, response rate, anything you noticed." className={inputClass} />
+        <textarea id={`${idPrefix}-notes`} rows={2} value={value.notes} onChange={set("notes")} placeholder="Trade Assurance, years on Alibaba, response rate, anything you noticed." className={controlClasses()} />
       </label>
     </div>
   );

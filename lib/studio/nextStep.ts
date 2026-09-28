@@ -31,8 +31,8 @@ export function nextStep(project: Project): NextStep {
   if (!v.businessCase) {
     return {
       title: "Set a price",
-      detail: "Pick a retail price (or ask the AI for one) to see your margin and the run size where this makes money.",
-      href: `${onVersion}#business-case-heading`,
+      detail: "Pick a price (or ask the AI for one) to see what you'd make on each sale, and how many you need to make for it to pay.",
+      href: `${base}/money?v=${v.number}#business-case-heading`,
       cta: "Open the business case",
     };
   }

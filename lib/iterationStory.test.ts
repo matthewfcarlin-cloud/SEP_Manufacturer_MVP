@@ -16,7 +16,7 @@ describe("buildIterationStory", () => {
     expect(step.from).toBe(1);
     expect(step.to).toBe(2);
     expect(step.change).toBe(twoVersions.versions[1].appliedTweak!.change);
-    expect(step.summary).toMatch(/^Unit cost −14%/);
+    expect(step.summary).toMatch(/^Each one costs 14% less/);
   });
 
   test("skips versions that aren't analyzed yet, instead of inventing deltas", () => {

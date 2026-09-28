@@ -1,24 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { Copy } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { useToast } from "@/components/ui/Toast";
 
 export function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
-  const [copied, setCopied] = useState(false);
+  const toast = useToast();
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      size="sm"
+      icon={Copy}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
+          toast({ message: "Copied" });
         } catch {
-          setCopied(false);
+          toast({ message: "Couldn't copy. Select the text and copy it instead." });
         }
       }}
-      className="rounded-lg border border-line bg-surface px-3 py-1.5 text-sm hover:border-ink"
     >
-      {copied ? "Copied" : label}
-    </button>
+      {label}
+    </Button>
   );
 }

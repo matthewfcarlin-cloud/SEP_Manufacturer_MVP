@@ -2,13 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { inputClass } from "@/components/upload/UploadPickers";
+import { controlClasses } from "@/components/ui/Field";
 import { AiErrorBanner } from "@/components/AiErrorBanner";
 import type { ApiResponse } from "@/lib/api";
 import { AiCallError } from "@/lib/client/aiError";
 import { MAX_PITCH_FIELD_CHARS } from "@/lib/schemas";
 import type { PitchContent } from "@/lib/types";
 import { RenderCapture } from "./RenderCapture";
+import { buttonClasses } from "@/components/ui/classes";
 
 type Props = {
   projectId: string;
@@ -27,7 +28,7 @@ const FIELDS: { key: keyof Omit<PitchContent, "editedByUser">; label: string; ro
   { key: "ask", label: "The ask", rows: 3 },
 ];
 
-const buttonClass = "rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium hover:border-ink disabled:cursor-wait disabled:opacity-60";
+const buttonClass = buttonClasses({ variant: "secondary", size: "sm", className: "disabled:cursor-wait" });
 
 async function send(method: "POST" | "PUT", body: object): Promise<void> {
   const res = await fetch("/api/pitch", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -46,15 +47,15 @@ function EditForm({ pitch, onSave, onCancel }: { pitch: PitchContent; onSave: (p
     setIsSaving(false);
   };
   return (
-    <form onSubmit={submit} className="grid gap-4 rounded-xl border border-line bg-surface p-5 md:grid-cols-2">
+    <form onSubmit={submit} className="grid gap-4 card card-pad @2xl:grid-cols-2">
       {FIELDS.map((f) => (
-        <label key={f.key} className={`flex flex-col gap-1.5 text-sm font-medium ${f.key === "oneLiner" ? "md:col-span-2" : ""}`}>
+        <label key={f.key} className={`flex flex-col gap-1.5 text-sm font-medium ${f.key === "oneLiner" ? "@2xl:col-span-2" : ""}`}>
           {f.label}
-          <textarea name={f.key} rows={f.rows} required maxLength={MAX_PITCH_FIELD_CHARS} defaultValue={pitch[f.key]} className={inputClass} />
+          <textarea name={f.key} rows={f.rows} required maxLength={MAX_PITCH_FIELD_CHARS} defaultValue={pitch[f.key]} className={controlClasses()} />
         </label>
       ))}
-      <div className="flex gap-2 md:col-span-2">
-        <button type="submit" disabled={isSaving} className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90 disabled:opacity-60">
+      <div className="flex gap-2 @2xl:col-span-2">
+        <button type="submit" disabled={isSaving} className={buttonClasses({ size: "sm" })}>
           {isSaving ? "Saving…" : "Save pitch text"}
         </button>
         <button type="button" onClick={onCancel} className={buttonClass}>Cancel</button>
@@ -97,7 +98,7 @@ export function PitchToolbar({ projectId, projectName, version, pitch, cadFileUr
   };
 
   return (
-    <div className="flex flex-col gap-3 print:hidden">
+    <div id="pitch-tools" className="flex scroll-mt-20 flex-col gap-3 print:hidden">
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={write} disabled={isWriting} className={buttonClass}>
           {isWriting ? "Writing the pitch…" : pitch ? "Rewrite with AI" : "Write pitch with AI"}
@@ -108,10 +109,10 @@ export function PitchToolbar({ projectId, projectName, version, pitch, cadFileUr
         {cadFileUrl && hasRenders && !isRendering && (
           <button type="button" onClick={() => setIsRendering(true)} className={buttonClass}>Re-render shots</button>
         )}
-        <button type="button" onClick={downloadPdf} className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-bg hover:opacity-90">
+        <button type="button" onClick={downloadPdf} className={buttonClasses({ size: "sm" })}>
           Download PDF
         </button>
-        {pitch?.editedByUser && <span className="text-xs text-muted">Text edited by you</span>}
+        {pitch?.editedByUser && <span className="text-[13px] text-ink-2">Text edited by you</span>}
       </div>
       {error && <AiErrorBanner message={error.message} status={error.status} />}
       {isEditing && pitch && (

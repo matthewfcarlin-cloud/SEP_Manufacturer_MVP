@@ -5,10 +5,12 @@ import { useState, useSyncExternalStore } from "react";
 import { FormError } from "@/components/upload/UploadPickers";
 import type { ApiResponse } from "@/lib/api";
 import type { ShareLink } from "@/lib/types";
+import { controlClasses } from "@/components/ui/Field";
+import { buttonClasses } from "@/components/ui/classes";
 
 const noSubscribe = () => () => {};
 
-const buttonClass = "rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium hover:border-ink disabled:opacity-60";
+const buttonClass = buttonClasses({ variant: "secondary", size: "sm" });
 
 /** Owner controls for the public pitch link: off by default, can be turned off or revoked any time. */
 export function SharePanel({ projectId, share }: { projectId: string; share?: ShareLink }) {
@@ -38,11 +40,11 @@ export function SharePanel({ projectId, share }: { projectId: string; share?: Sh
   const link = share && origin ? `${origin}/p/${share.token}` : "";
 
   return (
-    <section id="share" aria-label="Share link" className="flex scroll-mt-20 flex-col gap-3 rounded-xl border border-line bg-surface p-4 text-sm">
+    <section id="share" aria-label="Share link" className="flex scroll-mt-20 flex-col gap-3 card p-4 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-semibold">Public link {isOn ? "on" : "off"}</p>
-          <p className="text-xs text-muted">
+          <p className="text-[13px] text-ink-2">
             Private by default. Anyone with the link sees this pitch (text, renders, estimates), never your CAD file, photos or notes.
           </p>
         </div>
@@ -52,7 +54,7 @@ export function SharePanel({ projectId, share }: { projectId: string; share?: Sh
       </div>
       {isOn && link && (
         <div className="flex flex-wrap items-center gap-2">
-          <input readOnly value={link} aria-label="Share link" className="min-w-0 flex-1 rounded-lg border border-line bg-bg px-3 py-2 font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
+          <input readOnly value={link} aria-label="Share link" className={controlClasses("min-w-0 flex-1 bg-bg text-[13px]")} onFocus={(e) => e.currentTarget.select()} />
           <button
             type="button"
             className={buttonClass}
