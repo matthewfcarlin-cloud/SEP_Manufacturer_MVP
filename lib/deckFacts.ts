@@ -3,10 +3,13 @@ import { buildBusinessCase } from "@/lib/businessCase";
 import { effectiveCostCurve } from "@/lib/costCurve";
 import { formatDimensions, formatToolingRange, formatUnitCostRange, formatUsd } from "@/lib/format";
 import { matchVersion } from "@/lib/match";
+import { allInPerUnit, bestValueId, fastestId, sortQuotes } from "@/lib/outreach/compare";
+import { ACTION_ESTIMATE_USD, type AiAction } from "@/lib/usage/budget";
 import { etsySale } from "@/lib/sell/fees";
 import { PROCESS_LABELS } from "@/lib/processes";
 import { projectSchema } from "@/lib/schemas";
 import { getShopById, getShops, summarizeShops } from "@/lib/shops";
+import type { Outreach } from "@/lib/types";
 import { latestVersion } from "@/lib/versions";
 
 /**
@@ -18,6 +21,8 @@ export type DeckFacts = {
   shops: number;
   machines: number;
   idle: number;
+  /** Conservative AI cost (the budget gate's per-action estimates) to take one product from idea to a first supplier email. */
+  aiCostToOutreach: number;
   pedal: {
     name: string;
     quantity: number;
@@ -29,15 +34,18 @@ export type DeckFacts = {
     curves: { label: string; points: { quantity: number; mid: number }[] }[];
     verdict: string;
     match: { shop: string; neighborhood: string; machine: string; idle: boolean; reasons: string[] } | null;
-    /** Launch plan milestones as day offsets from the plan's start. */
-    plan: { launchDate: string; totalDays: number; milestones: { title: string; from: number; days: number }[] } | null;
+    plan: { launchDate: string; milestones: number } | null;
     listing: { title: string; tags: string[]; price: string; afterFees: string } | null;
+    /** The spec sheet the demo shops were sent, and their simulated quotes, best value first. */
+    outreach: {
+      spec: { process: string; dims: string; material: string; tiers: string; target: string | null; quoteBy: string };
+      quotes: { shop: string; process: string; tooling: string; allIn: string; lead: number; moq: number; best: boolean; fastest: boolean }[];
+    } | null;
   };
 };
 
-const DAY_MS = 86_400_000;
-const daysBetween = (from: string, to: string) => Math.round((Date.parse(to) - Date.parse(from)) / DAY_MS);
-
+/** The AI actions between an idea and a first supplier email: analysis, BOM, price, sourcing plan, one supplier draft. */
+const TO_OUTREACH: AiAction[] = ["analysis", "bom", "price", "sourcing", "negotiation"];
 
 function pedalFacts() {
   const project = projectSchema.parse(sampleProject);
@@ -80,12 +88,7 @@ function pedalFacts() {
     plan: v.plan
       ? {
           launchDate: new Date(`${v.plan.launchDate}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }),
-          totalDays: daysBetween(v.plan.startDate, v.plan.launchDate) + 1,
-          milestones: v.plan.milestones.map((m) => ({
-            title: m.title,
-            from: daysBetween(v.plan!.startDate, m.startDate),
-            days: daysBetween(m.startDate, m.endDate) + 1,
-          })),
+          milestones: v.plan.milestones.length,
         }
       : null,
     listing: v.listing
@@ -96,6 +99,35 @@ function pedalFacts() {
           afterFees: formatUsd(etsySale(v.listing.priceUsd).afterFeesUsd),
         }
       : null,
+    outreach: outreachFacts(v.outreach),
+  };
+}
+
+function outreachFacts(outreach: Outreach | undefined): DeckFacts["pedal"]["outreach"] {
+  if (!outreach) return null;
+  const { specSheet: spec, quotes } = outreach;
+  const best = bestValueId(quotes);
+  const fastest = fastestId(quotes);
+  const cents = (n: number) => formatUnitCostRange({ low: n, high: n });
+  return {
+    spec: {
+      process: PROCESS_LABELS[spec.process],
+      dims: formatDimensions(spec.dimensionsMm),
+      material: spec.material,
+      tiers: spec.quantityTiers.map((q) => q.toLocaleString("en-US")).join(" / "),
+      target: spec.targetUnitPriceUsd === undefined ? null : cents(spec.targetUnitPriceUsd),
+      quoteBy: spec.quoteBy,
+    },
+    quotes: sortQuotes(quotes, "value").map((q) => ({
+      shop: getShopById(q.shopId)?.name ?? q.shopId,
+      process: PROCESS_LABELS[q.process],
+      tooling: formatToolingRange({ low: q.toolingUsd, high: q.toolingUsd }),
+      allIn: cents(allInPerUnit(q)),
+      lead: q.leadTimeDays,
+      moq: q.moq,
+      best: q.id === best,
+      fastest: q.id === fastest,
+    })),
   };
 }
 
@@ -106,6 +138,7 @@ export function buildDeckFacts(): DeckFacts {
     shops: stats.shops,
     machines: stats.machines,
     idle: stats.idleMachines,
+    aiCostToOutreach: TO_OUTREACH.reduce((sum, action) => sum + ACTION_ESTIMATE_USD[action], 0),
     pedal: pedalFacts(),
   };
 }

@@ -9,20 +9,13 @@ const SEGMENTS = [
   { tag: "Beachhead", who: "Etsy sellers who've outgrown print-on-demand", why: "Want a product that's really theirs; already pay for tools and know margins" },
   { tag: "Next", who: "Students and first-time founders", why: "Can sketch or model an idea, can't tell if it's makeable or profitable" },
   { tag: "Next", who: "Hobby makers with a 3D printer", why: "Don't know when to switch from printing to CNC or molding" },
-  { tag: "Supply", who: "Small local shops", why: "Clear, ready-to-quote small-run requests, like Printify's print providers" },
-];
-
-const CHANNELS = [
-  { where: "Where first-timers already are", how: "USC groups, Iovine & Young Slack, Discord, X: “Have a product idea but no clue how to make it? Try it free, 5 minutes.”" },
-  { where: "Our own launch page", how: "Our waitlist runs on Moko's own landing-page feature (building today): every signup is also a demo" },
-  { where: "Every creator brings the next", how: "Creators' launch pages and share cards will carry “Made with Moko”" },
-  { where: "Shops follow orders", how: "The creator side works with zero shops; shops join as orders route through" },
+  { tag: "Supply", who: "Small shops and overseas suppliers", why: "Clear, ready-to-quote requests with a spec sheet, instead of vague cold emails" },
 ];
 
 export const segmentCard = { x: 120, y: 330, w: 400, h: 420, step: 425 };
 
 export function Market({ beat }: { beat: Beat }) {
-  const on = beat === "market" || beat === "distribution" || beat === "traction";
+  const on = beat === "market" || beat === "traction";
   return (
     <>
       <Show on={on} className="left-[120px] top-[96px]">
@@ -57,21 +50,6 @@ export function Market({ beat }: { beat: Beat }) {
           </motion.div>
         );
       })}
-
-      <Show on={beat === "distribution"} delay={0.1} className="left-[120px] top-[140px]">
-        <Display size={72} className="text-[#efeeec]">
-          Go where first-timers already are.
-        </Display>
-      </Show>
-      {CHANNELS.map((c, i) => (
-        <Show key={c.where} on={beat === "distribution"} delay={0.3 + i * 0.15} className="left-[120px] w-[1680px]" style={{ top: 300 + i * 150 }}>
-          <div className="flex items-baseline gap-10 border-t border-[#262624] pt-6">
-            <span className="w-14 shrink-0 font-mono text-[28px] text-[#ff4a00]">0{i + 1}</span>
-            <span className="w-[520px] shrink-0 text-[36px] font-semibold text-[#efeeec]">{c.where}</span>
-            <span className="text-[30px] leading-snug text-[#b9b5ac]">{c.how}</span>
-          </div>
-        </Show>
-      ))}
 
       <Traction on={beat === "traction"} />
     </>
